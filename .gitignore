@@ -1,0 +1,54 @@
+# .NET build output
+**/bin/
+**/obj/
+artifacts/
+
+# Visual Studio and VS Code local state
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains
+.idea/
+*.sln.iml
+
+# Node/Vite
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+
+# Logs
+*.log
+logs/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+appsettings.Development.local.json
+secrets.json
+
+# Test and tooling output
+TestResults/
+*.trx
+.nyc_output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local SQL/database artifacts
+*.mdf
+*.ldf
+*.db
+*.db-shm
+*.db-wal
+
+# Temporary archives and generated files
+*.zip
+tmp/
+temp/
