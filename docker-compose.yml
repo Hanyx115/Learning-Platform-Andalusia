@@ -1,13 +1,12 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: andalusia-sqlserver
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Andalusia_Dev_2026!}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your .env file}
       MSSQL_PID: Developer
     ports:
-      - "1433:1433"
+      - "${SQLSERVER_PORT:-1433}:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:
@@ -21,17 +20,16 @@ services:
     build:
       context: .
       dockerfile: src/AndalusiaAcademy.API/Dockerfile
-    container_name: andalusia-api
     depends_on:
       sqlserver:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: "8080"
-      PUBLIC_URLS: "http://localhost:8080"
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AndalusiaAcademy;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Andalusia_Dev_2026!};TrustServerCertificate=True"
+      PUBLIC_URLS: "http://localhost:${API_HTTP_PORT:-8080}"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AndalusiaAcademy;User Id=sa;Password=${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your .env file};TrustServerCertificate=True"
     ports:
-      - "8080:8080"
+      - "${API_HTTP_PORT:-8080}:8080"
 
 volumes:
   sqlserver-data:
