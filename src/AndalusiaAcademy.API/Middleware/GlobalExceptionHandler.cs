@@ -29,7 +29,7 @@ public sealed class GlobalExceptionHandler(
             {
                 Status = StatusCodes.Status500InternalServerError,
                 Title = "An unexpected error occurred.",
-                Type = "https://tools.ietf.org/html/rfc9110#section-15.6.1",
+                Type = "https://www.rfc-editor.org/rfc/rfc9110#section-15.6.1",
             },
         });
     }
