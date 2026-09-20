@@ -23,6 +23,20 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+var publicUrls = app.Configuration["PUBLIC_URLS"]?.Split(
+    ';',
+    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    foreach (var publicUrl in publicUrls)
+    {
+        app.Logger.LogInformation(
+            "OpenAPI URL: {OpenApiUrl}",
+            $"{publicUrl.TrimEnd('/')}/openapi/v1.json");
+    }
+});
+
 app.Run();
 
 public partial class Program;
