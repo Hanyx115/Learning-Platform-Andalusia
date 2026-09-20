@@ -38,6 +38,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi().WithDocumentPerVersion();
+    app.UseSwaggerUI(options =>
+    {
+        options.RoutePrefix = "swagger";
+        options.SwaggerEndpoint("/openapi/v1.json", "Andalusia Academy API v1");
+        options.ExposeSwaggerDocumentUrlsRoute = true;
+    });
 }
 
 app.UseExceptionHandler();
@@ -61,6 +67,9 @@ app.Lifetime.ApplicationStarted.Register(() =>
         app.Logger.LogInformation(
             "OpenAPI URL: {OpenApiUrl}",
             $"{publicUrl.TrimEnd('/')}/openapi/v1.json");
+        app.Logger.LogInformation(
+            "Swagger UI URL: {SwaggerUrl}",
+            $"{publicUrl.TrimEnd('/')}/swagger");
     }
 });
 

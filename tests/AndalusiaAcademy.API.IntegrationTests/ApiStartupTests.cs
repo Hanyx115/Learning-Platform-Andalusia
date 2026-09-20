@@ -23,4 +23,19 @@ public sealed class ApiStartupTests(ApiWebApplicationFactory factory)
         response.EnsureSuccessStatusCode();
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
     }
+
+    [Fact]
+    public async Task SwaggerUi_IsAvailableInDevelopment()
+    {
+        using var response = await _client.GetAsync("/swagger/index.html");
+
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+
+        using var documentUrlsResponse = await _client.GetAsync("/swagger/documentUrls");
+        documentUrlsResponse.EnsureSuccessStatusCode();
+
+        var documentUrls = await documentUrlsResponse.Content.ReadAsStringAsync();
+        Assert.Contains("/openapi/v1.json", documentUrls);
+    }
 }
