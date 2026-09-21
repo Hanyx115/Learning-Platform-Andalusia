@@ -133,10 +133,10 @@ A successful Phase 1 means:
 |---|---|---|
 | Backend version | ASP.NET Core 8 | **ASP.NET Core/.NET 10** |
 | Frontend framework | React 18 with Vite or Next.js | **React 18 + TypeScript + Vite only** |
-| Architecture | Clean Architecture + CQRS | Confirmed |
+| Architecture | Clean Architecture + CQRS | **Pragmatic Clean Architecture with application services and repositories** |
 | Application style | Modular monolith | Confirmed |
 | Database | SQL Server | Confirmed |
-| CQRS implementation | MediatR | Confirmed |
+| Application flow | MediatR commands and queries | **Controller → Service → Repository → EF Core** |
 | Redis | Presented as part of the locked stack | Introduce only when caching, distributed rate limiting, or idempotency justifies it |
 | Hangfire | Presented as a core component | Introduce when notifications, reminders, or outbox dispatch require it |
 | Blob/CDN | Production architecture assumes Azure Blob and CDN | Local storage abstraction first; Azure Blob/CDN during deployment work |
@@ -156,9 +156,8 @@ Confirmed stack:
 - React 18
 - TypeScript
 - Vite
-- Clean Architecture
-- Practical CQRS
-- MediatR
+- Pragmatic Clean Architecture
+- Application services and repository abstractions
 - Modular monolith
 - FluentValidation
 - Swagger/OpenAPI
@@ -224,18 +223,18 @@ flowchart TD
     FE["React 18 + TypeScript + Vite"]
     API["ASP.NET Core .NET 10 API"]
     CTL["Thin versioned controllers"]
-    MED["MediatR pipeline"]
-    USE["Commands, queries and handlers"]
-    CORE["Domain rules and application abstractions"]
-    INF["Infrastructure adapters and EF Core"]
+    SVC["Application services"]
+    REP["Repository abstractions"]
+    INF["Infrastructure repositories and EF Core"]
+    CORE["Domain models and rules"]
     DB["SQL Server"]
 
     FE --> API
     API --> CTL
-    CTL --> MED
-    MED --> USE
-    USE --> CORE
-    CORE --> INF
+    CTL --> SVC
+    SVC --> CORE
+    SVC --> REP
+    REP --> INF
     INF --> DB
 ```
 
@@ -246,7 +245,7 @@ Cross-cutting placement:
 | Identity | Infrastructure persistence and API authentication configuration |
 | JWT | API token validation; Infrastructure token creation/persistence |
 | Refresh tokens | Infrastructure persistence; secure HTTP transport through API |
-| Validation | Application MediatR validation pipeline |
+| Validation | Application services using FluentValidation at request boundaries |
 | Authorization | API policies backed by application permission requirements |
 | Logging | API and Infrastructure structured logging |
 | Audit | Application abstraction with Infrastructure persistence |
@@ -259,7 +258,7 @@ Cross-cutting placement:
 | Localization | React i18n plus localized API/content models |
 | Observability | API, EF Core, cache, jobs, and external HTTP instrumentation |
 
-Controllers will not call EF Core directly. Handlers will contain application use-case logic without introducing a redundant service layer for every entity.
+Controllers will not call EF Core directly. Application services contain use-case logic and depend on repository interfaces implemented by Infrastructure. ASP.NET Core Identity uses its built-in managers and stores rather than redundant repositories.
 
 ## 6. Clean Architecture solution structure
 
@@ -269,23 +268,17 @@ AndalusiaAcademy/
 ├── src/
 │   ├── AndalusiaAcademy.Domain/
 │   │   ├── Common/
-│   │   └── Modules/
-│   │       ├── Catalog/
-│   │       ├── Identity/
-│   │       ├── Enrollment/
-│   │       ├── LmsCore/
-│   │       ├── Operations/
-│   │       ├── Cms/
-│   │       └── Notifications/
+│   │   └── Models/
 │   ├── AndalusiaAcademy.Application/
-│   │   ├── Common/
-│   │   │   ├── Behaviors/
-│   │   │   ├── Interfaces/
-│   │   │   ├── Models/
-│   │   │   └── Exceptions/
-│   │   └── Modules/
+│   │   ├── DTOs/
+│   │   ├── Repositories/
+│   │   ├── Services/
+│   │   ├── Validation/
+│   │   └── Exceptions/
 │   ├── AndalusiaAcademy.Infrastructure/
-│   │   ├── Persistence/
+│   │   ├── Data/
+│   │   │   └── Migrations/
+│   │   ├── Repositories/
 │   │   ├── Identity/
 │   │   ├── Payments/
 │   │   ├── Notifications/
@@ -655,9 +648,9 @@ Publishing should be a separate permission and action from editing.
 - `PATCH /notifications/read-all`
 - Management endpoints for approved templates and operational announcements
 
-## 12. CQRS plan
+## 12. Application service plan
 
-| Module | Commands | Queries |
+| Module | Service operations | Read operations |
 |---|---|---|
 | Identity | RegisterUser, ConfirmEmail, Login, RefreshToken, RevokeRefreshToken, RequestPasswordReset, ResetPassword, UpdateProfile | GetCurrentUser, GetUserPermissions |
 | Catalog | Create/Update/Archive/PublishCourse, CreateCourseOffering, ScheduleCourseSession, Create/UpdateProgram, Create/UpdateCareerPath | GetCourses, GetCourseDetails, GetPrograms, GetProgramDetails, GetCareerPaths, GetPublicSearch |
@@ -667,7 +660,7 @@ Publishing should be a separate permission and action from editing.
 | CMS | UpdatePage, UpdateHomepageSection, PublishContent, UploadMedia, ManageFAQ/Partner/Accreditation | GetCmsContent, GetContentPreview |
 | Notifications | CreateAnnouncement, MarkNotificationRead, DispatchNotification | GetNotifications, GetDeliveryStatus |
 
-Validators will handle input shape and boundaries. Handlers will enforce use-case rules. Domain entities will enforce invariants that must remain true regardless of the caller.
+Validators handle input shape and boundaries. Application services enforce use-case rules and coordinate repository operations. Domain models enforce invariants that must remain true regardless of the caller.
 
 ## 13. Payment and enrollment design
 
@@ -900,7 +893,7 @@ Frontend decisions:
 |---|---|---|
 | Clean Architecture projects | Identity and refresh tokens | Azure Key Vault |
 | EF Core and SQL Server | Payment adapter | Azure Blob Storage |
-| MediatR and CQRS | Idempotency records | CDN/Front Door |
+| Application services and repositories | Idempotency records | CDN/Front Door |
 | FluentValidation | Transactional outbox | Full Redis deployment |
 | Swagger/OpenAPI | Hangfire | OpenTelemetry/Application Insights |
 | API versioning | Notifications | Autoscaling |
@@ -1059,4 +1052,4 @@ Planned commit after successful build:
 chore(solution): initialize clean architecture projects
 ```
 
-The next checkpoint is **Stage 1: Solution Setup and Clean Architecture**.
+The active checkpoint is the **database foundation and readable backend architecture refactor**. Identity foundation follows after colleague review.

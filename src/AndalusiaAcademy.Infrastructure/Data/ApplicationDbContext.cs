@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace AndalusiaAcademy.Infrastructure.Persistence;
+namespace AndalusiaAcademy.Infrastructure.Data;
 
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : DbContext(options)

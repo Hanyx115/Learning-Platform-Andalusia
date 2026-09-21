@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace AndalusiaAcademy.Infrastructure.Persistence.Migrations
+namespace AndalusiaAcademy.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
     public partial class InitialDatabaseFoundation : Migration

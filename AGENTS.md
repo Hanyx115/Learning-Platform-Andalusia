@@ -51,7 +51,7 @@ Separate recommendations from official requirements with:
 - Data: Entity Framework Core, SQL Server, Code First migrations.
 - API: REST, Swagger/OpenAPI, versioned `/api/v1/...` routes.
 - Frontend: React 18, TypeScript strict mode, Vite.
-- Architecture: Clean Architecture, practical CQRS, MediatR, modular monolith.
+- Architecture: pragmatic Clean Architecture with controllers, application services, repository abstractions, and Infrastructure implementations in a modular monolith.
 - Validation: FluentValidation.
 - Authentication: ASP.NET Core Identity, JWT access tokens, rotating refresh tokens.
 - Frontend server state: TanStack Query.
@@ -89,18 +89,30 @@ Logical modules:
 
 Keep one deployable application and one SQL Server database in Phase 1.
 
+Use these readable folder conventions as features are added:
+
+- Domain models: `AndalusiaAcademy.Domain/Models`.
+- DTOs and business services: `AndalusiaAcademy.Application/DTOs` and `AndalusiaAcademy.Application/Services`.
+- Repository abstractions: `AndalusiaAcademy.Application/Repositories`.
+- EF Core data access and migrations: `AndalusiaAcademy.Infrastructure/Data`.
+- Repository implementations: `AndalusiaAcademy.Infrastructure/Repositories`.
+- HTTP endpoints: `AndalusiaAcademy.API/Controllers`.
+
+Do not create empty placeholder folders. Add each folder when its first real type is implemented.
+
 ## Normal request flow
 
 Use this normal flow:
 
-React -> Controller -> MediatR -> Command/Query -> Handler -> Application abstraction -> Infrastructure/EF Core -> SQL Server.
+React -> Controller -> Application service -> Repository abstraction -> Infrastructure repository -> EF Core -> SQL Server.
 
 - Keep controllers thin.
-- Put application use-case logic in focused handlers.
+- Put use-case and business orchestration logic in focused application services.
 - Put domain invariants in Domain.
+- Put repository interfaces in Application and their EF Core implementations in Infrastructure.
 - Put provider and persistence details in Infrastructure.
-- Do not automatically add Controller -> Handler -> Service -> Manager -> Repository -> DbContext.
-- Add a service or repository only when it has a clear responsibility.
+- Do not add MediatR, command/query handlers, managers, or another application pipeline unless a concrete feature requires it and the user approves it.
+- Use ASP.NET Core Identity's managers and stores directly instead of wrapping them in redundant repositories.
 - Never expose EF Core entities directly from API endpoints.
 
 ## Scope controls
@@ -246,6 +258,7 @@ Normal flow:
 Use Conventional Commits, for example:
 
 - `chore(solution): initialize clean architecture projects`
+- `refactor(backend): adopt readable layered structure`
 - `feat(auth): add JWT authentication`
 - `feat(courses): implement paginated course catalog`
 - `fix(payments): prevent duplicate webhook processing`
@@ -268,12 +281,10 @@ Also provide a concise colleague handoff covering implementation, important file
 ## Current project state
 
 - Stage 0 requirements and architecture analysis is complete in `README.md`.
-- No business implementation should be assumed to exist until the repository is inspected.
-- The next approved checkpoint is Stage 1: solution setup and Clean Architecture foundation.
-- Recommended branch: `chore/solution-foundation`.
-- Planned commit: `chore(solution): initialize clean architecture projects`.
-
-For Stage 1, create only the solution/projects, project references, React/Vite project location, baseline ignores/configuration, test projects, and successful builds. Do not add business entities, migrations, Identity, Redis, Hangfire, payments, or business features during this checkpoint.
+- The solution, API foundation, frontend foundation, Docker development support, EF Core context, and initial database migration exist.
+- The current backend architecture uses readable project and folder boundaries with Controller -> Service -> Repository -> EF Core flow.
+- The database-foundation branch is intentionally awaiting colleague review and must not be merged into `develop` without the user's instruction.
+- The next business checkpoint after the architecture refactor is Identity foundation.
 
 ## Session-start response
 

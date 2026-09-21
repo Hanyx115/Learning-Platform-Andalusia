@@ -1,4 +1,4 @@
-using AndalusiaAcademy.Infrastructure.Persistence;
+using AndalusiaAcademy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
