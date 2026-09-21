@@ -1,6 +1,7 @@
 using AndalusiaAcademy.API.HealthChecks;
 using AndalusiaAcademy.API.Middleware;
 using AndalusiaAcademy.Application;
+using AndalusiaAcademy.Infrastructure;
 using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddCheck<SelfHealthCheck>("self");
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
