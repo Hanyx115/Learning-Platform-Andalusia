@@ -1,5 +1,96 @@
 # Andalusia Academy Phase 1 MVB
 
+## Development setup and running
+
+### Prerequisites
+
+- .NET 10 SDK
+- Git
+- A trusted ASP.NET Core HTTPS development certificate
+- Docker Desktop only when using the Docker Compose setup
+
+Trust the local HTTPS certificate once:
+
+```powershell
+dotnet dev-certs https --trust
+```
+
+### Run directly with .NET
+
+From the repository root, restore and build the solution:
+
+```powershell
+dotnet restore AndalusiaAcademy.sln
+dotnet build AndalusiaAcademy.sln --configuration Release --no-restore
+```
+
+Run the API with HTTPS:
+
+```powershell
+dotnet run --project src\AndalusiaAcademy.API --launch-profile https
+```
+
+The HTTPS launch profile uses:
+
+- Swagger UI: `https://localhost:7115/swagger`
+- OpenAPI document: `https://localhost:7115/openapi/v1.json`
+- Health check: `https://localhost:7115/health`
+- Versioned ping endpoint: `https://localhost:7115/api/v1/ping`
+- HTTP fallback: `http://localhost:5032`
+
+The `http` launch profile can be used without HTTPS:
+
+```powershell
+dotnet run --project src\AndalusiaAcademy.API --launch-profile http
+```
+
+Its Swagger UI is available at `http://localhost:5032/swagger`.
+
+Stop the API with `Ctrl+C`. Do not run the Visual Studio and PowerShell profiles at the same time because they use the same ports.
+
+### Run from Visual Studio
+
+1. Open `AndalusiaAcademy.sln`.
+2. Set `AndalusiaAcademy.API` as the startup project.
+3. Select the `https` profile.
+4. Press `F5` or `Ctrl+F5`.
+
+Visual Studio opens Swagger UI automatically.
+
+### Run with Docker Compose
+
+Create the ignored local environment file from the supplied example:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+The example uses `Aa11!Andalusia` for local SQL Server development. Replace it with your own strong local password when needed. Never commit `.env`.
+
+Start the API and SQL Server:
+
+```powershell
+docker compose up --build
+```
+
+Docker URLs use port `8080` by default:
+
+- Swagger UI: `http://localhost:8080/swagger`
+- Health check: `http://localhost:8080/health`
+- Versioned ping endpoint: `http://localhost:8080/api/v1/ping`
+
+To use different host ports, change `API_HTTP_PORT` and `SQLSERVER_PORT` in `.env`. Stop the stack with:
+
+```powershell
+docker compose down
+```
+
+### Run automated tests
+
+```powershell
+dotnet test AndalusiaAcademy.sln --configuration Release
+```
+
 ## Stage 0 — Requirements and Architecture Analysis
 
 This document consolidates the Stage 0 architecture analysis for the Andalusia Academy Phase 1 MVB based on:
