@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router-dom'
-import LanguageSwitcher from '../components/LanguageSwitcher'
+import Footer from '../components/Footer'
+import Header from '../components/Header'
 import { persistLanguage, resolveLanguage } from '../i18n'
 
 function RootLayout() {
@@ -18,11 +19,11 @@ function RootLayout() {
 
   return (
     <div className="app-shell">
-      <header className="foundation-header">
-        <strong>{t('app.name')}</strong>
-        <LanguageSwitcher />
-      </header>
-      <Outlet />
+      <Header />
+      <main className="container">
+        <Outlet />
+      </main>
+      <Footer />
     </div>
   )
 }

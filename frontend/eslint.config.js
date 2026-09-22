@@ -20,4 +20,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['**/*.test.{ts,tsx}', 'src/setupTests.ts'],
+    languageOptions: {
+      globals: globals.vitest,
+    },
+  },
 ])
