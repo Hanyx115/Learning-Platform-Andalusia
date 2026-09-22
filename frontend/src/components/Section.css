@@ -1,0 +1,50 @@
+.home-section {
+  padding-block: 3rem;
+}
+
+.home-section:nth-of-type(even) {
+  background: var(--color-surface);
+}
+
+.home-section__header {
+  max-width: 40rem;
+  margin-block-end: 2rem;
+}
+
+.home-section__eyebrow {
+  color: var(--color-brand);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem;
+}
+
+.home-section__title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--color-primary-dark);
+  margin: 0 0 0.5rem;
+}
+
+.home-section__description {
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.section-link {
+  display: inline-block;
+  margin-block-start: 1.75rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.section-link:hover {
+  color: var(--color-brand);
+}
+
+@media (min-width: 64rem) {
+  .home-section {
+    padding-block: 4rem;
+  }
+}

@@ -4,6 +4,7 @@ import {
   resolveLanguage,
   type SupportedLanguage,
 } from '../i18n'
+import './LanguageSwitcher.css'
 
 function LanguageSwitcher() {
   const { i18n, t } = useTranslation()

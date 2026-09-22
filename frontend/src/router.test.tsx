@@ -6,7 +6,9 @@ import { router } from './router'
 describe('router', () => {
   it('renders the home page by default, navigates to a real route, and falls back to the 404 page', async () => {
     render(<RouterProvider router={router} />)
-    expect(screen.getByRole('heading', { name: 'Andalusia Academy Platform' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Explore, apply, and learn, all in one place' }),
+    ).toBeInTheDocument()
 
     await act(async () => {
       await router.navigate('/about')

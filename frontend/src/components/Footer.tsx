@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import Container from './Container'
+import './Footer.css'
 import Logo from './Logo'
 import { primaryNavItems } from '../navigation'
 
