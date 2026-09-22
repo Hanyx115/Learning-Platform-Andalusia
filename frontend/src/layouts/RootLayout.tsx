@@ -20,7 +20,7 @@ function RootLayout() {
   return (
     <div className="app-shell">
       <Header />
-      <main className="container">
+      <main>
         <Outlet />
       </main>
       <Footer />
