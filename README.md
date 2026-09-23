@@ -2,6 +2,10 @@
 
 ## Development setup and running
 
+For a complete Docker, backend, frontend, migration, and SQL Server walkthrough, see [Local Development Guide](docs/LOCAL_DEVELOPMENT.md).
+
+The API requires a local `DefaultConnection` whenever it uses the database. Follow the guide's Docker Compose or Visual Studio workflow before starting the API; do not commit database passwords.
+
 ### Prerequisites
 
 - .NET 10 SDK
