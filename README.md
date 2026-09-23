@@ -5,6 +5,7 @@
 ### Prerequisites
 
 - .NET 10 SDK
+- Node.js `20.19+` or `22.12+`
 - Git
 - A trusted ASP.NET Core HTTPS development certificate
 - Docker Desktop only when using the Docker Compose setup
@@ -57,6 +58,26 @@ Stop the API with `Ctrl+C`. Do not run the Visual Studio and PowerShell profiles
 
 Visual Studio opens Swagger UI automatically.
 
+### Run the frontend
+
+Open a second PowerShell terminal from the repository root, install the locked dependencies, and start Vite:
+
+```powershell
+Set-Location frontend
+npm ci
+npm run dev
+```
+
+The frontend is available at `http://localhost:5173` and connects to the HTTPS API at `https://localhost:7115` by default.
+
+To connect the frontend to another API URL, create an ignored local configuration file:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Then update `VITE_API_BASE_URL` in `frontend/.env.local`. For example, use `http://localhost:8080` when the API is running through Docker Compose. Restart the Vite development server after changing an environment variable.
+
 ### Run with Docker Compose
 
 Create the ignored local environment file from the supplied example:
@@ -85,10 +106,22 @@ To use different host ports, change `API_HTTP_PORT` and `SQLSERVER_PORT` in `.en
 docker compose down
 ```
 
-### Run automated tests
+### Run automated checks
+
+Run the backend test suite from the repository root:
 
 ```powershell
 dotnet test AndalusiaAcademy.sln --configuration Release
+```
+
+Run the frontend lint, production build, and test suite from the repository root:
+
+```powershell
+Set-Location frontend
+npm ci
+npm run lint
+npm run build
+npm test
 ```
 
 ## Stage 0 — Requirements and Architecture Analysis
