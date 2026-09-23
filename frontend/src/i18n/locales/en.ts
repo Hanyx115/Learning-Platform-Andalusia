@@ -32,8 +32,19 @@ export const enTranslations = {
     returnHome: 'Return to the home page',
   },
   about: {
-    title: 'About Andalusia Academy',
-    description: 'Our story, mission, and approach to bilingual academy education are coming soon.',
+    eyebrow: 'About us',
+    title: 'Learning that supports professional growth',
+    description:
+      'Andalusia Academy brings together practical courses, structured programs, and career-focused learning paths for professionals and lifelong learners.',
+    excellenceTitle: 'Educational excellence',
+    excellenceDescription:
+      'Our learning experience focuses on clear content, practical knowledge, and guidance that helps learners build useful skills.',
+    offeringsTitle: 'What you can explore',
+    offerings: [
+      'Professional courses with clear learning goals.',
+      'Structured programs that connect related courses.',
+      'Career paths that help learners plan their next step.',
+    ],
   },
   courses: {
     title: 'Courses',
@@ -56,8 +67,24 @@ export const enTranslations = {
     description: 'Answers to common questions about applying, paying, and learning will be listed here soon.',
   },
   contact: {
-    title: 'Contact Us',
-    description: 'Ways to reach the Andalusia Academy team will be available here soon.',
+    eyebrow: 'Contact us',
+    title: 'We are here to help',
+    description: 'Contact the Andalusia Academy team for course information, registration support, or further details.',
+    detailsLabel: 'Contact details',
+    phoneLabel: 'Phone',
+    phoneValue: '01202317780',
+    emailLabel: 'Email',
+    emailValue: 'andalusiaacadem@andalusia.com',
+    addressLabel: 'Address',
+    addressValue: '39 Khaleel El-Khayat Basha, Abu an Nawatir, Sidi Gaber, Alexandria Governorate',
+    formTitle: 'Send us a message',
+    formDescription: 'Submitting this form opens your email application so you can send the message directly to our team.',
+    firstNameLabel: 'First name',
+    lastNameLabel: 'Last name',
+    formEmailLabel: 'Email address',
+    mobileLabel: 'Mobile number',
+    messageLabel: 'Message',
+    submit: 'Prepare email',
   },
   home: {
     hero: {
