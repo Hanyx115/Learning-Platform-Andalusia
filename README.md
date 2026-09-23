@@ -795,22 +795,6 @@ src/
 └── utils/
 ```
 
-Frontend decisions:
-
-- TanStack Query owns API/server state.
-- Zustand is reserved for true client-only global UI state.
-- Component-local state remains local.
-- Access tokens remain short-lived.
-- Refresh tokens should use a secure HttpOnly cookie unless the final deployment constraints require another design.
-- Protected routes improve UX, but backend permission policies remain authoritative.
-- A central API client handles refresh, `401`, and `403`.
-- User-facing strings come from localization resources.
-- Root `dir` switches between `rtl` and `ltr`.
-- CSS logical properties are preferred.
-- Public routes use code splitting and optimized images.
-- WCAG 2.1 AA is the accessibility target.
-- If SPA SEO becomes inadequate, it will be raised as an architecture decision; the project will not silently switch to Next.js.
-
 ## 16. Security plan
 
 - ASP.NET Core Identity for account and password management.
@@ -938,34 +922,6 @@ Frontend decisions:
 
 ## 19. Two-developer work plan
 
-### Initial safe split
-
-**Developer A**
-
-- Backend solution foundation
-- EF Core foundation
-- Identity and authentication
-- Roles and permissions
-
-**Developer B**
-
-- React/Vite foundation
-- Localization and RTL shell
-- Public layout and navigation
-- Typed API client based on agreed contracts
-
-After authentication is stable:
-
-**Developer A**
-
-- Catalog backend and public APIs
-
-**Developer B**
-
-- Catalog frontend connected to the stable API
-
-Later, modules can be divided more independently, but migration ownership should be coordinated.
-
 ### High-conflict areas
 
 - `Program.cs`
@@ -1060,29 +1016,3 @@ No Git checkpoint is required now because this step changed no project files.
 35. CI/CD and deployment
 
 Some frontend foundation work can run in parallel after the backend contracts and repository structure are agreed.
-
-## 22. First development task
-
-The first implementation task should establish only the solution foundation:
-
-- Create the solution and four backend projects.
-- Configure project references.
-- Create the React 18 + TypeScript + Vite project location, without building features.
-- Add baseline `.gitignore`.
-- Add initial test projects.
-- Confirm everything builds.
-- Do not add entities, migrations, Identity, Redis, Hangfire, payments, or business modules yet.
-
-Recommended branch:
-
-```text
-chore/solution-foundation
-```
-
-Planned commit after successful build:
-
-```text
-chore(solution): initialize clean architecture projects
-```
-
-The active checkpoint is the **database foundation and readable backend architecture refactor**. Identity foundation follows after colleague review.
