@@ -345,12 +345,12 @@ erDiagram
     APPLICATION_USER ||--o{ APPLICATION : submits
     COURSE_OFFERING o|--o{ APPLICATION : targets
     PROGRAM_OFFERING o|--o{ APPLICATION : targets
-    APPLICATION ||--o{ APPLICATION_STATUS_HISTORY : records
+    APPLICATION ||--|{ APPLICATION_STATUS_HISTORY : records
     APPLICATION_USER ||--o{ APPLICATION_STATUS_HISTORY : changes
     APPLICATION ||--o| PAYMENT : requires
     APPLICATION_USER ||--o{ PAYMENT : owns
     PAYMENT ||--o{ PAYMENT_ATTEMPT : attempts
-    PAYMENT ||--o{ PAYMENT_STATUS_HISTORY : records
+    PAYMENT ||--|{ PAYMENT_STATUS_HISTORY : records
     PAYMENT_ATTEMPT o|--o{ PAYMENT_STATUS_HISTORY : causes
     APPLICATION ||--o| ENROLLMENT : produces
     APPLICATION_USER ||--o{ ENROLLMENT : receives
@@ -362,6 +362,8 @@ Required database checks:
 
 - An `Application` targets exactly one of `CourseOffering` or `ProgramOffering`.
 - An `Enrollment` targets exactly one of `CourseOffering` or `ProgramOffering`.
+- Every `Application` is created with its initial `ApplicationStatusHistory` record in the same transaction. The initial record has no previous status.
+- Every `Payment` is created with its initial `PaymentStatusHistory` record in the same transaction. The initial record does not require a `PaymentAttempt`.
 - Provider event IDs, provider references, and protected-write idempotency keys are unique within their defined scope.
 - Enrollment history is never physically deleted.
 
@@ -655,7 +657,7 @@ erDiagram
 ## Relationship summary
 
 - One-to-one: user to learner profile, user to instructor profile, enrollment to course-progress summary.
-- One-to-many: course to offerings, offering to sessions, application to status history, payment to attempts, notification to delivery attempts.
+- One-to-many: course to offerings, offering to sessions, application to one-or-more status-history records, payment to one-or-more status-history records, payment to attempts, and notification to delivery attempts.
 - Many-to-many through explicit join entities: users to roles, roles to permissions, programs to courses, career paths to programs/courses, courses to instructors, submissions to media assets.
 - Exclusive alternative targets: application, enrollment, and compensation target rules require SQL check constraints rather than polymorphic foreign keys.
 

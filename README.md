@@ -499,10 +499,10 @@ erDiagram
 ```mermaid
 erDiagram
     APPLICATION_USER ||--o{ APPLICATION : submits
-    APPLICATION ||--o{ APPLICATION_STATUS_HISTORY : records
+    APPLICATION ||--|{ APPLICATION_STATUS_HISTORY : records
     APPLICATION ||--o| PAYMENT : requires
     PAYMENT ||--o{ PAYMENT_ATTEMPT : attempts
-    PAYMENT ||--o{ PAYMENT_STATUS_HISTORY : records
+    PAYMENT ||--|{ PAYMENT_STATUS_HISTORY : records
     APPLICATION ||--o| ENROLLMENT : produces
     APPLICATION_USER ||--o{ ENROLLMENT : owns
     COURSE_OFFERING ||--o{ COURSE_SESSION : contains
