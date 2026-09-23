@@ -22,7 +22,7 @@ export const enTranslations = {
   },
   footer: {
     navLabel: 'Footer navigation',
-    tagline: 'A bilingual academy platform for exploring, applying, and learning.',
+    tagline: 'Courses, programs, and learning paths that support your professional growth.',
     emailLabel: 'hello@andalusia.academy',
     copyright: '© {{year}} Andalusia Academy. All rights reserved.',
   },
@@ -88,10 +88,10 @@ export const enTranslations = {
   },
   home: {
     hero: {
-      eyebrow: 'Bilingual academy platform',
-      title: 'Explore, apply, and learn, all in one place',
+      eyebrow: 'Andalusia Academy',
+      title: 'Develop your skills and learn something new',
       description:
-        'Andalusia Academy connects you to courses, programs, and career paths designed for real progress, in Arabic and English.',
+        'Explore practical courses, programs, and career paths designed to support your professional growth.',
       primaryCta: 'Explore Courses',
       secondaryCta: 'Explore Career Paths',
     },
@@ -152,9 +152,9 @@ export const enTranslations = {
       eyebrow: 'For Business',
       title: 'Training built for your team',
       description:
-        'Andalusia Academy partners with organizations to upskill teams with structured, bilingual learning.',
+        'Andalusia Academy partners with organizations to develop teams through focused, practical training.',
       highlights: [
-        'Bilingual course delivery for diverse teams',
+        'Practical training programs shaped around team needs',
         'Structured learning paths aligned with business goals',
         'Dedicated support for corporate partners',
       ],
@@ -172,7 +172,7 @@ export const enTranslations = {
       description: 'Feedback shared by learners as they progress through their courses.',
       items: [
         {
-          quote: 'The bilingual format made it easy to follow along and finally finish a course I could apply at work.',
+          quote: 'The clear course structure made it easy to follow along and apply what I learned at work.',
           name: 'Sara',
           role: 'Business English Communication',
         },
