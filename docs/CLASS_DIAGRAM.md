@@ -247,11 +247,11 @@ classDiagram
         +string Currency
     }
 
-    Application "1" *-- "0..*" ApplicationStatusHistory
+    Application "1" *-- "1..*" ApplicationStatusHistory
     Application "1" --> "0..1" Payment
     Application "1" --> "0..1" Enrollment
     Payment "1" *-- "0..*" PaymentAttempt
-    Payment "1" *-- "0..*" PaymentStatusHistory
+    Payment "1" *-- "1..*" PaymentStatusHistory
     Payment --> Money
     PaymentWebhookReceipt ..> Payment : verified update
     IdempotencyRecord ..> Payment : protects
@@ -261,6 +261,7 @@ classDiagram
 Core invariants:
 
 - `Application` and `Enrollment` each reference exactly one offering type.
+- `Application` and `Payment` are created with their initial status-history records in the same transaction.
 - Browser input never marks a payment as paid.
 - Payment initiation and webhook processing are retry-safe.
 - Verified payment, enrollment creation, and the corresponding outbox event share a transaction where possible.
