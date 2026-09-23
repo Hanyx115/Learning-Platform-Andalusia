@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import RootLayout from './layouts/RootLayout'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
 import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import PlaceholderPage from './pages/PlaceholderPage'
@@ -15,7 +17,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'about',
-        element: <PlaceholderPage titleKey="about.title" descriptionKey="about.description" />,
+        element: <AboutPage />,
       },
       {
         path: 'courses',
@@ -39,7 +41,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'contact',
-        element: <PlaceholderPage titleKey="contact.title" descriptionKey="contact.description" />,
+        element: <ContactPage />,
       },
       {
         path: '*',

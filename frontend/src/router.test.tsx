@@ -13,7 +13,7 @@ describe('router', () => {
     await act(async () => {
       await router.navigate('/about')
     })
-    expect(screen.getByRole('heading', { name: 'About Andalusia Academy' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Learning that supports professional growth' })).toBeInTheDocument()
 
     await act(async () => {
       await router.navigate('/this-route-does-not-exist')
