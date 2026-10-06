@@ -1,3 +1,5 @@
+using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Infrastructure.Catalog.Repositories;
 using AndalusiaAcademy.Infrastructure.Data;
 using AndalusiaAcademy.Infrastructure.Identity.Models;
 using Microsoft.AspNetCore.Identity;
@@ -55,6 +57,10 @@ public static class DependencyInjection
 
         services.Configure<DataProtectionTokenProviderOptions>(options =>
             options.TokenLifespan = TimeSpan.FromHours(2));
+
+        services.AddScoped<ICourseRepository, CourseRepository>();
+        services.AddScoped<IProgramRepository, ProgramRepository>();
+        services.AddScoped<ICareerPathRepository, CareerPathRepository>();
 
         return services;
     }

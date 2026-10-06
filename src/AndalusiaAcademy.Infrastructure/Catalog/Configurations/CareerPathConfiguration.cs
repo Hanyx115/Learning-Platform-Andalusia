@@ -14,6 +14,13 @@ public sealed class CareerPathConfiguration : IEntityTypeConfiguration<CareerPat
             .HasMaxLength(200)
             .IsRequired();
 
+        builder.Property(careerPath => careerPath.Slug)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.HasIndex(careerPath => careerPath.Slug)
+            .IsUnique();
+
         builder.Property(careerPath => careerPath.Description)
             .HasMaxLength(2000)
             .IsRequired();

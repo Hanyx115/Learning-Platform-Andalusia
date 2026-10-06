@@ -16,6 +16,13 @@ public sealed class AcademyProgramConfiguration : IEntityTypeConfiguration<Acade
             .HasMaxLength(200)
             .IsRequired();
 
+        builder.Property(program => program.Slug)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.HasIndex(program => program.Slug)
+            .IsUnique();
+
         builder.Property(program => program.Description)
             .HasMaxLength(2000)
             .IsRequired();
