@@ -14,6 +14,13 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
             .HasMaxLength(200)
             .IsRequired();
 
+        builder.Property(course => course.Slug)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.HasIndex(course => course.Slug)
+            .IsUnique();
+
         builder.Property(course => course.Description)
             .HasMaxLength(2000)
             .IsRequired();
