@@ -105,7 +105,19 @@ Remove-Item Env:ConnectionStrings__DefaultConnection
 
 The command reads `SQLSERVER_PORT` from `.env` and defaults to `1433` when it is not set.
 
-## 6. Workflow B: debug the backend from Visual Studio
+## 6. Load the development catalog demo data
+
+The Development API adds any missing catalog demo records automatically after the database migrations are current. The seed includes realistic categories, courses, programs, career paths and their relationships. It is repeatable, preserves existing records and does not run outside Development.
+
+After applying migrations in the Docker workflow, restart the API container:
+
+```powershell
+docker compose restart api
+```
+
+For the Visual Studio workflow, stop and restart the API. To disable automatic demo seeding for a local run, set `CatalogSeed__Enabled=false` in that process environment.
+
+## 7. Workflow B: debug the backend from Visual Studio
 
 Start only SQL Server:
 
@@ -170,7 +182,7 @@ Visual Studio URLs are:
 | `https` | `https://localhost:7115/swagger` |
 | `Container (Dockerfile)` | `https://localhost:7115/swagger` or `http://localhost:5032/swagger` |
 
-## 7. Run the frontend
+## 8. Run the frontend
 
 Open a second PowerShell terminal at the repository root:
 
@@ -201,7 +213,7 @@ http://localhost:5173
 
 If the Docker API port is changed, update `VITE_API_BASE_URL` in `frontend/.env.local`, stop Vite with `Ctrl+C`, and run `npm run dev` again.
 
-## 8. Connect to the database with SSMS
+## 9. Connect to the database with SSMS
 
 Use these connection settings:
 
@@ -224,7 +236,7 @@ Databases
 
 Refresh the `Databases` or `Tables` node if the migrated objects do not appear immediately.
 
-## 9. Daily startup
+## 10. Daily startup
 
 When the containers have already been built and the database has already been migrated:
 
@@ -252,7 +264,7 @@ docker compose stop api
 docker compose up -d sqlserver
 ```
 
-## 10. Logs and troubleshooting
+## 11. Logs and troubleshooting
 
 Show container status:
 
@@ -281,7 +293,7 @@ docker compose up --build -d
 
 Remember to update the frontend API URL, migration connection string, and SSMS server port when the corresponding Docker port changes.
 
-If Visual Studio reports that `DefaultConnection` is required, the selected launch profile cannot see a database user secret. Repeat the matching command in section 6, stop debugging completely, and start the profile again.
+If Visual Studio reports that `DefaultConnection` is required, the selected launch profile cannot see a database user secret. Repeat the matching command in section 7, stop debugging completely, and start the profile again.
 
 If `localhost,1433` refuses the SQL connection:
 
@@ -292,7 +304,7 @@ Test-NetConnection localhost -Port 1433
 
 Confirm that the SQL Server service is healthy and that the tested port matches `SQLSERVER_PORT` in `.env`.
 
-## 11. Stop the project
+## 12. Stop the project
 
 Stop Vite with `Ctrl+C`, then stop and remove the Docker containers and network:
 
@@ -310,7 +322,7 @@ docker compose down -v
 
 This last command permanently deletes the local Docker database volume. Start the containers and apply migrations again after a reset.
 
-## 12. Verify the setup
+## 13. Verify the setup
 
 For the Docker Compose workflow, the setup is ready when:
 
@@ -320,4 +332,4 @@ For the Docker Compose workflow, the setup is ready when:
 4. The frontend opens at `http://localhost:5173`.
 5. SSMS shows the `AndalusiaAcademy` database and its migrated tables.
 
-For the Visual Studio workflow, `docker compose ps` only needs to show SQL Server as healthy. Verify the API through the URL for the selected profile in section 6.
+For the Visual Studio workflow, `docker compose ps` only needs to show SQL Server as healthy. Verify the API through the URL for the selected profile in section 7.

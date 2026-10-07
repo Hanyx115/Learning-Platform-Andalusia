@@ -2,7 +2,10 @@ using AndalusiaAcademy.API.HealthChecks;
 using AndalusiaAcademy.API.Middleware;
 using AndalusiaAcademy.Application;
 using AndalusiaAcademy.Infrastructure;
+using AndalusiaAcademy.Infrastructure.Catalog.Seeding;
+using AndalusiaAcademy.Infrastructure.Data;
 using Asp.Versioning;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +42,39 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    if (app.Configuration.GetValue<bool>("CatalogSeed:Enabled"))
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        if (!dbContext.Database.IsRelational())
+        {
+            app.Logger.LogInformation("Catalog demo data seeding skipped for a non-relational database provider.");
+        }
+        else if (!await dbContext.Database.CanConnectAsync())
+        {
+            app.Logger.LogWarning(
+                "Catalog demo data seeding skipped because the database is unavailable. Apply migrations and restart the API.");
+        }
+        else
+        {
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+
+            if (pendingMigrations.Any())
+            {
+                app.Logger.LogWarning(
+                    "Catalog demo data seeding skipped because database migrations are pending. Apply migrations and restart the API.");
+            }
+            else
+            {
+                var addedRows = await CatalogDataSeeder.SeedAsync(dbContext);
+                app.Logger.LogInformation(
+                    "Catalog demo data seeding completed. Added {AddedRows} missing rows.",
+                    addedRows);
+            }
+        }
+    }
+
     app.MapOpenApi().WithDocumentPerVersion();
     app.UseSwaggerUI(options =>
     {
