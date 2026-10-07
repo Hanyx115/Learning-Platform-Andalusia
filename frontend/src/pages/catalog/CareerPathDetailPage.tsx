@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { useCareerPath } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
+import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, QueryState } from './CatalogUi'
 import './catalog.css'
@@ -36,6 +37,11 @@ function CareerPathDetailPage() {
       <section className="catalog-page">
         <Container>
           <article className="catalog-detail catalog-detail--sections">
+            <CatalogPhoto
+              slug={query.data.slug}
+              className="catalog-detail__image"
+              alt={query.data.title}
+            />
             <section>
               <h2>{t('careerPaths.recommendedSkills')}</h2>
               {skills.length > 0 ? (

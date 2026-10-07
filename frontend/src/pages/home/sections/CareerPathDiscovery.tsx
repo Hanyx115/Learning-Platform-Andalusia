@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useCareerPaths } from '../../../api/catalogQueries'
 import Card from '../../../components/Card'
+import CatalogPhoto from '../../../components/CatalogPhoto'
 import Section from '../../../components/Section'
 
 function CareerPathDiscovery() {
@@ -22,6 +23,7 @@ function CareerPathDiscovery() {
         <div className="card-grid">
           {items.map((item) => (
             <Card key={item.id}>
+              <CatalogPhoto slug={item.slug} className="home-card-photo" />
               <h3 dir="auto"><Link to={`/career-paths/${item.slug}`}>{item.title}</Link></h3>
               <p dir="auto">{item.description}</p>
             </Card>

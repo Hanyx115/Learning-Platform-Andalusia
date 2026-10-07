@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { usePrograms } from '../../api/catalogQueries'
 import Card from '../../components/Card'
+import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, CatalogMeta, QueryState } from './CatalogUi'
 import './catalog.css'
@@ -23,6 +24,7 @@ function ProgramsPage() {
             <div className="catalog-grid">
               {programs.map((program) => (
                 <Card key={program.id} as="article" className="catalog-card">
+                  <CatalogPhoto slug={program.slug} className="catalog-card__image" />
                   <CatalogMeta>{t('programs.programLabel')}</CatalogMeta>
                   <h2 dir="auto"><Link to={`/programs/${program.slug}`}>{program.title}</Link></h2>
                   <p dir="auto">{program.description}</p>

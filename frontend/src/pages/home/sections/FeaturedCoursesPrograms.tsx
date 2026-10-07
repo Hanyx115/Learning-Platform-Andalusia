@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useCourses, usePrograms } from '../../../api/catalogQueries'
 import Card from '../../../components/Card'
+import CatalogPhoto from '../../../components/CatalogPhoto'
 import Section from '../../../components/Section'
 
 function FeaturedCoursesPrograms() {
@@ -26,6 +27,11 @@ function FeaturedCoursesPrograms() {
         <div className="card-grid">
           {courses.map((course) => (
             <Card key={course.id}>
+              <CatalogPhoto
+                categoryName={course.categoryName}
+                slug={course.slug}
+                className="home-card-photo"
+              />
               <span className="badge">{t('home.featured.courseLabel')}</span>
               <h3 dir="auto"><Link to={`/courses/${course.slug}`}>{course.title}</Link></h3>
               <p dir="auto">{course.categoryName} · {course.type}</p>
@@ -33,6 +39,7 @@ function FeaturedCoursesPrograms() {
           ))}
           {programs.map((program) => (
             <Card key={program.id}>
+              <CatalogPhoto slug={program.slug} className="home-card-photo" />
               <span className="badge">{t('home.featured.programLabel')}</span>
               <h3 dir="auto"><Link to={`/programs/${program.slug}`}>{program.title}</Link></h3>
               <p dir="auto">{program.description}</p>

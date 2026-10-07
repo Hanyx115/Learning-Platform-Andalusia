@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { useCourse } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
+import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, CatalogMeta, QueryState } from './CatalogUi'
 import './catalog.css'
@@ -34,6 +35,12 @@ function CourseDetailPage() {
       <section className="catalog-page">
         <Container>
           <article className="catalog-detail">
+            <CatalogPhoto
+              categoryName={query.data.categoryName}
+              slug={query.data.slug}
+              className="catalog-detail__image"
+              alt={query.data.title}
+            />
             <div className="catalog-card__meta">
               <CatalogMeta>{query.data.categoryName}</CatalogMeta>
               <CatalogMeta>{query.data.type}</CatalogMeta>

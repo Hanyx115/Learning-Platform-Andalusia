@@ -26,6 +26,24 @@
 
 .category-card {
   text-align: center;
+  overflow: hidden;
+}
+
+.featured .card,
+.career-paths .card {
+  overflow: hidden;
+}
+
+.home-card-photo {
+  display: block;
+  width: calc(100% + 3rem);
+  height: 11rem;
+  margin: -1.5rem -1.5rem 1.25rem;
+  object-fit: cover;
+}
+
+.home-card-photo--category {
+  height: 8rem;
 }
 
 .icon-circle {

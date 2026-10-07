@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCourses } from '../../api/catalogQueries'
 import Card from '../../components/Card'
+import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, CatalogMeta, QueryState } from './CatalogUi'
 import './catalog.css'
@@ -121,6 +122,11 @@ function CoursesPage() {
               <div className="catalog-grid">
                 {coursesQuery.data.items.map((course) => (
                   <Card key={course.id} as="article" className="catalog-card">
+                    <CatalogPhoto
+                      categoryName={course.categoryName}
+                      slug={course.slug}
+                      className="catalog-card__image"
+                    />
                     <div className="catalog-card__meta">
                       <CatalogMeta>{course.categoryName}</CatalogMeta>
                       <CatalogMeta>{course.type}</CatalogMeta>

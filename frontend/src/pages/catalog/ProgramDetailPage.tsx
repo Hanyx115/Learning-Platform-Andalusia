@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { useProgram } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
+import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, QueryState } from './CatalogUi'
 import './catalog.css'
@@ -34,6 +35,11 @@ function ProgramDetailPage() {
       <section className="catalog-page">
         <Container>
           <article className="catalog-detail">
+            <CatalogPhoto
+              slug={query.data.slug}
+              className="catalog-detail__image"
+              alt={query.data.title}
+            />
             <h2>{t('programs.includedCourses')}</h2>
             {query.data.courses.length > 0 ? (
               <ol className="catalog-related-list">

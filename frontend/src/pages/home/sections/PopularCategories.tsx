@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useCourses } from '../../../api/catalogQueries'
 import Card from '../../../components/Card'
+import CatalogPhoto from '../../../components/CatalogPhoto'
 import Section from '../../../components/Section'
 
 function PopularCategories() {
@@ -29,6 +30,7 @@ function PopularCategories() {
         <div className="card-grid card-grid--compact">
           {items.map(([name, count]) => (
             <Card key={name} className="category-card">
+              <CatalogPhoto categoryName={name} className="home-card-photo home-card-photo--category" />
               <span className="icon-circle" aria-hidden="true">
                 {name.charAt(0)}
               </span>
