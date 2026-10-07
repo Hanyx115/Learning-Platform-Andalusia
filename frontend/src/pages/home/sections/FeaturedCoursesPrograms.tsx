@@ -1,17 +1,17 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useCourses, usePrograms } from '../../../api/catalogQueries'
 import Card from '../../../components/Card'
 import Section from '../../../components/Section'
 
-interface FeaturedItem {
-  kind: string
-  title: string
-  meta: string
-}
-
 function FeaturedCoursesPrograms() {
   const { t } = useTranslation()
-  const items = t('home.featured.items', { returnObjects: true }) as FeaturedItem[]
+  const coursesQuery = useCourses({ page: 1, pageSize: 2, status: 'Published', sort: 'newest' })
+  const programsQuery = usePrograms()
+  const courses = coursesQuery.data?.items ?? []
+  const programs = programsQuery.data?.filter((program) => program.status === 'Published').slice(0, 2) ?? []
+  const isPending = coursesQuery.isPending || programsQuery.isPending
+  const isError = coursesQuery.isError || programsQuery.isError
 
   return (
     <Section
@@ -20,15 +20,26 @@ function FeaturedCoursesPrograms() {
       titleKey="home.featured.title"
       descriptionKey="home.featured.description"
     >
-      <div className="card-grid">
-        {items.map((item) => (
-          <Card key={item.title}>
-            <span className="badge">{item.kind}</span>
-            <h3>{item.title}</h3>
-            <p>{item.meta}</p>
-          </Card>
-        ))}
-      </div>
+      {isPending ? <p className="home-query-state">{t('common.loading')}</p> : null}
+      {isError ? <p className="home-query-state" role="alert">{t('common.error')}</p> : null}
+      {!isPending && !isError ? (
+        <div className="card-grid">
+          {courses.map((course) => (
+            <Card key={course.id}>
+              <span className="badge">{t('home.featured.courseLabel')}</span>
+              <h3 dir="auto"><Link to={`/courses/${course.slug}`}>{course.title}</Link></h3>
+              <p dir="auto">{course.categoryName} · {course.type}</p>
+            </Card>
+          ))}
+          {programs.map((program) => (
+            <Card key={program.id}>
+              <span className="badge">{t('home.featured.programLabel')}</span>
+              <h3 dir="auto"><Link to={`/programs/${program.slug}`}>{program.title}</Link></h3>
+              <p dir="auto">{program.description}</p>
+            </Card>
+          ))}
+        </div>
+      ) : null}
       <Link to="/courses" className="section-link">
         {t('home.featured.viewAll')}
       </Link>
