@@ -1,0 +1,39 @@
+import careerDevelopmentPhoto from '../assets/catalog/career-development.jpg'
+import computerEngineeringPhoto from '../assets/catalog/computer-engineering.jpg'
+import healthcareTrainingPhoto from '../assets/catalog/healthcare-training.jpg'
+
+interface CatalogPhotoProps {
+  alt?: string
+  categoryName?: string
+  className?: string
+  slug?: string
+}
+
+function getCatalogPhoto(categoryName = '', slug = '') {
+  const catalogContext = `${categoryName} ${slug}`.toLowerCase()
+
+  if (/software|computer|network|embedded|cyber|programming/.test(catalogContext)) {
+    return computerEngineeringPhoto
+  }
+
+  if (/leadership|leader|quality|career/.test(catalogContext)) {
+    return careerDevelopmentPhoto
+  }
+
+  return healthcareTrainingPhoto
+}
+
+function CatalogPhoto({ alt = '', categoryName, className, slug }: CatalogPhotoProps) {
+  return (
+    <img
+      className={className}
+      src={getCatalogPhoto(categoryName, slug)}
+      alt={alt}
+      width="1200"
+      height="800"
+      loading="lazy"
+    />
+  )
+}
+
+export default CatalogPhoto

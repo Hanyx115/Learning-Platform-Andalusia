@@ -1,16 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useCareerPaths } from '../../../api/catalogQueries'
 import Card from '../../../components/Card'
+import CatalogPhoto from '../../../components/CatalogPhoto'
 import Section from '../../../components/Section'
-
-interface CareerPathItem {
-  title: string
-  description: string
-}
 
 function CareerPathDiscovery() {
   const { t } = useTranslation()
-  const items = t('home.careerPaths.items', { returnObjects: true }) as CareerPathItem[]
+  const query = useCareerPaths()
+  const items = query.data?.filter((item) => item.status === 'Published').slice(0, 3) ?? []
 
   return (
     <Section
@@ -19,14 +17,19 @@ function CareerPathDiscovery() {
       titleKey="home.careerPaths.title"
       descriptionKey="home.careerPaths.description"
     >
-      <div className="card-grid">
-        {items.map((item) => (
-          <Card key={item.title}>
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
-          </Card>
-        ))}
-      </div>
+      {query.isPending ? <p className="home-query-state">{t('common.loading')}</p> : null}
+      {query.isError ? <p className="home-query-state" role="alert">{t('common.error')}</p> : null}
+      {query.isSuccess ? (
+        <div className="card-grid">
+          {items.map((item) => (
+            <Card key={item.id}>
+              <CatalogPhoto slug={item.slug} className="home-card-photo" />
+              <h3 dir="auto"><Link to={`/career-paths/${item.slug}`}>{item.title}</Link></h3>
+              <p dir="auto">{item.description}</p>
+            </Card>
+          ))}
+        </div>
+      ) : null}
       <Link to="/career-paths" className="section-link">
         {t('home.careerPaths.viewAll')}
       </Link>

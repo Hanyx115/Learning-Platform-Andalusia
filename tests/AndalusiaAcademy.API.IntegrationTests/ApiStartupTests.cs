@@ -38,4 +38,17 @@ public sealed class ApiStartupTests(ApiWebApplicationFactory factory)
         var documentUrls = await documentUrlsResponse.Content.ReadAsStringAsync();
         Assert.Contains("/openapi/v1.json", documentUrls);
     }
+
+    [Fact]
+    public async Task CorsPreflight_AllowsConfiguredFrontendOrigin()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/courses");
+        request.Headers.Add("Origin", "http://localhost:5173");
+        request.Headers.Add("Access-Control-Request-Method", "GET");
+
+        using var response = await _client.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+        Assert.Contains("http://localhost:5173", response.Headers.GetValues("Access-Control-Allow-Origin"));
+    }
 }

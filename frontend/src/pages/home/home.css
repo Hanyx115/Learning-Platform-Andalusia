@@ -26,6 +26,24 @@
 
 .category-card {
   text-align: center;
+  overflow: hidden;
+}
+
+.featured .card,
+.career-paths .card {
+  overflow: hidden;
+}
+
+.home-card-photo {
+  display: block;
+  width: calc(100% + 3rem);
+  height: 11rem;
+  margin: -1.5rem -1.5rem 1.25rem;
+  object-fit: cover;
+}
+
+.home-card-photo--category {
+  height: 8rem;
 }
 
 .icon-circle {
@@ -52,6 +70,23 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   margin-block-end: 0.65rem;
+}
+
+.card h3 a {
+  text-decoration: none;
+}
+
+.card h3 a:hover,
+.card h3 a:focus-visible {
+  color: var(--color-brand-hover);
+}
+
+.home-query-state {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
 }
 
 .testimonial-card__quote {

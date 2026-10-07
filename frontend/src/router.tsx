@@ -5,6 +5,12 @@ import ContactPage from './pages/ContactPage'
 import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import CareerPathDetailPage from './pages/catalog/CareerPathDetailPage'
+import CareerPathsPage from './pages/catalog/CareerPathsPage'
+import CourseDetailPage from './pages/catalog/CourseDetailPage'
+import CoursesPage from './pages/catalog/CoursesPage'
+import ProgramDetailPage from './pages/catalog/ProgramDetailPage'
+import ProgramsPage from './pages/catalog/ProgramsPage'
 
 export const router = createBrowserRouter([
   {
@@ -21,15 +27,27 @@ export const router = createBrowserRouter([
       },
       {
         path: 'courses',
-        element: <PlaceholderPage titleKey="courses.title" descriptionKey="courses.description" />,
+        element: <CoursesPage />,
+      },
+      {
+        path: 'courses/:slug',
+        element: <CourseDetailPage />,
       },
       {
         path: 'programs',
-        element: <PlaceholderPage titleKey="programs.title" descriptionKey="programs.description" />,
+        element: <ProgramsPage />,
+      },
+      {
+        path: 'programs/:slug',
+        element: <ProgramDetailPage />,
       },
       {
         path: 'career-paths',
-        element: <PlaceholderPage titleKey="careerPaths.title" descriptionKey="careerPaths.description" />,
+        element: <CareerPathsPage />,
+      },
+      {
+        path: 'career-paths/:slug',
+        element: <CareerPathDetailPage />,
       },
       {
         path: 'for-business',
