@@ -13,6 +13,15 @@ public sealed class CareerPathRepository(ApplicationDbContext dbContext) : ICare
     {
         var careerPathsQuery = dbContext.CareerPaths.AsNoTracking();
 
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim();
+            careerPathsQuery = careerPathsQuery.Where(careerPath =>
+                careerPath.Title.Contains(search) ||
+                careerPath.Description.Contains(search) ||
+                careerPath.RecommendedSkills.Contains(search));
+        }
+
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
             var status = query.Status.Trim();
@@ -27,8 +36,17 @@ public sealed class CareerPathRepository(ApplicationDbContext dbContext) : ICare
             return new PaginatedResult<CareerPathSummaryDto>([], query.Page, query.PageSize, totalCount);
         }
 
-        var careerPaths = await careerPathsQuery
-            .OrderBy(careerPath => careerPath.Title)
+        var orderedCareerPaths = query.Sort.ToLowerInvariant() switch
+        {
+            CatalogListQuery.TitleDescendingSort => careerPathsQuery
+                .OrderByDescending(careerPath => careerPath.Title)
+                .ThenBy(careerPath => careerPath.Id),
+            _ => careerPathsQuery
+                .OrderBy(careerPath => careerPath.Title)
+                .ThenBy(careerPath => careerPath.Id),
+        };
+
+        var careerPaths = await orderedCareerPaths
             .Select(careerPath => new CareerPathSummaryDto
             {
                 Id = careerPath.Id,

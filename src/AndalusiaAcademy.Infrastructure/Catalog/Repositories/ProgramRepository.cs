@@ -13,6 +13,14 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
     {
         var programsQuery = dbContext.Programs.AsNoTracking();
 
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim();
+            programsQuery = programsQuery.Where(program =>
+                program.Title.Contains(search) ||
+                program.Description.Contains(search));
+        }
+
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
             var status = query.Status.Trim();
@@ -27,8 +35,17 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
             return new PaginatedResult<ProgramSummaryDto>([], query.Page, query.PageSize, totalCount);
         }
 
-        var programs = await programsQuery
-            .OrderBy(program => program.Title)
+        var orderedPrograms = query.Sort.ToLowerInvariant() switch
+        {
+            CatalogListQuery.TitleDescendingSort => programsQuery
+                .OrderByDescending(program => program.Title)
+                .ThenBy(program => program.Id),
+            _ => programsQuery
+                .OrderBy(program => program.Title)
+                .ThenBy(program => program.Id),
+        };
+
+        var programs = await orderedPrograms
             .Select(program => new ProgramSummaryDto
             {
                 Id = program.Id,

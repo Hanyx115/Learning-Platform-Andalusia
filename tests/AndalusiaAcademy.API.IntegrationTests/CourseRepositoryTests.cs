@@ -8,6 +8,33 @@ namespace AndalusiaAcademy.API.IntegrationTests;
 
 public sealed class CourseRepositoryTests
 {
+    [Theory]
+    [InlineData("search", "Leadership", "Leadership Essentials")]
+    [InlineData("category", "management", "Leadership Essentials")]
+    [InlineData("status", "Draft", "Emergency Care")]
+    [InlineData("type", "Online", "Leadership Essentials")]
+    public async Task GetPageAsync_AppliesEachFilterIndependently(
+        string filter,
+        string value,
+        string expectedTitle)
+    {
+        await using var context = CreateContext();
+        await SeedCoursesAsync(context);
+        var repository = new CourseRepository(context);
+        var query = filter switch
+        {
+            "search" => new CourseCatalogQuery { Search = value },
+            "category" => new CourseCatalogQuery { Category = value },
+            "status" => new CourseCatalogQuery { Status = value },
+            "type" => new CourseCatalogQuery { Type = value },
+            _ => throw new ArgumentOutOfRangeException(nameof(filter)),
+        };
+
+        var result = await repository.GetPageAsync(query, CancellationToken.None);
+
+        Assert.Equal(expectedTitle, Assert.Single(result.Items).Title);
+    }
+
     [Fact]
     public async Task GetPageAsync_AppliesSearchAndFilters()
     {
@@ -53,6 +80,24 @@ public sealed class CourseRepositoryTests
         Assert.Equal(["Leadership Essentials", "Patient Care Basics"], result.Items.Select(course => course.Title));
         Assert.Equal(4, result.TotalCount);
         Assert.Equal(2, result.TotalPages);
+    }
+
+    [Theory]
+    [InlineData(CourseCatalogQuery.TitleSort, "Advanced Patient Care")]
+    [InlineData(CourseCatalogQuery.TitleDescendingSort, "Patient Care Basics")]
+    [InlineData(CourseCatalogQuery.NewestSort, "Leadership Essentials")]
+    [InlineData(CourseCatalogQuery.OldestSort, "Patient Care Basics")]
+    public async Task GetPageAsync_AppliesEverySupportedSort(string sort, string expectedFirstTitle)
+    {
+        await using var context = CreateContext();
+        await SeedCoursesAsync(context);
+        var repository = new CourseRepository(context);
+
+        var result = await repository.GetPageAsync(
+            new CourseCatalogQuery { Sort = sort },
+            CancellationToken.None);
+
+        Assert.Equal(expectedFirstTitle, result.Items[0].Title);
     }
 
     private static ApplicationDbContext CreateContext()

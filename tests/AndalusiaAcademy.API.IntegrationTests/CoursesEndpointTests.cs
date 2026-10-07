@@ -31,6 +31,7 @@ public sealed class CoursesEndpointTests(CatalogApiWebApplicationFactory factory
         var root = document.RootElement;
 
         Assert.Equal("Advanced Patient Care", root.GetProperty("items")[0].GetProperty("title").GetString());
+        Assert.Equal("clinical-care", root.GetProperty("items")[0].GetProperty("categorySlug").GetString());
         Assert.Equal(1, root.GetProperty("page").GetInt32());
         Assert.Equal(1, root.GetProperty("pageSize").GetInt32());
         Assert.Equal(2, root.GetProperty("totalCount").GetInt32());

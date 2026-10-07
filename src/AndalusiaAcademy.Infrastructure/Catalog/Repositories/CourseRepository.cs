@@ -73,6 +73,7 @@ public sealed class CourseRepository(ApplicationDbContext dbContext) : ICourseRe
                 Description = course.Description,
                 Status = course.Status,
                 Type = course.Type,
+                CategorySlug = course.Category!.Slug,
                 CategoryName = course.Category!.Name,
                 CreatedAt = course.CreatedAt,
             })
@@ -96,6 +97,7 @@ public sealed class CourseRepository(ApplicationDbContext dbContext) : ICourseRe
                 Description = course.Description,
                 Status = course.Status,
                 Type = course.Type,
+                CategorySlug = course.Category!.Slug,
                 CategoryName = course.Category!.Name,
                 CreatedAt = course.CreatedAt,
             })

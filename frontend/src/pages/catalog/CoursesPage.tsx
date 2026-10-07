@@ -41,7 +41,12 @@ function CoursesPage() {
   })
   const optionsQuery = useCourses({ page: 1, pageSize: 100, status: 'Published', sort: 'title' })
 
-  const categories = [...new Set(optionsQuery.data?.items.map((course) => course.categoryName) ?? [])]
+  const categories = [...new Map(
+    optionsQuery.data?.items.map((course) => [
+      course.categorySlug,
+      { slug: course.categorySlug, name: course.categoryName },
+    ]) ?? [],
+  ).values()]
   const types = [...new Set(optionsQuery.data?.items.map((course) => course.type) ?? [])]
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
@@ -78,7 +83,7 @@ function CoursesPage() {
       />
       <section className="catalog-page">
         <Container>
-          <form className="catalog-filters" onSubmit={applyFilters}>
+          <form key={searchParams.toString()} className="catalog-filters" onSubmit={applyFilters}>
             <label>
               {t('courses.searchLabel')}
               <input name="search" type="search" defaultValue={search} placeholder={t('courses.searchPlaceholder')} />
@@ -87,7 +92,7 @@ function CoursesPage() {
               {t('courses.categoryLabel')}
               <select name="category" defaultValue={category}>
                 <option value="">{t('courses.allCategories')}</option>
-                {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+                {categories.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
               </select>
             </label>
             <label>

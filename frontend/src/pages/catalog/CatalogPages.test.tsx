@@ -44,6 +44,7 @@ describe('catalog pages', () => {
         description: 'Learn programming concepts.',
         status: 'Published',
         type: 'Technical',
+        categorySlug: 'computer-engineering',
         categoryName: 'Computer Engineering',
         createdAt: '2026-01-01T00:00:00Z',
       }],
@@ -61,6 +62,52 @@ describe('catalog pages', () => {
       'href',
       '/courses/programming-fundamentals',
     )
+  })
+
+  it('submits every course filter with the category slug and resets the form', async () => {
+    const fetchMock = vi.fn(() => jsonResponse({
+      items: [{
+        id: 'course-1',
+        title: 'Business Communication Essentials',
+        slug: 'business-communication-essentials',
+        description: 'Practical professional communication.',
+        status: 'Published',
+        type: 'Hybrid',
+        categorySlug: 'business-management',
+        categoryName: 'Business and Management',
+        createdAt: '2026-07-01T00:00:00Z',
+      }],
+      page: 1,
+      pageSize: 6,
+      totalCount: 1,
+      totalPages: 1,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderWithCatalogProviders(<CoursesPage />, '/courses')
+
+    await screen.findByRole('heading', { name: 'Business Communication Essentials' })
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category' }), 'business-management')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Course type' }), 'Hybrid')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sort by' }), 'title-desc')
+    await userEvent.type(
+      screen.getByRole('searchbox', { name: 'Search' }),
+      'Business Communication Essential',
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'search=Business+Communication+Essential&category=business-management&type=Hybrid&sort=title-desc',
+      ),
+      expect.any(Object),
+    )
+
+    await userEvent.click(screen.getByRole('link', { name: 'Reset' }))
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Category' })).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Course type' })).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('title')
   })
 
   it('renders the ordered courses included in a program', async () => {
@@ -123,6 +170,40 @@ describe('catalog pages', () => {
     )
   })
 
+  it('applies and resets program search and sorting', async () => {
+    const fetchMock = vi.fn(() => jsonResponse({
+      items: [{
+        id: 'program-1',
+        title: 'Business Management Essentials',
+        slug: 'business-management-essentials',
+        description: 'A structured business program.',
+        status: 'Published',
+        createdAt: '2026-01-01T00:00:00Z',
+      }],
+      page: 1,
+      pageSize: 6,
+      totalCount: 1,
+      totalPages: 1,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderWithCatalogProviders(<ProgramsPage />, '/programs')
+    await screen.findByRole('heading', { name: 'Business Management Essentials' })
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search' }), 'Business')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sort by' }), 'title-desc')
+    await userEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/programs?page=1&pageSize=6&status=Published&search=Business&sort=title-desc'),
+      expect.any(Object),
+    )
+
+    await userEvent.click(screen.getByRole('link', { name: 'Reset' }))
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('title')
+  })
+
   it('renders a career path with its skills, programs, and courses', async () => {
     vi.stubGlobal('fetch', vi.fn(() => jsonResponse({
       id: 'path-1',
@@ -176,5 +257,38 @@ describe('catalog pages', () => {
     expect(await screen.findByRole('heading', { name: 'Project Coordinator' }, { timeout: 5_000 })).toBeInTheDocument()
     expect(screen.getByText('Page 1 of 2')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled()
+  })
+
+  it('applies and resets career-path search and sorting', async () => {
+    const fetchMock = vi.fn(() => jsonResponse({
+      items: [{
+        id: 'path-1',
+        title: 'Project Coordinator',
+        slug: 'project-coordinator',
+        description: 'Coordinate successful projects.',
+        status: 'Published',
+      }],
+      page: 1,
+      pageSize: 6,
+      totalCount: 1,
+      totalPages: 1,
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderWithCatalogProviders(<CareerPathsPage />, '/career-paths')
+    await screen.findByRole('heading', { name: 'Project Coordinator' })
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search' }), 'Project')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sort by' }), 'title-desc')
+    await userEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/career-paths?page=1&pageSize=6&status=Published&search=Project&sort=title-desc'),
+      expect.any(Object),
+    )
+
+    await userEvent.click(screen.getByRole('link', { name: 'Reset' }))
+    expect(screen.getByRole('searchbox', { name: 'Search' })).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('title')
   })
 })

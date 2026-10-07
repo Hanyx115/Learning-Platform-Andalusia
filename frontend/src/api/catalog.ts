@@ -7,6 +7,7 @@ export interface Course {
   description: string
   status: string
   type: string
+  categorySlug: string
   categoryName: string
   createdAt: string
 }
@@ -25,6 +26,8 @@ export interface CatalogListQuery {
   page?: number
   pageSize?: number
   status?: string
+  search?: string
+  sort?: 'title' | 'title-desc'
 }
 
 export interface PaginatedResult<T> {

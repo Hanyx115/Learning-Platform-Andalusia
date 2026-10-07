@@ -32,10 +32,53 @@ public sealed class CatalogListEndpointsTests(CatalogApiWebApplicationFactory fa
     }
 
     [Theory]
+    [InlineData("programs", "Beta", "Beta Program")]
+    [InlineData("career-paths", "Beta", "Beta Career")]
+    public async Task GetCatalogList_AppliesSearch(
+        string endpoint,
+        string search,
+        string expectedTitle)
+    {
+        await factory.SeedProgramsAndCareerPathsAsync();
+
+        using var response = await _client.GetAsync(
+            $"/api/v1/{endpoint}?status=Published&search={search}&sort=title");
+
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = document.RootElement;
+
+        Assert.Equal(expectedTitle, Assert.Single(root.GetProperty("items").EnumerateArray()).GetProperty("title").GetString());
+        Assert.Equal(1, root.GetProperty("totalCount").GetInt32());
+    }
+
+    [Theory]
+    [InlineData("programs", "Gamma Program")]
+    [InlineData("career-paths", "Gamma Career")]
+    public async Task GetCatalogList_AppliesDescendingTitleSort(
+        string endpoint,
+        string expectedFirstTitle)
+    {
+        await factory.SeedProgramsAndCareerPathsAsync();
+
+        using var response = await _client.GetAsync(
+            $"/api/v1/{endpoint}?status=Published&sort=title-desc");
+
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(
+            expectedFirstTitle,
+            document.RootElement.GetProperty("items")[0].GetProperty("title").GetString());
+    }
+
+    [Theory]
     [InlineData("programs", "page=0")]
     [InlineData("programs", "pageSize=101")]
     [InlineData("career-paths", "page=0")]
     [InlineData("career-paths", "pageSize=101")]
+    [InlineData("programs", "sort=unsupported")]
+    [InlineData("career-paths", "sort=unsupported")]
     public async Task GetCatalogList_WithInvalidPaging_ReturnsBadRequest(
         string endpoint,
         string query)

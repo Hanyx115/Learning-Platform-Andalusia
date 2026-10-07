@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCareerPaths } from '../../api/catalogQueries'
@@ -8,14 +9,34 @@ import { CatalogHero, CatalogMeta, CatalogPagination, QueryState } from './Catal
 import './catalog.css'
 
 const PAGE_SIZE = 6
+const allowedSorts = ['title', 'title-desc'] as const
+type CatalogSort = (typeof allowedSorts)[number]
+
+function parseSort(value: string | null): CatalogSort {
+  return allowedSorts.includes(value as CatalogSort) ? (value as CatalogSort) : 'title'
+}
 
 function CareerPathsPage() {
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedPage = Number(searchParams.get('page'))
   const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
-  const query = useCareerPaths({ page, pageSize: PAGE_SIZE, status: 'Published' })
+  const search = searchParams.get('search') ?? ''
+  const sort = parseSort(searchParams.get('sort'))
+  const query = useCareerPaths({ page, pageSize: PAGE_SIZE, status: 'Published', search, sort })
   const paths = query.data?.items ?? []
+
+  function applyFilters(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const data = new FormData(event.currentTarget)
+    const next = new URLSearchParams()
+    const nextSearch = String(data.get('search') ?? '').trim()
+    const nextSort = String(data.get('sort') ?? 'title')
+
+    if (nextSearch) next.set('search', nextSearch)
+    if (nextSort !== 'title') next.set('sort', nextSort)
+    setSearchParams(next)
+  }
 
   function changePage(nextPage: number) {
     const next = new URLSearchParams(searchParams)
@@ -36,6 +57,33 @@ function CareerPathsPage() {
       />
       <section className="catalog-page">
         <Container>
+          <form
+            key={searchParams.toString()}
+            className="catalog-filters catalog-filters--compact"
+            onSubmit={applyFilters}
+          >
+            <label>
+              {t('careerPaths.searchLabel')}
+              <input
+                name="search"
+                type="search"
+                defaultValue={search}
+                placeholder={t('careerPaths.searchPlaceholder')}
+              />
+            </label>
+            <label>
+              {t('careerPaths.sortLabel')}
+              <select name="sort" defaultValue={sort}>
+                <option value="title">{t('careerPaths.sortTitle')}</option>
+                <option value="title-desc">{t('careerPaths.sortTitleDescending')}</option>
+              </select>
+            </label>
+            <div className="catalog-filters__actions">
+              <button className="button button--primary" type="submit">{t('careerPaths.applyFilters')}</button>
+              <Link className="button button--secondary" to="/career-paths">{t('careerPaths.resetFilters')}</Link>
+            </div>
+          </form>
+
           {query.isPending ? <QueryState kind="loading" /> : null}
           {query.isError ? <QueryState kind="error" onRetry={() => void query.refetch()} /> : null}
           {query.isSuccess && paths.length === 0 ? <QueryState kind="empty" /> : null}
