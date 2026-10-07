@@ -101,8 +101,27 @@ export const enTranslations = {
     notFound: 'Career path not found',
   },
   forBusiness: {
-    title: 'For Business',
-    description: 'Information about corporate training offerings will be available here soon.',
+    eyebrow: 'For Business',
+    title: 'Practical learning for ambitious teams',
+    description:
+      'Build useful skills through focused courses and structured programs shaped around real workplace goals.',
+    trainingTitle: 'Training that supports your team',
+    highlights: [
+      'Focused learning plans for technical and business skills.',
+      'Flexible course and program combinations.',
+      'Practical content connected to workplace challenges.',
+    ],
+    contactCta: 'Discuss your training needs',
+    outcomesTitle: 'Clear learning outcomes',
+    outcomesDescription:
+      'Choose learning paths that help teams strengthen communication, leadership, technology, and operational skills.',
+    companiesEyebrow: 'Our network',
+    companiesTitle: 'Companies we work with',
+    companiesDescription:
+      'We collaborate with leading global companies across technology, media, commerce, and business.',
+    previousCompany: 'Show previous company',
+    nextCompany: 'Show next company',
+    carouselPosition: 'Company {{current}} of {{total}}',
   },
   faq: {
     title: 'Frequently Asked Questions',

@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import AboutPage from './AboutPage'
 import ContactPage from './ContactPage'
+import ForBusinessPage from './ForBusinessPage'
 
 describe('public information pages', () => {
   it('renders the About page with real academy information', () => {
@@ -29,5 +30,20 @@ describe('public information pages', () => {
     )
     expect(screen.getByRole('textbox', { name: 'Message' })).toBeRequired()
     expect(screen.getByRole('button', { name: 'Prepare email' })).toHaveAttribute('type', 'submit')
+  })
+
+  it('presents partner companies in an accessible carousel', () => {
+    render(
+      <MemoryRouter>
+        <ForBusinessPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('region', { name: 'Companies we work with' })).toBeInTheDocument()
+    expect(screen.getByText('Meta')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show next company' }))
+
+    expect(screen.getByText('Apple')).toBeInTheDocument()
   })
 })
