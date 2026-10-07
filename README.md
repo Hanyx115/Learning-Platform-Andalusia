@@ -104,6 +104,8 @@ Docker URLs use port `8080` by default:
 - Health check: `http://localhost:8080/health`
 - Versioned ping endpoint: `http://localhost:8080/api/v1/ping`
 
+After the EF Core migrations have been applied, the Development API inserts any missing catalog demo records when it starts. Existing catalog records are preserved, and this seeding does not run outside Development.
+
 To use different host ports, change `API_HTTP_PORT` and `SQLSERVER_PORT` in `.env`. Stop the stack with:
 
 ```powershell
