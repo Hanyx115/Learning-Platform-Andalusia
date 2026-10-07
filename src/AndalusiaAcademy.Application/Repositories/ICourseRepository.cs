@@ -4,7 +4,9 @@ namespace AndalusiaAcademy.Application.Repositories;
 
 public interface ICourseRepository
 {
-    Task<IReadOnlyList<CourseDto>> GetAllAsync(CancellationToken cancellationToken);
+    Task<PaginatedResult<CourseDto>> GetPageAsync(
+        CourseCatalogQuery query,
+        CancellationToken cancellationToken);
 
     Task<CourseDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken);
 }
