@@ -1,6 +1,5 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { vi } from 'vitest'
 import AboutPage from './AboutPage'
 import ContactPage from './ContactPage'
 import ForBusinessPage from './ForBusinessPage'
@@ -34,25 +33,15 @@ describe('public information pages', () => {
   })
 
   it('presents partner companies in an accessible carousel', () => {
-    vi.useFakeTimers()
+    render(
+      <MemoryRouter>
+        <ForBusinessPage />
+      </MemoryRouter>,
+    )
 
-    try {
-      render(
-        <MemoryRouter>
-          <ForBusinessPage />
-        </MemoryRouter>,
-      )
-
-      expect(screen.getByRole('region', { name: 'Companies we work with' })).toBeInTheDocument()
-      expect(screen.getByText('Meta')).toBeInTheDocument()
-
-      act(() => vi.advanceTimersByTime(4000))
-      expect(screen.getByText('Apple')).toBeInTheDocument()
-
-      fireEvent.click(screen.getByRole('button', { name: 'Show next company' }))
-      expect(screen.getByText('Amazon')).toBeInTheDocument()
-    } finally {
-      vi.useRealTimers()
-    }
+    expect(screen.getByRole('region', { name: 'Companies we work with' })).toBeInTheDocument()
+    expect(screen.getAllByText('Meta')).toHaveLength(2)
+    expect(screen.getAllByText('OpenAI')).toHaveLength(2)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 })

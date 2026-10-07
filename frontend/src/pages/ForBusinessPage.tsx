@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { FaAmazon, FaApple, FaGoogle, FaMeta, FaMicrosoft } from 'react-icons/fa6'
@@ -28,34 +27,22 @@ const companies: Company[] = [
   { name: 'OpenAI', color: '#000000', imageSource: openAiLogo },
 ]
 
+function CompanyCard({ company }: { company: Company }) {
+  const CompanyIcon = company.Icon
+
+  return (
+    <li className="company-carousel__item">
+      <span className="company-carousel__logo" aria-hidden="true">
+        {CompanyIcon ? <CompanyIcon color={company.color} /> : <img src={company.imageSource} alt="" />}
+      </span>
+      <span className="company-carousel__name">{company.name}</span>
+    </li>
+  )
+}
+
 function ForBusinessPage() {
   const { t } = useTranslation()
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
   const highlights = t('forBusiness.highlights', { returnObjects: true }) as string[]
-  const activeCompany = companies[activeIndex]
-  const ActiveCompanyIcon = activeCompany.Icon
-
-  const showPrevious = () => {
-    setActiveIndex((currentIndex) => (currentIndex - 1 + companies.length) % companies.length)
-  }
-
-  const showNext = () => {
-    setActiveIndex((currentIndex) => (currentIndex + 1) % companies.length)
-  }
-
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-
-    if (isPaused || prefersReducedMotion) {
-      return undefined
-    }
-
-    const intervalId = window.setInterval(() => {
-      setActiveIndex((currentIndex) => (currentIndex + 1) % companies.length)
-    }, 4000)
-    return () => window.clearInterval(intervalId)
-  }, [isPaused])
 
   return (
     <div className="public-page for-business-page">
@@ -100,62 +87,20 @@ function ForBusinessPage() {
             <p>{t('forBusiness.companiesDescription')}</p>
           </header>
 
-          <div
-            className="company-carousel"
-            onFocusCapture={() => setIsPaused(true)}
-            onBlurCapture={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
-                setIsPaused(false)
-              }
-            }}
-          >
-            <button
-              className="company-carousel__control"
-              type="button"
-              aria-label={t('forBusiness.previousCompany')}
-              onClick={showPrevious}
-            >
-              <span aria-hidden="true">‹</span>
-            </button>
-
-            <div className="company-carousel__viewport" aria-live={isPaused ? 'polite' : 'off'}>
-              <article key={activeCompany.name} className="company-carousel__slide">
-                <span className="company-carousel__monogram" aria-hidden="true">
-                  {ActiveCompanyIcon ? (
-                    <ActiveCompanyIcon color={activeCompany.color} />
-                  ) : (
-                    <img src={activeCompany.imageSource} alt="" />
-                  )}
-                </span>
-                <p className="company-carousel__name">{activeCompany.name}</p>
-                <p className="company-carousel__position">
-                  {t('forBusiness.carouselPosition', {
-                    current: activeIndex + 1,
-                    total: companies.length,
-                  })}
-                </p>
-              </article>
+          <div className="company-carousel">
+            <div className="company-carousel__track">
+              <ul className="company-carousel__group">
+                {companies.map((company) => (
+                  <CompanyCard key={company.name} company={company} />
+                ))}
+              </ul>
+              <ul className="company-carousel__group" aria-hidden="true">
+                {companies.map((company) => (
+                  <CompanyCard key={`duplicate-${company.name}`} company={company} />
+                ))}
+              </ul>
             </div>
-
-            <button
-              className="company-carousel__control"
-              type="button"
-              aria-label={t('forBusiness.nextCompany')}
-              onClick={showNext}
-            >
-              <span aria-hidden="true">›</span>
-            </button>
           </div>
-
-          <div className="company-carousel__dots" aria-hidden="true">
-            {companies.map((company, index) => (
-              <span
-                key={company.name}
-                className={index === activeIndex ? 'company-carousel__dot company-carousel__dot--active' : 'company-carousel__dot'}
-              />
-            ))}
-          </div>
-
         </Container>
       </section>
     </div>

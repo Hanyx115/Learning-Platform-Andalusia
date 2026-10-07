@@ -118,9 +118,6 @@ export const arTranslations = {
     companiesTitle: 'شركات نعمل معها',
     companiesDescription:
       'نتعاون مع شركات عالمية رائدة في مجالات التقنية والإعلام والتجارة والأعمال.',
-    previousCompany: 'عرض الشركة السابقة',
-    nextCompany: 'عرض الشركة التالية',
-    carouselPosition: 'الشركة {{current}} من {{total}}',
   },
   faq: {
     title: 'الأسئلة الشائعة',

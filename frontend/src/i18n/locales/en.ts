@@ -119,9 +119,6 @@ export const enTranslations = {
     companiesTitle: 'Companies we work with',
     companiesDescription:
       'We collaborate with leading global companies across technology, media, commerce, and business.',
-    previousCompany: 'Show previous company',
-    nextCompany: 'Show next company',
-    carouselPosition: 'Company {{current}} of {{total}}',
   },
   faq: {
     title: 'Frequently Asked Questions',
