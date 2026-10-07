@@ -55,6 +55,7 @@
   min-height: 17rem;
   padding: 2rem;
   text-align: center;
+  animation: company-carousel-slide-in 420ms ease-out;
 }
 
 .company-carousel__monogram {
@@ -135,8 +136,24 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .company-carousel__slide {
+    animation: none;
+  }
+
   .company-carousel__control,
   .company-carousel__dot {
     transition: none;
+  }
+}
+
+@keyframes company-carousel-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }

@@ -102,8 +102,6 @@ function ForBusinessPage() {
 
           <div
             className="company-carousel"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
             onFocusCapture={() => setIsPaused(true)}
             onBlurCapture={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -121,7 +119,7 @@ function ForBusinessPage() {
             </button>
 
             <div className="company-carousel__viewport" aria-live={isPaused ? 'polite' : 'off'}>
-              <article className="company-carousel__slide">
+              <article key={activeCompany.name} className="company-carousel__slide">
                 <span className="company-carousel__monogram" aria-hidden="true">
                   {ActiveCompanyIcon ? (
                     <ActiveCompanyIcon color={activeCompany.color} />
