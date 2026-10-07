@@ -5,7 +5,7 @@ import { useCourses } from '../../api/catalogQueries'
 import Card from '../../components/Card'
 import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
-import { CatalogHero, CatalogMeta, QueryState } from './CatalogUi'
+import { CatalogHero, CatalogMeta, CatalogPagination, QueryState } from './CatalogUi'
 import './catalog.css'
 
 const PAGE_SIZE = 6
@@ -137,27 +137,11 @@ function CoursesPage() {
                   </Card>
                 ))}
               </div>
-              {coursesQuery.data.totalPages > 1 ? (
-                <nav className="catalog-pagination" aria-label={t('courses.paginationLabel')}>
-                  <button
-                    className="button button--secondary"
-                    type="button"
-                    disabled={page <= 1}
-                    onClick={() => changePage(page - 1)}
-                  >
-                    {t('common.previous')}
-                  </button>
-                  <span>{t('courses.pageSummary', { page, totalPages: coursesQuery.data.totalPages })}</span>
-                  <button
-                    className="button button--secondary"
-                    type="button"
-                    disabled={page >= coursesQuery.data.totalPages}
-                    onClick={() => changePage(page + 1)}
-                  >
-                    {t('common.next')}
-                  </button>
-                </nav>
-              ) : null}
+              <CatalogPagination
+                page={page}
+                totalPages={coursesQuery.data.totalPages}
+                onPageChange={changePage}
+              />
             </>
           ) : null}
         </Container>

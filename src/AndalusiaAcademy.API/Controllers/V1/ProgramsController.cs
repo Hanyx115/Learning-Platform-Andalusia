@@ -1,3 +1,4 @@
+using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.Services;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
@@ -10,9 +11,13 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 public sealed class ProgramsController(ProgramService programService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetPrograms(CancellationToken cancellationToken)
+    [ProducesResponseType<PaginatedResult<ProgramSummaryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResult<ProgramSummaryDto>>> GetPrograms(
+        [FromQuery] CatalogListQuery query,
+        CancellationToken cancellationToken)
     {
-        var programs = await programService.GetProgramsAsync(cancellationToken);
+        var programs = await programService.GetProgramsAsync(query, cancellationToken);
         return Ok(programs);
     }
 

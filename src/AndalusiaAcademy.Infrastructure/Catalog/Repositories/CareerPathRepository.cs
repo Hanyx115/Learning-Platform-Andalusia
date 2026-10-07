@@ -7,10 +7,27 @@ namespace AndalusiaAcademy.Infrastructure.Catalog.Repositories;
 
 public sealed class CareerPathRepository(ApplicationDbContext dbContext) : ICareerPathRepository
 {
-    public async Task<IReadOnlyList<CareerPathSummaryDto>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<PaginatedResult<CareerPathSummaryDto>> GetPageAsync(
+        CatalogListQuery query,
+        CancellationToken cancellationToken)
     {
-        return await dbContext.CareerPaths
-            .AsNoTracking()
+        var careerPathsQuery = dbContext.CareerPaths.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(query.Status))
+        {
+            var status = query.Status.Trim();
+            careerPathsQuery = careerPathsQuery.Where(careerPath => careerPath.Status == status);
+        }
+
+        var totalCount = await careerPathsQuery.CountAsync(cancellationToken);
+        var offset = (long)(query.Page - 1) * query.PageSize;
+
+        if (offset > int.MaxValue)
+        {
+            return new PaginatedResult<CareerPathSummaryDto>([], query.Page, query.PageSize, totalCount);
+        }
+
+        var careerPaths = await careerPathsQuery
             .OrderBy(careerPath => careerPath.Title)
             .Select(careerPath => new CareerPathSummaryDto
             {
@@ -20,7 +37,15 @@ public sealed class CareerPathRepository(ApplicationDbContext dbContext) : ICare
                 Description = careerPath.Description,
                 Status = careerPath.Status,
             })
+            .Skip((int)offset)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<CareerPathSummaryDto>(
+            careerPaths,
+            query.Page,
+            query.PageSize,
+            totalCount);
     }
 
     public async Task<CareerPathDetailDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken)

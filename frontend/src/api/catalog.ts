@@ -21,6 +21,12 @@ export interface CourseCatalogQuery {
   sort?: 'title' | 'title-desc' | 'newest' | 'oldest'
 }
 
+export interface CatalogListQuery {
+  page?: number
+  pageSize?: number
+  status?: string
+}
+
 export interface PaginatedResult<T> {
   items: T[]
   page: number
@@ -75,7 +81,7 @@ export interface CareerPathDetail extends CareerPathSummary {
   recommendedCourses: CareerPathCourse[]
 }
 
-function buildQueryString(query: CourseCatalogQuery) {
+function buildQueryString(query: CourseCatalogQuery | CatalogListQuery) {
   const searchParams = new URLSearchParams()
 
   Object.entries(query).forEach(([key, value]) => {
@@ -96,16 +102,16 @@ export function getCourse(slug: string) {
   return apiRequest<Course>(`/api/v1/courses/${encodeURIComponent(slug)}`)
 }
 
-export function getPrograms() {
-  return apiRequest<ProgramSummary[]>('/api/v1/programs')
+export function getPrograms(query: CatalogListQuery = {}) {
+  return apiRequest<PaginatedResult<ProgramSummary>>(`/api/v1/programs${buildQueryString(query)}`)
 }
 
 export function getProgram(slug: string) {
   return apiRequest<ProgramDetail>(`/api/v1/programs/${encodeURIComponent(slug)}`)
 }
 
-export function getCareerPaths() {
-  return apiRequest<CareerPathSummary[]>('/api/v1/career-paths')
+export function getCareerPaths(query: CatalogListQuery = {}) {
+  return apiRequest<PaginatedResult<CareerPathSummary>>(`/api/v1/career-paths${buildQueryString(query)}`)
 }
 
 export function getCareerPath(slug: string) {

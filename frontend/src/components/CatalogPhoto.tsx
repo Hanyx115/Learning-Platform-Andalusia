@@ -16,7 +16,7 @@ function getCatalogPhoto(categoryName = '', slug = '') {
     return computerEngineeringPhoto
   }
 
-  if (/leadership|leader|quality|career/.test(catalogContext)) {
+  if (/leadership|leader|quality|career|business|management|marketing|project|sales|entrepreneur|human resources|financial/.test(catalogContext)) {
     return careerDevelopmentPhoto
   }
 

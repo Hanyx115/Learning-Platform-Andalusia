@@ -1,3 +1,4 @@
+using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.Services;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
@@ -10,9 +11,13 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 public sealed class CareerPathsController(CareerPathService careerPathService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetCareerPaths(CancellationToken cancellationToken)
+    [ProducesResponseType<PaginatedResult<CareerPathSummaryDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResult<CareerPathSummaryDto>>> GetCareerPaths(
+        [FromQuery] CatalogListQuery query,
+        CancellationToken cancellationToken)
     {
-        var careerPaths = await careerPathService.GetCareerPathsAsync(cancellationToken);
+        var careerPaths = await careerPathService.GetCareerPathsAsync(query, cancellationToken);
         return Ok(careerPaths);
     }
 

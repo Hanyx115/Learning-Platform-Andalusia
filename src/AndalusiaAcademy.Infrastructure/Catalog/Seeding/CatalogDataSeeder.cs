@@ -211,6 +211,7 @@ public static class CatalogDataSeeder
         new(new Guid("10000000-0000-0000-0000-000000000004"), "Healthcare Leadership", "healthcare-leadership"),
         new(new Guid("10000000-0000-0000-0000-000000000005"), "Software Development", "software-development"),
         new(new Guid("10000000-0000-0000-0000-000000000006"), "Computer Systems", "computer-systems"),
+        new(new Guid("10000000-0000-0000-0000-000000000007"), "Business and Management", "business-management"),
     ];
 
     private static readonly CourseSeed[] Courses =
@@ -327,6 +328,70 @@ public static class CatalogDataSeeder
             "Develop an introductory understanding of threats, secure system design, access control and network protection.",
             "Online",
             new DateTimeOffset(2026, 6, 22, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000015"),
+            "business-management",
+            "Business Communication Essentials",
+            "business-communication-essentials",
+            "Communicate clearly with colleagues and clients through practical writing, presentations and professional conversations.",
+            "Hybrid",
+            new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000016"),
+            "business-management",
+            "Project Management Fundamentals",
+            "project-management-fundamentals",
+            "Plan scope, schedules, resources and risks while guiding a project from initiation through delivery.",
+            "Online",
+            new DateTimeOffset(2026, 7, 5, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000017"),
+            "business-management",
+            "Digital Marketing Strategy",
+            "digital-marketing-strategy",
+            "Build audience-focused campaigns across digital channels and measure performance against clear objectives.",
+            "Online",
+            new DateTimeOffset(2026, 7, 10, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000018"),
+            "business-management",
+            "Financial Literacy for Professionals",
+            "financial-literacy-for-professionals",
+            "Understand budgets, cash flow, financial statements and the numbers behind everyday business decisions.",
+            "Hybrid",
+            new DateTimeOffset(2026, 7, 15, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000019"),
+            "business-management",
+            "Entrepreneurship and Business Planning",
+            "entrepreneurship-business-planning",
+            "Turn an opportunity into a practical business model, value proposition and evidence-based launch plan.",
+            "Offline",
+            new DateTimeOffset(2026, 7, 20, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000020"),
+            "business-management",
+            "Sales and Customer Relationship Management",
+            "sales-customer-relationship-management",
+            "Develop consultative selling, customer discovery and relationship-management skills that support sustainable growth.",
+            "Hybrid",
+            new DateTimeOffset(2026, 7, 25, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000021"),
+            "business-management",
+            "Human Resources Fundamentals",
+            "human-resources-fundamentals",
+            "Explore recruitment, onboarding, performance support and the foundations of a healthy employee experience.",
+            "Online",
+            new DateTimeOffset(2026, 8, 1, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("20000000-0000-0000-0000-000000000022"),
+            "business-management",
+            "Data-Driven Business Decision Making",
+            "data-driven-business-decision-making",
+            "Use practical metrics, structured analysis and clear visual evidence to make better operational decisions.",
+            "Online",
+            new DateTimeOffset(2026, 8, 5, 0, 0, 0, TimeSpan.Zero)),
     ];
 
     private static readonly ProgramSeed[] Programs =
@@ -361,6 +426,30 @@ public static class CatalogDataSeeder
             "computer-systems-engineering",
             "Build foundational capability across networks, embedded systems and secure computer infrastructure.",
             new DateTimeOffset(2026, 6, 15, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("30000000-0000-0000-0000-000000000006"),
+            "Business Management Essentials",
+            "business-management-essentials",
+            "Build the communication, financial and analytical foundations needed to support effective business operations.",
+            new DateTimeOffset(2026, 7, 10, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("30000000-0000-0000-0000-000000000007"),
+            "Digital Marketing Professional",
+            "digital-marketing-professional",
+            "Connect marketing strategy, customer insight and relationship-building into a practical growth toolkit.",
+            new DateTimeOffset(2026, 7, 20, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("30000000-0000-0000-0000-000000000008"),
+            "Project Management Foundations",
+            "project-management-foundations",
+            "Develop the planning, communication and evidence-based decision skills required to coordinate successful projects.",
+            new DateTimeOffset(2026, 8, 1, 0, 0, 0, TimeSpan.Zero)),
+        new(
+            new Guid("30000000-0000-0000-0000-000000000009"),
+            "Entrepreneurship Launchpad",
+            "entrepreneurship-launchpad",
+            "Shape, fund and communicate a viable new business idea through a structured early-stage learning journey.",
+            new DateTimeOffset(2026, 8, 10, 0, 0, 0, TimeSpan.Zero)),
     ];
 
     private static readonly ProgramCourseSeed[] ProgramCourses =
@@ -380,6 +469,18 @@ public static class CatalogDataSeeder
         new("computer-systems-engineering", "computer-networks-fundamentals", 1),
         new("computer-systems-engineering", "embedded-systems-essentials", 2),
         new("computer-systems-engineering", "cybersecurity-foundations", 3),
+        new("business-management-essentials", "business-communication-essentials", 1),
+        new("business-management-essentials", "financial-literacy-for-professionals", 2),
+        new("business-management-essentials", "data-driven-business-decision-making", 3),
+        new("digital-marketing-professional", "digital-marketing-strategy", 1),
+        new("digital-marketing-professional", "sales-customer-relationship-management", 2),
+        new("digital-marketing-professional", "business-communication-essentials", 3),
+        new("project-management-foundations", "project-management-fundamentals", 1),
+        new("project-management-foundations", "business-communication-essentials", 2),
+        new("project-management-foundations", "data-driven-business-decision-making", 3),
+        new("entrepreneurship-launchpad", "entrepreneurship-business-planning", 1),
+        new("entrepreneurship-launchpad", "financial-literacy-for-professionals", 2),
+        new("entrepreneurship-launchpad", "digital-marketing-strategy", 3),
     ];
 
     private static readonly CareerPathSeed[] CareerPaths =
@@ -420,6 +521,30 @@ public static class CatalogDataSeeder
             "embedded-systems-engineer",
             "Develop the hardware-software integration skills needed to design and troubleshoot embedded computing solutions.",
             "Microcontrollers, embedded programming, digital interfaces, debugging, computer architecture"),
+        new(
+            new Guid("40000000-0000-0000-0000-000000000007"),
+            "Project Coordinator",
+            "project-coordinator",
+            "Prepare to organize project work, communicate progress and support teams in delivering agreed outcomes.",
+            "Project planning, scheduling, stakeholder communication, risk tracking, reporting"),
+        new(
+            new Guid("40000000-0000-0000-0000-000000000008"),
+            "Digital Marketing Specialist",
+            "digital-marketing-specialist",
+            "Develop the strategic, analytical and customer-focused skills needed to support effective digital campaigns.",
+            "Digital strategy, audience research, campaign measurement, content planning, customer insight"),
+        new(
+            new Guid("40000000-0000-0000-0000-000000000009"),
+            "Business Development Specialist",
+            "business-development-specialist",
+            "Build the communication, commercial and relationship skills used to identify and develop growth opportunities.",
+            "Customer discovery, consultative sales, relationship management, financial awareness, negotiation"),
+        new(
+            new Guid("40000000-0000-0000-0000-000000000010"),
+            "Entrepreneur and Startup Founder",
+            "entrepreneur-startup-founder",
+            "Learn to evaluate opportunities, shape a business model and communicate a credible plan for a new venture.",
+            "Opportunity assessment, business modeling, financial planning, marketing strategy, pitching"),
     ];
 
     private static readonly CareerPathProgramSeed[] CareerPathPrograms =
@@ -430,6 +555,10 @@ public static class CatalogDataSeeder
         new("software-engineer", "software-engineering-foundations"),
         new("network-infrastructure-engineer", "computer-systems-engineering"),
         new("embedded-systems-engineer", "computer-systems-engineering"),
+        new("project-coordinator", "project-management-foundations"),
+        new("digital-marketing-specialist", "digital-marketing-professional"),
+        new("business-development-specialist", "business-management-essentials"),
+        new("entrepreneur-startup-founder", "entrepreneurship-launchpad"),
     ];
 
     private static readonly CareerPathCourseSeed[] CareerPathCourses =
@@ -448,6 +577,18 @@ public static class CatalogDataSeeder
         new("network-infrastructure-engineer", "cybersecurity-foundations"),
         new("embedded-systems-engineer", "embedded-systems-essentials"),
         new("embedded-systems-engineer", "computer-networks-fundamentals"),
+        new("project-coordinator", "project-management-fundamentals"),
+        new("project-coordinator", "business-communication-essentials"),
+        new("project-coordinator", "data-driven-business-decision-making"),
+        new("digital-marketing-specialist", "digital-marketing-strategy"),
+        new("digital-marketing-specialist", "sales-customer-relationship-management"),
+        new("digital-marketing-specialist", "business-communication-essentials"),
+        new("business-development-specialist", "sales-customer-relationship-management"),
+        new("business-development-specialist", "financial-literacy-for-professionals"),
+        new("business-development-specialist", "business-communication-essentials"),
+        new("entrepreneur-startup-founder", "entrepreneurship-business-planning"),
+        new("entrepreneur-startup-founder", "financial-literacy-for-professionals"),
+        new("entrepreneur-startup-founder", "digital-marketing-strategy"),
     ];
 
     private sealed record CategorySeed(Guid Id, string Name, string Slug);

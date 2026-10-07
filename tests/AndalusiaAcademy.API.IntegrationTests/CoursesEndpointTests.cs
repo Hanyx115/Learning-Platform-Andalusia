@@ -117,6 +117,30 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
         await context.SaveChangesAsync();
     }
 
+    public async Task SeedProgramsAndCareerPathsAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        if (await context.Programs.AnyAsync() || await context.CareerPaths.AnyAsync())
+        {
+            return;
+        }
+
+        context.Programs.AddRange(
+            CreateProgram("Alpha Program", "alpha-program", "Published", 1),
+            CreateProgram("Beta Program", "beta-program", "Published", 2),
+            CreateProgram("Gamma Program", "gamma-program", "Published", 3),
+            CreateProgram("Internal Draft", "internal-draft", "Draft", 4));
+        context.CareerPaths.AddRange(
+            CreateCareerPath("Alpha Career", "alpha-career", "Published"),
+            CreateCareerPath("Beta Career", "beta-career", "Published"),
+            CreateCareerPath("Gamma Career", "gamma-career", "Published"),
+            CreateCareerPath("Internal Career Draft", "internal-career-draft", "Draft"));
+
+        await context.SaveChangesAsync();
+    }
+
     private static Course CreateCourse(
         Guid categoryId,
         string title,
@@ -135,6 +159,36 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
             Status = status,
             Type = type,
             CreatedAt = createdAt,
+        };
+    }
+
+    private static AcademyProgram CreateProgram(
+        string title,
+        string slug,
+        string status,
+        int month)
+    {
+        return new AcademyProgram
+        {
+            Id = Guid.NewGuid(),
+            Title = title,
+            Slug = slug,
+            Description = $"Description for {title}",
+            Status = status,
+            CreatedAt = new DateTimeOffset(2026, month, 1, 0, 0, 0, TimeSpan.Zero),
+        };
+    }
+
+    private static CareerPath CreateCareerPath(string title, string slug, string status)
+    {
+        return new CareerPath
+        {
+            Id = Guid.NewGuid(),
+            Title = title,
+            Slug = slug,
+            Description = $"Description for {title}",
+            RecommendedSkills = "Planning, communication",
+            Status = status,
         };
     }
 }

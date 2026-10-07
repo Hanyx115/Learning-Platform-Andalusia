@@ -8,9 +8,9 @@ import Section from '../../../components/Section'
 function FeaturedCoursesPrograms() {
   const { t } = useTranslation()
   const coursesQuery = useCourses({ page: 1, pageSize: 2, status: 'Published', sort: 'newest' })
-  const programsQuery = usePrograms()
+  const programsQuery = usePrograms({ page: 1, pageSize: 2, status: 'Published' })
   const courses = coursesQuery.data?.items ?? []
-  const programs = programsQuery.data?.filter((program) => program.status === 'Published').slice(0, 2) ?? []
+  const programs = programsQuery.data?.items ?? []
   const isPending = coursesQuery.isPending || programsQuery.isPending
   const isError = coursesQuery.isError || programsQuery.isError
 

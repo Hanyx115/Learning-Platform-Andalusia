@@ -5,8 +5,10 @@ namespace AndalusiaAcademy.Application.Services;
 
 public sealed class CareerPathService(ICareerPathRepository careerPathRepository)
 {
-    public Task<IReadOnlyList<CareerPathSummaryDto>> GetCareerPathsAsync(CancellationToken cancellationToken)
-        => careerPathRepository.GetAllAsync(cancellationToken);
+    public Task<PaginatedResult<CareerPathSummaryDto>> GetCareerPathsAsync(
+        CatalogListQuery query,
+        CancellationToken cancellationToken)
+        => careerPathRepository.GetPageAsync(query, cancellationToken);
 
     public Task<CareerPathDetailDto?> GetCareerPathBySlugAsync(string slug, CancellationToken cancellationToken)
         => careerPathRepository.GetBySlugAsync(slug, cancellationToken);

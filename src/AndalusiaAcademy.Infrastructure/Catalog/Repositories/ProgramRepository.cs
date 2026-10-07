@@ -7,10 +7,27 @@ namespace AndalusiaAcademy.Infrastructure.Catalog.Repositories;
 
 public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgramRepository
 {
-    public async Task<IReadOnlyList<ProgramSummaryDto>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<PaginatedResult<ProgramSummaryDto>> GetPageAsync(
+        CatalogListQuery query,
+        CancellationToken cancellationToken)
     {
-        return await dbContext.Programs
-            .AsNoTracking()
+        var programsQuery = dbContext.Programs.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(query.Status))
+        {
+            var status = query.Status.Trim();
+            programsQuery = programsQuery.Where(program => program.Status == status);
+        }
+
+        var totalCount = await programsQuery.CountAsync(cancellationToken);
+        var offset = (long)(query.Page - 1) * query.PageSize;
+
+        if (offset > int.MaxValue)
+        {
+            return new PaginatedResult<ProgramSummaryDto>([], query.Page, query.PageSize, totalCount);
+        }
+
+        var programs = await programsQuery
             .OrderBy(program => program.Title)
             .Select(program => new ProgramSummaryDto
             {
@@ -21,7 +38,15 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 Status = program.Status,
                 CreatedAt = program.CreatedAt,
             })
+            .Skip((int)offset)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<ProgramSummaryDto>(
+            programs,
+            query.Page,
+            query.PageSize,
+            totalCount);
     }
 
     public async Task<ProgramDetailDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken)

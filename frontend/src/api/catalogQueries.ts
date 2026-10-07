@@ -6,15 +6,16 @@ import {
   getCourses,
   getProgram,
   getPrograms,
+  type CatalogListQuery,
   type CourseCatalogQuery,
 } from './catalog'
 
 export const catalogQueryKeys = {
   courses: (query: CourseCatalogQuery) => ['courses', query] as const,
   course: (slug: string) => ['courses', slug] as const,
-  programs: ['programs'] as const,
+  programs: (query: CatalogListQuery) => ['programs', query] as const,
   program: (slug: string) => ['programs', slug] as const,
-  careerPaths: ['career-paths'] as const,
+  careerPaths: (query: CatalogListQuery) => ['career-paths', query] as const,
   careerPath: (slug: string) => ['career-paths', slug] as const,
 }
 
@@ -33,8 +34,11 @@ export function useCourse(slug: string) {
   })
 }
 
-export function usePrograms() {
-  return useQuery({ queryKey: catalogQueryKeys.programs, queryFn: getPrograms })
+export function usePrograms(query: CatalogListQuery = {}) {
+  return useQuery({
+    queryKey: catalogQueryKeys.programs(query),
+    queryFn: () => getPrograms(query),
+  })
 }
 
 export function useProgram(slug: string) {
@@ -45,8 +49,11 @@ export function useProgram(slug: string) {
   })
 }
 
-export function useCareerPaths() {
-  return useQuery({ queryKey: catalogQueryKeys.careerPaths, queryFn: getCareerPaths })
+export function useCareerPaths(query: CatalogListQuery = {}) {
+  return useQuery({
+    queryKey: catalogQueryKeys.careerPaths(query),
+    queryFn: () => getCareerPaths(query),
+  })
 }
 
 export function useCareerPath(slug: string) {

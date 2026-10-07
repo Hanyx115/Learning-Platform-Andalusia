@@ -7,8 +7,8 @@ import Section from '../../../components/Section'
 
 function CareerPathDiscovery() {
   const { t } = useTranslation()
-  const query = useCareerPaths()
-  const items = query.data?.filter((item) => item.status === 'Published').slice(0, 3) ?? []
+  const query = useCareerPaths({ page: 1, pageSize: 3, status: 'Published' })
+  const items = query.data?.items ?? []
 
   return (
     <Section

@@ -8,11 +8,8 @@ import { router } from './router'
 
 describe('router', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
-      const url = String(input)
-      const body = url.includes('/courses')
-        ? { items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 0 }
-        : []
+    vi.stubGlobal('fetch', vi.fn(() => {
+      const body = { items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 0 }
 
       return Promise.resolve(new Response(JSON.stringify(body), {
         status: 200,

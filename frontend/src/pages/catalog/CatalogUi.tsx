@@ -47,3 +47,39 @@ interface CatalogMetaProps {
 export function CatalogMeta({ children }: CatalogMetaProps) {
   return <span className="catalog-meta" dir="auto">{children}</span>
 }
+
+interface CatalogPaginationProps {
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+export function CatalogPagination({ page, totalPages, onPageChange }: CatalogPaginationProps) {
+  const { t } = useTranslation()
+
+  if (totalPages <= 1) {
+    return null
+  }
+
+  return (
+    <nav className="catalog-pagination" aria-label={t('common.paginationLabel')}>
+      <button
+        className="button button--secondary"
+        type="button"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+      >
+        {t('common.previous')}
+      </button>
+      <span>{t('common.pageSummary', { page, totalPages })}</span>
+      <button
+        className="button button--secondary"
+        type="button"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        {t('common.next')}
+      </button>
+    </nav>
+  )
+}

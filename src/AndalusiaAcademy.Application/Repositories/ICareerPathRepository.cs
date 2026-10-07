@@ -4,7 +4,9 @@ namespace AndalusiaAcademy.Application.Repositories;
 
 public interface ICareerPathRepository
 {
-    Task<IReadOnlyList<CareerPathSummaryDto>> GetAllAsync(CancellationToken cancellationToken);
+    Task<PaginatedResult<CareerPathSummaryDto>> GetPageAsync(
+        CatalogListQuery query,
+        CancellationToken cancellationToken);
 
     Task<CareerPathDetailDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken);
 }

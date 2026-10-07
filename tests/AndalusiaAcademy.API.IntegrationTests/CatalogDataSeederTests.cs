@@ -14,14 +14,14 @@ public sealed class CatalogDataSeederTests
 
         var addedRows = await CatalogDataSeeder.SeedAsync(context);
 
-        Assert.Equal(66, addedRows);
-        Assert.Equal(6, await context.CourseCategories.CountAsync());
-        Assert.Equal(14, await context.Courses.CountAsync());
-        Assert.Equal(5, await context.Programs.CountAsync());
-        Assert.Equal(15, await context.ProgramCourses.CountAsync());
-        Assert.Equal(6, await context.CareerPaths.CountAsync());
-        Assert.Equal(6, await context.CareerPathPrograms.CountAsync());
-        Assert.Equal(14, await context.CareerPathCourses.CountAsync());
+        Assert.Equal(111, addedRows);
+        Assert.Equal(7, await context.CourseCategories.CountAsync());
+        Assert.Equal(22, await context.Courses.CountAsync());
+        Assert.Equal(9, await context.Programs.CountAsync());
+        Assert.Equal(27, await context.ProgramCourses.CountAsync());
+        Assert.Equal(10, await context.CareerPaths.CountAsync());
+        Assert.Equal(10, await context.CareerPathPrograms.CountAsync());
+        Assert.Equal(26, await context.CareerPathCourses.CountAsync());
 
         var emergencyProgram = await context.Programs
             .SingleAsync(program => program.Slug == "emergency-care-foundations");
@@ -54,6 +54,22 @@ public sealed class CatalogDataSeederTests
                 "programming-fundamentals",
             ],
             softwareCourseSlugs);
+
+        var entrepreneurshipProgram = await context.Programs
+            .SingleAsync(program => program.Slug == "entrepreneurship-launchpad");
+        var entrepreneurshipCourseSlugs = await context.ProgramCourses
+            .Where(link => link.ProgramId == entrepreneurshipProgram.Id)
+            .OrderBy(link => link.SequenceOrder)
+            .Select(link => link.Course!.Slug)
+            .ToListAsync();
+
+        Assert.Equal(
+            [
+                "entrepreneurship-business-planning",
+                "financial-literacy-for-professionals",
+                "digital-marketing-strategy",
+            ],
+            entrepreneurshipCourseSlugs);
     }
 
     [Fact]
@@ -72,12 +88,12 @@ public sealed class CatalogDataSeederTests
         var firstAddedRows = await CatalogDataSeeder.SeedAsync(context);
         var secondAddedRows = await CatalogDataSeeder.SeedAsync(context);
 
-        Assert.Equal(65, firstAddedRows);
+        Assert.Equal(110, firstAddedRows);
         Assert.Equal(0, secondAddedRows);
-        Assert.Equal(6, await context.CourseCategories.CountAsync());
-        Assert.Equal(14, await context.Courses.CountAsync());
-        Assert.Equal(5, await context.Programs.CountAsync());
-        Assert.Equal(6, await context.CareerPaths.CountAsync());
+        Assert.Equal(7, await context.CourseCategories.CountAsync());
+        Assert.Equal(22, await context.Courses.CountAsync());
+        Assert.Equal(9, await context.Programs.CountAsync());
+        Assert.Equal(10, await context.CareerPaths.CountAsync());
 
         var preservedCategory = await context.CourseCategories
             .SingleAsync(category => category.Slug == "clinical-care");
