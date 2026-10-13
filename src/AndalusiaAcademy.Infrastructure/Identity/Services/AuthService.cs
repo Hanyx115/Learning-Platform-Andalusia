@@ -70,6 +70,57 @@ public sealed class AuthService(
         return LoginOutcome.Success(tokens);
     }
 
+    public async Task LogoutAsync(Guid userId, string refreshToken, CancellationToken cancellationToken)
+    {
+        var tokenHash = tokenService.Hash(refreshToken);
+        var stored = await refreshTokenRepository.GetActiveByHashAsync(tokenHash, cancellationToken);
+
+        if (stored is null || stored.UserId != userId || stored.RevokedAtUtc is not null)
+        {
+            return;
+        }
+
+        await refreshTokenRepository.RevokeAsync(tokenHash, replacedByTokenHash: null, revokedByIp: null, cancellationToken);
+    }
+
+    public async Task<ForgotPasswordOutcome> ForgotPasswordAsync(string email, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+
+        if (user is null)
+        {
+            return new ForgotPasswordOutcome(null);
+        }
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        return new ForgotPasswordOutcome(token);
+    }
+
+    public async Task<ResetPasswordOutcome> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+
+        if (user is null)
+        {
+            // Same generic failure as an invalid token, so this endpoint can't be used to enumerate accounts.
+            return ResetPasswordOutcome.Failure(["Invalid or expired reset token."]);
+        }
+
+        var resetResult = await userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+
+        if (!resetResult.Succeeded)
+        {
+            return ResetPasswordOutcome.Failure(resetResult.Errors.Select(error => error.Description).ToArray());
+        }
+
+        // Invalidate every existing session: a password reset should force re-authentication everywhere.
+        await refreshTokenRepository.RevokeAllForUserAsync(user.Id, cancellationToken);
+
+        return ResetPasswordOutcome.Success();
+    }
+
     private async Task<AuthResultDto> IssueTokensAsync(
         ApplicationUser user,
         string? ipAddress,

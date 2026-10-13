@@ -1,19 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Infrastructure.Data;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace AndalusiaAcademy.API.IntegrationTests;
 
-public sealed class AuthEndpointsTests(AuthApiWebApplicationFactory factory) : IClassFixture<AuthApiWebApplicationFactory>
+// Uses the shared, real-SQL-Server-backed ApiWebApplicationFactory (not an InMemory one): reset-password's
+// RevokeAllForUserAsync uses ExecuteUpdateAsync, which the EF InMemory provider does not support.
+public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClassFixture<ApiWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -109,34 +106,121 @@ public sealed class AuthEndpointsTests(AuthApiWebApplicationFactory factory) : I
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
-}
 
-public sealed class AuthApiWebApplicationFactory : WebApplicationFactory<Program>
-{
-    private readonly string _databaseName = $"AuthApiTests-{Guid.NewGuid()}";
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    [Fact]
+    public async Task Logout_WithoutAuthentication_ReturnsUnauthorized()
     {
-        builder.UseEnvironment("Development");
-        builder.ConfigureServices(services =>
-        {
-            services.RemoveAll<ApplicationDbContext>();
-            services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
-            services.RemoveAll<IDbContextOptionsConfiguration<ApplicationDbContext>>();
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseInMemoryDatabase(_databaseName));
-        });
-        builder.ConfigureLogging(logging => logging.ClearProviders());
+        using var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/logout",
+            new { refreshToken = "anything" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    protected override IHost CreateHost(IHostBuilder builder)
+    [Fact]
+    public async Task Logout_WithValidRefreshToken_RevokesItInStorage()
     {
-        var host = base.CreateHost(builder);
+        var (accessToken, refreshToken) = await RegisterAsync();
 
-        using var scope = host.Services.CreateScope();
-        // The InMemory provider never runs migrations, so the roles seeded via HasData need EnsureCreated to materialize.
-        scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreated();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout")
+        {
+            Content = JsonContent.Create(new { refreshToken }),
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-        return host;
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var tokenHash = scope.ServiceProvider.GetRequiredService<ITokenService>().Hash(refreshToken);
+        var storedToken = await dbContext.RefreshTokens.SingleAsync(token => token.TokenHash == tokenHash);
+        Assert.NotNull(storedToken.RevokedAtUtc);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ForKnownAndUnknownEmail_BothReturnGenericSuccess()
+    {
+        var (_, _, email) = await RegisterWithEmailAsync();
+
+        using var knownResponse = await _client.PostAsJsonAsync("/api/v1/auth/forgot-password", new { email });
+        using var unknownResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/forgot-password",
+            new { email = $"{Guid.NewGuid()}@example.com" });
+
+        Assert.Equal(HttpStatusCode.OK, knownResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, unknownResponse.StatusCode);
+
+        using var knownDocument = JsonDocument.Parse(await knownResponse.Content.ReadAsStringAsync());
+        using var unknownDocument = JsonDocument.Parse(await unknownResponse.Content.ReadAsStringAsync());
+
+        Assert.False(string.IsNullOrWhiteSpace(knownDocument.RootElement.GetProperty("resetToken").GetString()));
+        Assert.Equal(JsonValueKind.Null, unknownDocument.RootElement.GetProperty("resetToken").ValueKind);
+    }
+
+    [Fact]
+    public async Task ResetPassword_WithValidToken_AllowsLoginWithNewPasswordOnly()
+    {
+        var (_, _, email) = await RegisterWithEmailAsync();
+
+        using var forgotResponse = await _client.PostAsJsonAsync("/api/v1/auth/forgot-password", new { email });
+        using var forgotDocument = JsonDocument.Parse(await forgotResponse.Content.ReadAsStringAsync());
+        var resetToken = forgotDocument.RootElement.GetProperty("resetToken").GetString();
+
+        const string newPassword = "N3wP@ssword123!";
+        using var resetResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/reset-password",
+            new { email, token = resetToken, newPassword });
+        resetResponse.EnsureSuccessStatusCode();
+
+        using var oldLoginResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new { email, password = "P@ssw0rd123!" });
+        Assert.Equal(HttpStatusCode.Unauthorized, oldLoginResponse.StatusCode);
+
+        using var newLoginResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new { email, password = newPassword });
+        newLoginResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task ResetPassword_WithInvalidToken_ReturnsBadRequest()
+    {
+        var (_, _, email) = await RegisterWithEmailAsync();
+
+        using var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/reset-password",
+            new { email, token = "not-a-real-token", newPassword = "N3wP@ssword123!" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    private async Task<(string AccessToken, string RefreshToken)> RegisterAsync()
+    {
+        var (accessToken, refreshToken, _) = await RegisterWithEmailAsync();
+        return (accessToken, refreshToken);
+    }
+
+    private async Task<(string AccessToken, string RefreshToken, string Email)> RegisterWithEmailAsync()
+    {
+        var email = $"{Guid.NewGuid()}@example.com";
+
+        using var response = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            email,
+            password = "P@ssw0rd123!",
+            firstName = "Test",
+            lastName = "Learner",
+            phoneNumber = "+201234567890",
+            countryCode = "EG",
+            preferredLanguage = "en",
+        });
+        response.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = document.RootElement;
+        return (root.GetProperty("accessToken").GetString()!, root.GetProperty("refreshToken").GetString()!, email);
     }
 }
