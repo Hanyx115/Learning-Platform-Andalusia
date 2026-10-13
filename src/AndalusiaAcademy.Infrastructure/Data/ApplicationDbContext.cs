@@ -8,6 +8,8 @@ namespace AndalusiaAcademy.Infrastructure.Data;
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
 {
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     public DbSet<CourseCategory> CourseCategories => Set<CourseCategory>();
 
     public DbSet<Course> Courses => Set<Course>();
