@@ -99,6 +99,7 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IProfileService, ProfileService>();
 
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<IProgramRepository, ProgramRepository>();
