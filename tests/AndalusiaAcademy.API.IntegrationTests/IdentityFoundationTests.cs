@@ -32,7 +32,8 @@ public sealed class IdentityFoundationTests
         Assert.True(identityOptions.Password.RequireLowercase);
         Assert.True(identityOptions.Password.RequireNonAlphanumeric);
         Assert.True(identityOptions.Password.RequireUppercase);
-        Assert.True(identityOptions.SignIn.RequireConfirmedEmail);
+        // Off until a real email provider exists (decided 2026-10-13); revisit when notifications/email are built.
+        Assert.False(identityOptions.SignIn.RequireConfirmedEmail);
         Assert.True(identityOptions.User.RequireUniqueEmail);
         Assert.Equal(5, identityOptions.Lockout.MaxFailedAccessAttempts);
         Assert.Equal(TimeSpan.FromMinutes(15), identityOptions.Lockout.DefaultLockoutTimeSpan);

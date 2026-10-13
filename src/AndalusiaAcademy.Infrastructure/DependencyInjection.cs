@@ -54,12 +54,14 @@ public static class DependencyInjection
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
                 options.Lockout.MaxFailedAccessAttempts = 5;
 
-                options.SignIn.RequireConfirmedEmail = true;
+                // Off until a real email provider exists (decided 2026-10-13); revisit when notifications/email are built.
+                options.SignIn.RequireConfirmedEmail = false;
                 options.User.RequireUniqueEmail = true;
             })
             .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddSignInManager();
 
         services.Configure<DataProtectionTokenProviderOptions>(options =>
             options.TokenLifespan = TimeSpan.FromHours(2));
@@ -96,6 +98,7 @@ public static class DependencyInjection
 
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IAuthService, AuthService>();
 
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<IProgramRepository, ProgramRepository>();
