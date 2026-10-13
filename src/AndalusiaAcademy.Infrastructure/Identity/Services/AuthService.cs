@@ -38,7 +38,7 @@ public sealed class AuthService(
 
         await userManager.AddToRoleAsync(user, RoleNames.Learner);
 
-        var tokens = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        var (tokens, _) = await IssueTokensAsync(user, ipAddress, cancellationToken);
         return RegisterOutcome.Success(tokens);
     }
 
@@ -66,8 +66,47 @@ public sealed class AuthService(
             return LoginOutcome.Failure(LoginFailureReason.InvalidCredentials);
         }
 
-        var tokens = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        var (tokens, _) = await IssueTokensAsync(user, ipAddress, cancellationToken);
         return LoginOutcome.Success(tokens);
+    }
+
+    public async Task<RefreshOutcome> RefreshAsync(
+        RefreshRequest request,
+        string? ipAddress,
+        CancellationToken cancellationToken)
+    {
+        var oldHash = tokenService.Hash(request.RefreshToken);
+        var stored = await refreshTokenRepository.GetActiveByHashAsync(oldHash, cancellationToken);
+
+        if (stored is null)
+        {
+            return RefreshOutcome.Failure();
+        }
+
+        if (stored.RevokedAtUtc is not null)
+        {
+            // A revoked token being presented again means it was stolen and used after the legitimate
+            // client rotated past it; kill every session for this user rather than trust the chain further.
+            await refreshTokenRepository.RevokeAllForUserAsync(stored.UserId, cancellationToken);
+            return RefreshOutcome.Failure();
+        }
+
+        if (stored.ExpiresAtUtc <= DateTimeOffset.UtcNow)
+        {
+            return RefreshOutcome.Failure();
+        }
+
+        var user = await userManager.FindByIdAsync(stored.UserId.ToString());
+
+        if (user is null)
+        {
+            return RefreshOutcome.Failure();
+        }
+
+        var (tokens, newHash) = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        await refreshTokenRepository.RevokeAsync(oldHash, newHash, ipAddress, cancellationToken);
+
+        return RefreshOutcome.Success(tokens);
     }
 
     public async Task LogoutAsync(Guid userId, string refreshToken, CancellationToken cancellationToken)
@@ -121,7 +160,7 @@ public sealed class AuthService(
         return ResetPasswordOutcome.Success();
     }
 
-    private async Task<AuthResultDto> IssueTokensAsync(
+    private async Task<(AuthResultDto Tokens, string RefreshTokenHash)> IssueTokensAsync(
         ApplicationUser user,
         string? ipAddress,
         CancellationToken cancellationToken)
@@ -137,10 +176,12 @@ public sealed class AuthService(
             ipAddress,
             cancellationToken);
 
-        return new AuthResultDto(
+        var tokens = new AuthResultDto(
             accessToken.Value,
             accessToken.ExpiresAtUtc,
             refreshToken.PlainText,
             refreshToken.ExpiresAtUtc);
+
+        return (tokens, refreshToken.Hash);
     }
 }

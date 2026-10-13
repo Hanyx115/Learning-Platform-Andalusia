@@ -186,6 +186,57 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     }
 
     [Fact]
+    public async Task Refresh_WithValidToken_ReturnsNewTokensAndRevokesOldOne()
+    {
+        var (_, refreshToken) = await RegisterAsync();
+
+        using var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken });
+        response.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var newRefreshToken = document.RootElement.GetProperty("refreshToken").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(newRefreshToken));
+        Assert.NotEqual(refreshToken, newRefreshToken);
+
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var tokenHash = scope.ServiceProvider.GetRequiredService<ITokenService>().Hash(refreshToken);
+        var oldToken = await dbContext.RefreshTokens.SingleAsync(token => token.TokenHash == tokenHash);
+        Assert.NotNull(oldToken.RevokedAtUtc);
+    }
+
+    [Fact]
+    public async Task Refresh_WithUnknownToken_ReturnsUnauthorized()
+    {
+        using var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new { refreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_WithAlreadyRotatedToken_ReturnsUnauthorizedAndRevokesWholeChain()
+    {
+        var (_, refreshToken) = await RegisterAsync();
+
+        using var firstRefresh = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken });
+        firstRefresh.EnsureSuccessStatusCode();
+        using var firstRefreshDocument = JsonDocument.Parse(await firstRefresh.Content.ReadAsStringAsync());
+        var rotatedRefreshToken = firstRefreshDocument.RootElement.GetProperty("refreshToken").GetString();
+
+        // Reusing the original (now-revoked) token simulates a stolen token being replayed.
+        using var reuseResponse = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken });
+        Assert.Equal(HttpStatusCode.Unauthorized, reuseResponse.StatusCode);
+
+        // The whole chain, including the legitimate rotated token, must now be dead too.
+        using var rotatedTokenResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new { refreshToken = rotatedRefreshToken });
+        Assert.Equal(HttpStatusCode.Unauthorized, rotatedTokenResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task ResetPassword_WithInvalidToken_ReturnsBadRequest()
     {
         var (_, _, email) = await RegisterWithEmailAsync();

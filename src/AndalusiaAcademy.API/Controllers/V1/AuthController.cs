@@ -16,6 +16,7 @@ public sealed class AuthController(
     IValidator<RegisterRequest> registerValidator,
     IValidator<LoginRequest> loginValidator,
     IValidator<LogoutRequest> logoutValidator,
+    IValidator<RefreshRequest> refreshValidator,
     IValidator<ForgotPasswordRequest> forgotPasswordValidator,
     IValidator<ResetPasswordRequest> resetPasswordValidator,
     IHostEnvironment hostEnvironment) : ControllerBase
@@ -63,6 +64,30 @@ public sealed class AuthController(
             {
                 Status = StatusCodes.Status401Unauthorized,
                 Title = message,
+            });
+        }
+
+        return Ok(outcome.Tokens);
+    }
+
+    [HttpPost("refresh")]
+    [ProducesResponseType<AuthResultDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AuthResultDto>> Refresh(RefreshRequest request, CancellationToken cancellationToken)
+    {
+        await refreshValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        var outcome = await authService.RefreshAsync(
+            request,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            cancellationToken);
+
+        if (!outcome.Succeeded)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Invalid or expired refresh token.",
             });
         }
 
