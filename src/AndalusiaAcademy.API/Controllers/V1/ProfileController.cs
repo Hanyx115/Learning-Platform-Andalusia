@@ -46,5 +46,15 @@ public sealed class ProfileController(
         return Ok(outcome.Profile);
     }
 
+    [HttpGet("{userId:guid}")]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<ProfileDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProfileDto>> GetProfileByUserId(Guid userId, CancellationToken cancellationToken)
+    {
+        var profile = await profileService.GetProfileAsync(userId, cancellationToken);
+        return profile is null ? NotFound() : Ok(profile);
+    }
+
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

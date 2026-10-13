@@ -94,7 +94,17 @@ public static class DependencyInjection
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(PolicyNames.RequireAdmin, policy => policy.RequireRole(RoleNames.Admin));
+            options.AddPolicy(
+                PolicyNames.RequireManagerOrAdmin,
+                policy => policy.RequireRole(RoleNames.Manager, RoleNames.Admin));
+            options.AddPolicy(PolicyNames.RequireInstructor, policy => policy.RequireRole(RoleNames.Instructor));
+            options.AddPolicy(
+                PolicyNames.RequireContentManager,
+                policy => policy.RequireRole(RoleNames.ContentManager));
+        });
 
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
