@@ -28,8 +28,14 @@ services:
       ASPNETCORE_HTTP_PORTS: "8080"
       PUBLIC_URLS: "http://localhost:${API_HTTP_PORT:-8080}"
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AndalusiaAcademy;User Id=sa;Password=${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your .env file};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY in your .env file}
+      Database__MigrateOnStartup: "true"
+      HttpsRedirection__Enabled: "false"
     ports:
       - "${API_HTTP_PORT:-8080}:8080"
+    volumes:
+      - api-dataprotection-keys:/home/app/.aspnet/DataProtection-Keys
 
 volumes:
   sqlserver-data:
+  api-dataprotection-keys:
