@@ -1,5 +1,6 @@
 using AndalusiaAcademy.API.HealthChecks;
 using AndalusiaAcademy.API.Middleware;
+using AndalusiaAcademy.API.OpenApi;
 using AndalusiaAcademy.Application;
 using AndalusiaAcademy.Infrastructure;
 using AndalusiaAcademy.Infrastructure.Catalog.Seeding;
@@ -52,7 +53,11 @@ builder.Services.AddApiVersioning(options =>
 {
     options.GroupNameFormat = "'v'VVV";
     options.SubstituteApiVersionInUrl = true;
-}).AddOpenApi();
+}).AddOpenApi(options =>
+{
+    options.Document.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.Document.AddOperationTransformer<BearerSecuritySchemeTransformer>();
+});
 
 var app = builder.Build();
 
