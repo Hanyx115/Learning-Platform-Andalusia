@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { logout } from '../api/auth'
+import { useAuthSession } from '../auth/session'
 import Container from './Container'
 import './Header.css'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -11,7 +13,10 @@ const NAV_ID = 'primary-navigation'
 
 function Header() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const tokens = useAuthSession()
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const navToggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -31,6 +36,20 @@ function Header() {
   }, [isNavOpen])
 
   const navClassName = isNavOpen ? 'site-nav site-nav--open' : 'site-nav'
+
+  async function handleLogout() {
+    setIsLoggingOut(true)
+
+    try {
+      await logout()
+    } catch {
+      // The local session is cleared even when the API is temporarily unavailable.
+    } finally {
+      setIsLoggingOut(false)
+      setIsNavOpen(false)
+      navigate('/login', { replace: true })
+    }
+  }
 
   return (
     <header className="site-header">
@@ -54,10 +73,73 @@ function Header() {
                   </NavLink>
                 </li>
               ))}
+              {tokens ? (
+                <>
+                  <li className="site-nav__auth-item">
+                    <NavLink className="site-nav__link" to="/profile" onClick={() => setIsNavOpen(false)}>
+                      {t('nav.profile')}
+                    </NavLink>
+                  </li>
+                  <li className="site-nav__auth-item">
+                    <button
+                      className="site-nav__link site-nav__button"
+                      type="button"
+                      disabled={isLoggingOut}
+                      onClick={handleLogout}
+                    >
+                      {isLoggingOut ? t('auth.actions.signingOut') : t('nav.logout')}
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="site-nav__auth-item">
+                    <NavLink className="site-nav__link" to="/login" onClick={() => setIsNavOpen(false)}>
+                      {t('nav.login')}
+                    </NavLink>
+                  </li>
+                  <li className="site-nav__auth-item">
+                    <NavLink className="site-nav__link" to="/register" onClick={() => setIsNavOpen(false)}>
+                      {t('nav.register')}
+                    </NavLink>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
 
           <LanguageSwitcher />
+
+          <div className="site-header__auth">
+            {tokens ? (
+              <>
+                <NavLink className="site-header__auth-link" to="/profile" onClick={() => setIsNavOpen(false)}>
+                  {t('nav.profile')}
+                </NavLink>
+                <button
+                  className="site-header__logout"
+                  type="button"
+                  disabled={isLoggingOut}
+                  onClick={handleLogout}
+                >
+                  {isLoggingOut ? t('auth.actions.signingOut') : t('nav.logout')}
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink className="site-header__auth-link" to="/login" onClick={() => setIsNavOpen(false)}>
+                  {t('nav.login')}
+                </NavLink>
+                <NavLink
+                  className="site-header__auth-link site-header__auth-link--primary"
+                  to="/register"
+                  onClick={() => setIsNavOpen(false)}
+                >
+                  {t('nav.register')}
+                </NavLink>
+              </>
+            )}
+          </div>
 
           <button
             type="button"

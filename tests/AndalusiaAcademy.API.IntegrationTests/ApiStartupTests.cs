@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 
 namespace AndalusiaAcademy.API.IntegrationTests;
 
@@ -22,6 +23,41 @@ public sealed class ApiStartupTests(ApiWebApplicationFactory factory)
 
         response.EnsureSuccessStatusCode();
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task OpenApiDocument_DescribesBearerAuthenticationOnProtectedOperations()
+    {
+        using var response = await _client.GetAsync("/openapi/v1.json");
+        response.EnsureSuccessStatusCode();
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(responseStream);
+        var root = document.RootElement;
+
+        var bearerScheme = root
+            .GetProperty("components")
+            .GetProperty("securitySchemes")
+            .GetProperty("Bearer");
+
+        Assert.Equal("http", bearerScheme.GetProperty("type").GetString());
+        Assert.Equal("bearer", bearerScheme.GetProperty("scheme").GetString());
+        Assert.Equal("JWT", bearerScheme.GetProperty("bearerFormat").GetString());
+
+        var profileOperation = root
+            .GetProperty("paths")
+            .GetProperty("/api/v1/profile")
+            .GetProperty("get");
+
+        var securityRequirement = Assert.Single(profileOperation.GetProperty("security").EnumerateArray());
+        Assert.True(securityRequirement.TryGetProperty("Bearer", out _));
+
+        var registerOperation = root
+            .GetProperty("paths")
+            .GetProperty("/api/v1/auth/register")
+            .GetProperty("post");
+
+        Assert.False(registerOperation.TryGetProperty("security", out _));
     }
 
     [Fact]

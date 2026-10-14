@@ -37,6 +37,24 @@ SQLSERVER_PORT=1433
 
 `MSSQL_SA_PASSWORD` is the local SQL Server administrator password. Keep `.env` local and never commit it.
 
+Generate a unique local JWT signing key and add it to `.env`:
+
+```powershell
+$jwtBytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($jwtBytes)
+$jwtKey = [Convert]::ToBase64String($jwtBytes)
+$envLines = Get-Content -LiteralPath .env
+$hasJwtKey = $envLines | Where-Object { $_ -match '^JWT_KEY=' }
+if ($hasJwtKey) {
+    $updatedLines = $envLines -replace '^JWT_KEY=.*$', "JWT_KEY=$jwtKey"
+    Set-Content -LiteralPath .env -Value $updatedLines
+} else {
+    Add-Content -LiteralPath .env -Value "JWT_KEY=$jwtKey"
+}
+```
+
+The committed `.env.example` contains only a placeholder. Never commit the generated key.
+
 ## 3. Choose one backend workflow
 
 Use only one API workflow at a time:
@@ -75,44 +93,18 @@ If `API_HTTP_PORT` is changed in `.env`, replace `8080` in these URLs with the c
 
 ## 5. Apply the database migrations
 
-The containers start SQL Server and the API, but the API does not apply EF Core migrations automatically. On the first setup, and whenever a new migration is pulled, run:
+The Docker Compose API applies pending EF Core migrations automatically in the local Development environment before loading the catalog seed data. This behavior is enabled only for the Compose service through `Database__MigrateOnStartup=true`; it is not enabled for production.
 
-```powershell
-dotnet tool restore
-
-$sqlPasswordLine = Get-Content .env |
-    Where-Object { $_ -like 'MSSQL_SA_PASSWORD=*' } |
-    Select-Object -First 1
-$sqlPassword = ($sqlPasswordLine -split '=', 2)[1].Trim()
-
-$sqlPortLine = Get-Content .env |
-    Where-Object { $_ -like 'SQLSERVER_PORT=*' } |
-    Select-Object -First 1
-$sqlPort = if ($sqlPortLine) {
-    ($sqlPortLine -split '=', 2)[1].Trim()
-} else {
-    '1433'
-}
-
-$env:ConnectionStrings__DefaultConnection = "Server=localhost,$sqlPort;Database=AndalusiaAcademy;User Id=sa;Password=$sqlPassword;TrustServerCertificate=True"
-
-dotnet ef database update `
-    --project src\AndalusiaAcademy.Infrastructure `
-    --startup-project src\AndalusiaAcademy.API
-
-Remove-Item Env:ConnectionStrings__DefaultConnection
-```
-
-The command reads `SQLSERVER_PORT` from `.env` and defaults to `1433` when it is not set.
+Compose exposes HTTP locally and disables only the API's HTTPS redirect for this workflow. ASP.NET Data Protection keys are stored in the `api-dataprotection-keys` Docker volume so authentication-related protected data survives API container recreation.
 
 ## 6. Load the development catalog demo data
 
 The Development API adds any missing catalog demo records automatically after the database migrations are current. The seed includes realistic categories, courses, programs, career paths and their relationships. It is repeatable, preserves existing records and does not run outside Development.
 
-After applying migrations in the Docker workflow, restart the API container:
+After pulling a new migration, rebuild and restart the API container:
 
 ```powershell
-docker compose restart api
+docker compose up --build -d api
 ```
 
 For the Visual Studio workflow, stop and restart the API. To disable automatic demo seeding for a local run, set `CatalogSeed__Enabled=false` in that process environment.

@@ -13,11 +13,13 @@ function renderHeader(initialEntries: string[] = ['/']) {
 }
 
 describe('Header', () => {
-  it('renders a link for every primary navigation item', () => {
+  it('renders every primary navigation item and signed-out authentication actions', () => {
     renderHeader()
 
     const nav = screen.getByRole('navigation', { name: 'Primary navigation' })
-    expect(within(nav).getAllByRole('link')).toHaveLength(primaryNavItems.length)
+    expect(within(nav).getAllByRole('link')).toHaveLength(primaryNavItems.length + 2)
+    expect(within(nav).getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login')
+    expect(within(nav).getByRole('link', { name: 'Create account' })).toHaveAttribute('href', '/register')
   })
 
   it('marks the current route as the active link', () => {
