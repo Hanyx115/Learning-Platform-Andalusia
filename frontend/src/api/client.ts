@@ -1,3 +1,5 @@
+import { authSession, type AuthTokens } from '../auth/session'
+
 const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:7115'
 const apiBaseUrl = configuredBaseUrl.replace(/\/$/, '')
 
@@ -16,31 +18,111 @@ export class ApiError extends Error {
   }
 }
 
+interface ApiRequestConfiguration {
+  includeAccessToken?: boolean
+  retryAfterRefresh?: boolean
+}
+
+let refreshInProgress: Promise<AuthTokens | null> | null = null
+
+async function readResponseBody(response: Response) {
+  if (response.status === 204) {
+    return undefined
+  }
+
+  const contentType = response.headers.get('content-type')
+  return contentType?.includes('application/json')
+    ? response.json()
+    : response.text()
+}
+
+async function refreshSession(): Promise<AuthTokens | null> {
+  if (refreshInProgress) {
+    return refreshInProgress
+  }
+
+  const refreshToken = authSession.getTokens()?.refreshToken
+  if (!refreshToken) {
+    authSession.clear()
+    return null
+  }
+
+  refreshInProgress = (async () => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/v1/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      })
+
+      if (!response.ok) {
+        authSession.clear()
+        return null
+      }
+
+      const tokens = await response.json() as AuthTokens
+      authSession.setTokens(tokens)
+      return tokens
+    } catch {
+      return null
+    } finally {
+      refreshInProgress = null
+    }
+  })()
+
+  return refreshInProgress
+}
+
+export function refreshAuthSession() {
+  return refreshSession()
+}
+
+async function sendRequest(
+  path: string,
+  options: RequestInit,
+  includeAccessToken: boolean,
+) {
+  const headers = new Headers(options.headers)
+  headers.set('Accept', 'application/json')
+
+  const accessToken = authSession.getTokens()?.accessToken
+  if (includeAccessToken && accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`)
+  }
+
+  return fetch(`${apiBaseUrl}${path}`, {
+    ...options,
+    headers,
+  })
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
+  configuration: ApiRequestConfiguration = {},
 ): Promise<T> {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  const response = await fetch(`${apiBaseUrl}${normalizedPath}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      ...options.headers,
-    },
-  })
+  const includeAccessToken = configuration.includeAccessToken ?? true
+  const retryAfterRefresh = configuration.retryAfterRefresh ?? true
+  let response = await sendRequest(normalizedPath, options, includeAccessToken)
+
+  if (response.status === 401 && retryAfterRefresh && authSession.getTokens()?.refreshToken) {
+    const refreshedTokens = await refreshSession()
+    if (refreshedTokens) {
+      response = await sendRequest(normalizedPath, options, includeAccessToken)
+    }
+  }
 
   if (!response.ok) {
-    const contentType = response.headers.get('content-type')
-    const details = contentType?.includes('application/json')
-      ? await response.json()
-      : await response.text()
+    if (response.status === 401) {
+      authSession.clear()
+    }
 
-    throw new ApiError(response.status, details)
+    throw new ApiError(response.status, await readResponseBody(response))
   }
 
-  if (response.status === 204) {
-    return undefined as T
-  }
-
-  return (await response.json()) as T
+  return await readResponseBody(response) as T
 }

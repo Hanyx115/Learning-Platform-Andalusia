@@ -12,7 +12,7 @@ function CallToAction() {
         <h2 className="cta-banner__title">{t('home.cta.title')}</h2>
         <p className="cta-banner__description">{t('home.cta.description')}</p>
         <div className="cta-banner__actions">
-          <Link to="/courses" className="button button--primary">
+          <Link to="/register" className="button button--primary">
             {t('home.cta.primaryCta')}
           </Link>
           <Link to="/about" className="button button--secondary">
