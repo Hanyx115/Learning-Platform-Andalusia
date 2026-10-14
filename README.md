@@ -92,6 +92,8 @@ Copy-Item .env.example .env
 
 The example uses `Aa11!Andalusia` for local SQL Server development. Replace it with your own strong local password when needed. Never commit `.env`.
 
+Before starting Compose, generate the required local JWT signing key using the command in [Local Development Guide section 2](docs/LOCAL_DEVELOPMENT.md#2-create-the-local-docker-configuration). The key is stored only in the ignored `.env` file.
+
 Start the API and SQL Server:
 
 ```powershell

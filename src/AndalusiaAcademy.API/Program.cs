@@ -59,35 +59,48 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    if (app.Configuration.GetValue<bool>("CatalogSeed:Enabled"))
+    var migrateOnStartup = app.Configuration.GetValue<bool>("Database:MigrateOnStartup");
+    var seedCatalog = app.Configuration.GetValue<bool>("CatalogSeed:Enabled");
+
+    if (migrateOnStartup || seedCatalog)
     {
         await using var scope = app.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         if (!dbContext.Database.IsRelational())
         {
-            app.Logger.LogInformation("Catalog demo data seeding skipped for a non-relational database provider.");
-        }
-        else if (!await dbContext.Database.CanConnectAsync())
-        {
-            app.Logger.LogWarning(
-                "Catalog demo data seeding skipped because the database is unavailable. Apply migrations and restart the API.");
+            app.Logger.LogInformation(
+                "Development database initialization skipped for a non-relational database provider.");
         }
         else
         {
-            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+            if (migrateOnStartup)
+            {
+                await dbContext.Database.MigrateAsync();
+                app.Logger.LogInformation("Development database migrations are current.");
+            }
 
-            if (pendingMigrations.Any())
+            if (seedCatalog && !await dbContext.Database.CanConnectAsync())
             {
                 app.Logger.LogWarning(
-                    "Catalog demo data seeding skipped because database migrations are pending. Apply migrations and restart the API.");
+                    "Catalog demo data seeding skipped because the database is unavailable.");
             }
-            else
+            else if (seedCatalog)
             {
-                var addedRows = await CatalogDataSeeder.SeedAsync(dbContext);
-                app.Logger.LogInformation(
-                    "Catalog demo data seeding completed. Added {AddedRows} missing rows.",
-                    addedRows);
+                var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+
+                if (pendingMigrations.Any())
+                {
+                    app.Logger.LogWarning(
+                        "Catalog demo data seeding skipped because database migrations are pending.");
+                }
+                else
+                {
+                    var addedRows = await CatalogDataSeeder.SeedAsync(dbContext);
+                    app.Logger.LogInformation(
+                        "Catalog demo data seeding completed. Added {AddedRows} missing rows.",
+                        addedRows);
+                }
             }
         }
     }
@@ -104,7 +117,10 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-app.UseHttpsRedirection();
+if (app.Configuration.GetValue("HttpsRedirection:Enabled", true))
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("Frontend");
 

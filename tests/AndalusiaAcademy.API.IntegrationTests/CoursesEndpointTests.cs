@@ -62,6 +62,8 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Jwt:Key"] = ApiWebApplicationFactory.TestJwtKey,
+                ["CatalogSeed:Enabled"] = "false",
+                ["Database:MigrateOnStartup"] = "false",
             }));
         builder.ConfigureServices(services =>
         {
