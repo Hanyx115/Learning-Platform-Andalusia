@@ -19,6 +19,10 @@ import CourseDetailPage from './pages/catalog/CourseDetailPage'
 import CoursesPage from './pages/catalog/CoursesPage'
 import ProgramDetailPage from './pages/catalog/ProgramDetailPage'
 import ProgramsPage from './pages/catalog/ProgramsPage'
+import ProfileLayout from './pages/profile/ProfileLayout'
+import ApplicationsPage from './pages/profile/ApplicationsPage'
+import EnrollmentsPage from './pages/profile/EnrollmentsPage'
+import StaffApplicationsPage from './pages/staff/StaffApplicationsPage'
 
 export const router = createBrowserRouter([
   {
@@ -94,7 +98,25 @@ export const router = createBrowserRouter([
         children: [
           {
             path: 'profile',
-            element: <ProfilePage />,
+            element: <ProfileLayout />,
+            children: [
+              {
+                index: true,
+                element: <ProfilePage />,
+              },
+              {
+                path: 'applications',
+                element: <ApplicationsPage />,
+              },
+              {
+                path: 'enrollments',
+                element: <EnrollmentsPage />,
+              },
+            ],
+          },
+          {
+            path: 'staff/applications',
+            element: <StaffApplicationsPage />,
           },
         ],
       },

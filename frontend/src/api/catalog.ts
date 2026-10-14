@@ -7,6 +7,7 @@ export interface Course {
   description: string
   status: string
   type: string
+  price: number | null
   categorySlug: string
   categoryName: string
   createdAt: string
@@ -44,6 +45,7 @@ export interface ProgramSummary {
   slug: string
   description: string
   status: string
+  price: number | null
   createdAt: string
 }
 

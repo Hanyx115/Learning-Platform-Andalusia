@@ -103,7 +103,11 @@ function ProfilePage() {
       <Container>
         <div className="profile-page__heading">
           <div>
-            <p className="auth-card__eyebrow">{t('profile.eyebrow')}</p>
+            <p className="auth-card__eyebrow">
+              {t('profile.accountType', {
+                roles: profile.roles.map((role) => t(`profile.roleNames.${role}`, role)).join(', '),
+              })}
+            </p>
             <h1>{t('profile.title')}</h1>
             <p>{t('profile.description')}</p>
           </div>

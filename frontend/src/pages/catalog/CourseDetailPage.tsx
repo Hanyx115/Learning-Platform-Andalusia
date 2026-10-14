@@ -1,7 +1,12 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
+import { getApiErrorMessage } from '../../api/auth'
 import { useCourse } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
+import { submitApplication } from '../../api/enrollment'
+import { useAuthProfile } from '../../auth/profileContext'
+import { useAuthSession } from '../../auth/session'
 import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, CatalogMeta, QueryState } from './CatalogUi'
@@ -11,6 +16,26 @@ function CourseDetailPage() {
   const { t } = useTranslation()
   const { slug = '' } = useParams()
   const query = useCourse(slug)
+  const tokens = useAuthSession()
+  const { profile } = useAuthProfile()
+  const isLearner = profile?.roles.includes('Learner') ?? false
+  const [isApplying, setIsApplying] = useState(false)
+  const [applyError, setApplyError] = useState('')
+  const [hasApplied, setHasApplied] = useState(false)
+
+  async function handleApply(courseId: string) {
+    setIsApplying(true)
+    setApplyError('')
+
+    try {
+      await submitApplication({ courseId })
+      setHasApplied(true)
+    } catch (requestError) {
+      setApplyError(getApiErrorMessage(requestError, t('courses.applyError')))
+    } finally {
+      setIsApplying(false)
+    }
+  }
 
   if (query.isPending) {
     return <Container><QueryState kind="loading" /></Container>
@@ -47,6 +72,31 @@ function CourseDetailPage() {
               <CatalogMeta>{query.data.status}</CatalogMeta>
             </div>
             <p dir="auto">{query.data.description}</p>
+
+            {query.data.price !== null ? (
+              <p className="catalog-detail__price">{t('courses.price', { price: query.data.price })}</p>
+            ) : null}
+
+            {!tokens || isLearner ? (
+              <div className="catalog-detail__apply">
+                {!tokens ? (
+                  <Link className="button button--primary" to="/login">{t('courses.signInToApply')}</Link>
+                ) : hasApplied ? (
+                  <p className="auth-message auth-message--success" role="status">{t('courses.applySuccess')}</p>
+                ) : (
+                  <button
+                    className="button button--primary"
+                    type="button"
+                    disabled={isApplying}
+                    onClick={() => void handleApply(query.data.id)}
+                  >
+                    {isApplying ? t('courses.applying') : t('courses.apply')}
+                  </button>
+                )}
+                {applyError ? <p className="auth-message auth-message--error" role="alert">{applyError}</p> : null}
+              </div>
+            ) : null}
+
             <Link className="catalog-card__link" to="/courses">{t('courses.backToCourses')}</Link>
           </article>
         </Container>
