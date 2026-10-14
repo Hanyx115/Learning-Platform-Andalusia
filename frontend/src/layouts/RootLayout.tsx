@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router-dom'
+import { AuthProfileProvider } from '../auth/profile'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import { persistLanguage, resolveLanguage } from '../i18n'
@@ -18,13 +19,15 @@ function RootLayout() {
   }, [currentLanguage, t])
 
   return (
-    <div className="app-shell">
-      <Header />
-      <main>
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
+    <AuthProfileProvider>
+      <div className="app-shell">
+        <Header />
+        <main>
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
+    </AuthProfileProvider>
   )
 }
 

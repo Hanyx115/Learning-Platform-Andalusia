@@ -1,0 +1,145 @@
+.profile-dashboard {
+  min-height: calc(100vh - var(--header-height));
+  padding-block: clamp(2.5rem, 7vw, 5rem);
+  background: var(--color-bg-warm);
+}
+
+.profile-dashboard__layout {
+  display: grid;
+  grid-template-columns: 14rem 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.profile-dashboard__sidebar {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid rgb(52 74 78 / 12%);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  position: sticky;
+  top: calc(var(--header-height) + 1.5rem);
+}
+
+.profile-dashboard__link {
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.6rem;
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.profile-dashboard__link:hover {
+  background: var(--color-bg-warm);
+}
+
+.profile-dashboard__link.active {
+  background: var(--color-brand);
+  color: var(--color-surface);
+}
+
+.profile-dashboard__content {
+  min-width: 0;
+}
+
+.dashboard-section {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.dashboard-section__heading h1 {
+  margin: 0 0 0.4rem;
+  color: var(--color-primary-dark);
+}
+
+.dashboard-section__heading p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.dashboard-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgb(52 74 78 / 12%);
+  border-radius: 0.9rem;
+  background: var(--color-surface);
+}
+
+.dashboard-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-card__heading h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--color-primary-dark);
+}
+
+.dashboard-card__meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.status-badge--pending {
+  background: rgb(176 121 99 / 15%);
+  color: var(--color-brand-hover);
+}
+
+.status-badge--positive {
+  background: rgb(43 112 72 / 12%);
+  color: #215d3b;
+}
+
+.status-badge--negative {
+  background: rgb(150 42 42 / 10%);
+  color: #7a1f1f;
+}
+
+.status-badge--neutral {
+  background: rgb(52 74 78 / 10%);
+  color: var(--color-text-secondary);
+}
+
+.dashboard-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 56rem) {
+  .profile-dashboard__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-dashboard__sidebar {
+    position: static;
+    grid-auto-flow: column;
+    overflow-x: auto;
+  }
+}

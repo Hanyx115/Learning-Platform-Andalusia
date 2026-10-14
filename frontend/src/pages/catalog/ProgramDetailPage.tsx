@@ -1,7 +1,12 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
+import { getApiErrorMessage } from '../../api/auth'
 import { useProgram } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
+import { submitApplication } from '../../api/enrollment'
+import { useAuthProfile } from '../../auth/profileContext'
+import { useAuthSession } from '../../auth/session'
 import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, QueryState } from './CatalogUi'
@@ -11,6 +16,26 @@ function ProgramDetailPage() {
   const { t } = useTranslation()
   const { slug = '' } = useParams()
   const query = useProgram(slug)
+  const tokens = useAuthSession()
+  const { profile } = useAuthProfile()
+  const isLearner = profile?.roles.includes('Learner') ?? false
+  const [isApplying, setIsApplying] = useState(false)
+  const [applyError, setApplyError] = useState('')
+  const [hasApplied, setHasApplied] = useState(false)
+
+  async function handleApply(programId: string) {
+    setIsApplying(true)
+    setApplyError('')
+
+    try {
+      await submitApplication({ programId })
+      setHasApplied(true)
+    } catch (requestError) {
+      setApplyError(getApiErrorMessage(requestError, t('programs.applyError')))
+    } finally {
+      setIsApplying(false)
+    }
+  }
 
   if (query.isPending) {
     return <Container><QueryState kind="loading" /></Container>
@@ -40,6 +65,30 @@ function ProgramDetailPage() {
               className="catalog-detail__image"
               alt={query.data.title}
             />
+            {query.data.price !== null ? (
+              <p className="catalog-detail__price">{t('programs.price', { price: query.data.price })}</p>
+            ) : null}
+
+            {!tokens || isLearner ? (
+              <div className="catalog-detail__apply">
+                {!tokens ? (
+                  <Link className="button button--primary" to="/login">{t('programs.signInToApply')}</Link>
+                ) : hasApplied ? (
+                  <p className="auth-message auth-message--success" role="status">{t('programs.applySuccess')}</p>
+                ) : (
+                  <button
+                    className="button button--primary"
+                    type="button"
+                    disabled={isApplying}
+                    onClick={() => void handleApply(query.data.id)}
+                  >
+                    {isApplying ? t('programs.applying') : t('programs.apply')}
+                  </button>
+                )}
+                {applyError ? <p className="auth-message auth-message--error" role="alert">{applyError}</p> : null}
+              </div>
+            ) : null}
+
             <h2>{t('programs.includedCourses')}</h2>
             {query.data.courses.length > 0 ? (
               <ol className="catalog-related-list">

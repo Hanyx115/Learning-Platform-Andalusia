@@ -12,5 +12,7 @@ public class AcademyProgram
 
     public string Status { get; set; } = string.Empty;
 
+    public decimal? Price { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }

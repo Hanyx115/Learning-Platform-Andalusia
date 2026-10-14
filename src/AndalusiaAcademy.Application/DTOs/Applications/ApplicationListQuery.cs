@@ -1,0 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace AndalusiaAcademy.Application.DTOs.Applications;
+
+public sealed class ApplicationListQuery
+{
+    [Range(1, int.MaxValue)]
+    public int Page { get; init; } = 1;
+
+    [Range(1, 100)]
+    public int PageSize { get; init; } = 10;
+
+    [StringLength(50)]
+    public string? Status { get; init; }
+}

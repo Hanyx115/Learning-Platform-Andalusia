@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { logout } from '../api/auth'
 import { useAuthSession } from '../auth/session'
+import { useAuthProfile } from '../auth/profileContext'
 import Container from './Container'
 import './Header.css'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -15,6 +16,8 @@ function Header() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const tokens = useAuthSession()
+  const { profile } = useAuthProfile()
+  const canReviewApplications = profile?.roles.includes('Manager') || profile?.roles.includes('Admin')
   const [isNavOpen, setIsNavOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const navToggleRef = useRef<HTMLButtonElement>(null)
@@ -80,6 +83,13 @@ function Header() {
                       {t('nav.profile')}
                     </NavLink>
                   </li>
+                  {canReviewApplications ? (
+                    <li className="site-nav__auth-item">
+                      <NavLink className="site-nav__link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
+                        {t('nav.reviewApplications')}
+                      </NavLink>
+                    </li>
+                  ) : null}
                   <li className="site-nav__auth-item">
                     <button
                       className="site-nav__link site-nav__button"
@@ -116,6 +126,11 @@ function Header() {
                 <NavLink className="site-header__auth-link" to="/profile" onClick={() => setIsNavOpen(false)}>
                   {t('nav.profile')}
                 </NavLink>
+                {canReviewApplications ? (
+                  <NavLink className="site-header__auth-link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
+                    {t('nav.reviewApplications')}
+                  </NavLink>
+                ) : null}
                 <button
                   className="site-header__logout"
                   type="button"

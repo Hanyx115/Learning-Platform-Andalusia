@@ -14,6 +14,8 @@ public sealed class CourseDto
 
     public string Type { get; init; } = string.Empty;
 
+    public decimal? Price { get; init; }
+
     public string CategorySlug { get; init; } = string.Empty;
 
     public string CategoryName { get; init; } = string.Empty;

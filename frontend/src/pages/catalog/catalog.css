@@ -194,6 +194,20 @@
   color: var(--color-primary-dark);
 }
 
+.catalog-detail__price {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.catalog-detail__apply {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  margin-block: 1.25rem;
+}
+
 .catalog-detail--sections {
   display: grid;
   gap: 2rem;
