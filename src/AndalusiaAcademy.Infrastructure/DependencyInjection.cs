@@ -2,6 +2,7 @@ using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Infrastructure.Catalog.Repositories;
 using AndalusiaAcademy.Infrastructure.Data;
+using AndalusiaAcademy.Infrastructure.Enrollment.Repositories;
 using AndalusiaAcademy.Infrastructure.Identity;
 using AndalusiaAcademy.Infrastructure.Identity.Models;
 using AndalusiaAcademy.Infrastructure.Identity.Repositories;
@@ -114,6 +115,7 @@ public static class DependencyInjection
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<IProgramRepository, ProgramRepository>();
         services.AddScoped<ICareerPathRepository, CareerPathRepository>();
+        services.AddScoped<IApplicationRepository, ApplicationRepository>();
 
         return services;
     }

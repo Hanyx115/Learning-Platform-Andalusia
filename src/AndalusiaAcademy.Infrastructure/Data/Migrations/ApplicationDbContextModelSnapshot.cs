@@ -199,6 +199,94 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.ToTable("CourseCategories");
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ProgramId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("ProgramId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("UserId", "CourseId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_LearnerApplications_User_Course_Pending")
+                        .HasFilter("[Status] = 'Pending' AND [CourseId] IS NOT NULL");
+
+                    b.HasIndex("UserId", "ProgramId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_LearnerApplications_User_Program_Pending")
+                        .HasFilter("[Status] = 'Pending' AND [ProgramId] IS NOT NULL");
+
+                    b.ToTable("LearnerApplications", t =>
+                        {
+                            t.HasCheckConstraint("CK_LearnerApplications_ExactlyOneTarget", "([CourseId] IS NOT NULL AND [ProgramId] IS NULL) OR ([CourseId] IS NULL AND [ProgramId] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplicationStatusHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ChangedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("LearnerApplicationStatusHistories");
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramCourse", b =>
                 {
                     b.Property<Guid>("ProgramId")
@@ -576,6 +664,34 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AndalusiaAcademy.Domain.Models.AcademyProgram", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Program");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplicationStatusHistory", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.LearnerApplication", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramCourse", b =>

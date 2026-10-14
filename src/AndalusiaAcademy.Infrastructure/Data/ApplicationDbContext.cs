@@ -24,6 +24,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<CareerPathCourse> CareerPathCourses => Set<CareerPathCourse>();
 
+    public DbSet<LearnerApplication> LearnerApplications => Set<LearnerApplication>();
+
+    public DbSet<LearnerApplicationStatusHistory> LearnerApplicationStatusHistories => Set<LearnerApplicationStatusHistory>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
