@@ -18,5 +18,7 @@ public class Course
 
     public string Type { get; set; } = string.Empty;
 
+    public decimal? Price { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }

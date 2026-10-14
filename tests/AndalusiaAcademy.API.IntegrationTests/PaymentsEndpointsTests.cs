@@ -1,0 +1,258 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using AndalusiaAcademy.Application.Identity;
+using AndalusiaAcademy.Domain.Models;
+using AndalusiaAcademy.Infrastructure.Data;
+using AndalusiaAcademy.Infrastructure.Identity.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AndalusiaAcademy.API.IntegrationTests;
+
+public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : IClassFixture<ApiWebApplicationFactory>
+{
+    private readonly HttpClient _client = factory.CreateClient();
+
+    [Fact]
+    public async Task Pay_ForAcceptedApplication_SucceedsAndCreatesEnrollment()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseId = await SeedCourseAsync(price: 499.99m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+
+        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+        response.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = document.RootElement;
+
+        Assert.True(root.GetProperty("succeeded").GetBoolean());
+        Assert.Equal("Succeeded", root.GetProperty("payment").GetProperty("status").GetString());
+        Assert.Equal(499.99, root.GetProperty("payment").GetProperty("amount").GetDouble());
+        Assert.Equal("Active", root.GetProperty("enrollment").GetProperty("status").GetString());
+
+        using var enrollmentsResponse = await SendAuthorizedAsync(HttpMethod.Get, "/api/v1/enrollments/me", learnerToken);
+        enrollmentsResponse.EnsureSuccessStatusCode();
+        using var enrollmentsDocument = JsonDocument.Parse(await enrollmentsResponse.Content.ReadAsStringAsync());
+        Assert.True(enrollmentsDocument.RootElement.GetArrayLength() >= 1);
+
+        using var paymentsResponse = await SendAuthorizedAsync(HttpMethod.Get, "/api/v1/payments/me", learnerToken);
+        paymentsResponse.EnsureSuccessStatusCode();
+        using var paymentsDocument = JsonDocument.Parse(await paymentsResponse.Content.ReadAsStringAsync());
+        Assert.True(paymentsDocument.RootElement.GetArrayLength() >= 1);
+    }
+
+    [Fact]
+    public async Task Pay_Twice_ForSameApplication_ReturnsValidationProblem()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseId = await SeedCourseAsync(price: 100m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+
+        using var first = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+        first.EnsureSuccessStatusCode();
+
+        using var second = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pay_ForStillPendingApplication_ReturnsValidationProblem()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseId = await SeedCourseAsync(price: 100m);
+
+        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseId });
+        submitResponse.EnsureSuccessStatusCode();
+        using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
+        var applicationId = submitDocument.RootElement.GetProperty("id").GetString();
+
+        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pay_ForCourseWithNoPrice_ReturnsValidationProblem()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseId = await SeedCourseAsync(price: null);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+
+        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pay_ForSomeoneElsesApplication_ReturnsValidationProblem()
+    {
+        var (ownerToken, _) = await RegisterAsync();
+        var courseId = await SeedCourseAsync(price: 100m);
+        var applicationId = await SubmitAndAcceptAsync(ownerToken, courseId);
+
+        var (otherLearnerToken, _) = await RegisterAsync();
+
+        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", otherLearnerToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pay_AsAdminWithoutLearnerRole_ReturnsForbidden()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseId = await SeedCourseAsync(price: 100m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+
+        var adminOnlyToken = await RegisterAdminOnlyAsync();
+
+        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", adminOnlyToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    private async Task<string> RegisterAdminOnlyAsync()
+    {
+        var email = $"{Guid.NewGuid()}@example.com";
+        const string password = "P@ssw0rd123!";
+
+        using var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            email,
+            password,
+            firstName = "Test",
+            lastName = "Staff",
+            phoneNumber = "+201234567890",
+            countryCode = "EG",
+            preferredLanguage = "en",
+        });
+        registerResponse.EnsureSuccessStatusCode();
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.FindByEmailAsync(email);
+            await userManager.AddToRoleAsync(user!, RoleNames.Admin);
+            await userManager.RemoveFromRoleAsync(user!, RoleNames.Learner);
+        }
+
+        using var loginResponse = await _client.PostAsJsonAsync("/api/v1/auth/login", new { email, password });
+        loginResponse.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await loginResponse.Content.ReadAsStringAsync());
+        return document.RootElement.GetProperty("accessToken").GetString()!;
+    }
+
+    private async Task<string> SubmitAndAcceptAsync(string learnerToken, Guid courseId)
+    {
+        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseId });
+        submitResponse.EnsureSuccessStatusCode();
+        using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
+        var applicationId = submitDocument.RootElement.GetProperty("id").GetString()!;
+
+        var adminToken = await RegisterAsAsync(RoleNames.Admin);
+        using var acceptResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, $"/api/v1/applications/{applicationId}/accept", adminToken);
+        acceptResponse.EnsureSuccessStatusCode();
+
+        return applicationId;
+    }
+
+    private async Task<HttpResponseMessage> SendAuthorizedAsync(
+        HttpMethod method,
+        string url,
+        string accessToken,
+        object? body = null)
+    {
+        using var request = new HttpRequestMessage(method, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        if (body is not null)
+        {
+            request.Content = JsonContent.Create(body);
+        }
+
+        return await _client.SendAsync(request);
+    }
+
+    private async Task<Guid> SeedCourseAsync(decimal? price)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var category = new CourseCategory { Id = Guid.NewGuid(), Name = $"Cat-{Guid.NewGuid()}", Slug = $"cat-{Guid.NewGuid()}" };
+        var course = new Course
+        {
+            Id = Guid.NewGuid(),
+            CategoryId = category.Id,
+            Title = $"Course-{Guid.NewGuid()}",
+            Slug = $"course-{Guid.NewGuid()}",
+            Description = "Test course.",
+            Status = "Published",
+            Type = "Online",
+            Price = price,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        dbContext.CourseCategories.Add(category);
+        dbContext.Courses.Add(course);
+        await dbContext.SaveChangesAsync();
+
+        return course.Id;
+    }
+
+    private async Task<(string AccessToken, string Email)> RegisterAsync()
+    {
+        var email = $"{Guid.NewGuid()}@example.com";
+
+        using var response = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            email,
+            password = "P@ssw0rd123!",
+            firstName = "Test",
+            lastName = "Learner",
+            phoneNumber = "+201234567890",
+            countryCode = "EG",
+            preferredLanguage = "en",
+        });
+        response.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return (document.RootElement.GetProperty("accessToken").GetString()!, email);
+    }
+
+    private async Task<string> RegisterAsAsync(string role)
+    {
+        var email = $"{Guid.NewGuid()}@example.com";
+        const string password = "P@ssw0rd123!";
+
+        using var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            email,
+            password,
+            firstName = "Test",
+            lastName = "Staff",
+            phoneNumber = "+201234567890",
+            countryCode = "EG",
+            preferredLanguage = "en",
+        });
+        registerResponse.EnsureSuccessStatusCode();
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.FindByEmailAsync(email);
+            await userManager.AddToRoleAsync(user!, role);
+        }
+
+        using var loginResponse = await _client.PostAsJsonAsync("/api/v1/auth/login", new { email, password });
+        loginResponse.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await loginResponse.Content.ReadAsStringAsync());
+        return document.RootElement.GetProperty("accessToken").GetString()!;
+    }
+}

@@ -12,5 +12,7 @@ public sealed class ProgramSummaryDto
 
     public string Status { get; init; } = string.Empty;
 
+    public decimal? Price { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
 }

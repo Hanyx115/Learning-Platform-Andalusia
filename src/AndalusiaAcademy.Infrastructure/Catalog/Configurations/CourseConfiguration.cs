@@ -33,6 +33,9 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
             .HasMaxLength(50)
             .IsRequired();
 
+        builder.Property(course => course.Price)
+            .HasPrecision(10, 2);
+
         builder.Property(course => course.CreatedAt)
             .IsRequired();
 

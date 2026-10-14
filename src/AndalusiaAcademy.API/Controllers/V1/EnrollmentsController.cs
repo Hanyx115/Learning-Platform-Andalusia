@@ -1,0 +1,26 @@
+using System.Security.Claims;
+using AndalusiaAcademy.Application.DTOs.Enrollments;
+using AndalusiaAcademy.Application.Services;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AndalusiaAcademy.API.Controllers.V1;
+
+[ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/enrollments")]
+[Authorize]
+public sealed class EnrollmentsController(EnrollmentReadService enrollmentService) : ControllerBase
+{
+    [HttpGet("me")]
+    [ProducesResponseType<IReadOnlyList<EnrollmentDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<EnrollmentDto>>> GetMine(CancellationToken cancellationToken)
+    {
+        var enrollments = await enrollmentService.GetMyEnrollmentsAsync(
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            cancellationToken);
+
+        return Ok(enrollments);
+    }
+}

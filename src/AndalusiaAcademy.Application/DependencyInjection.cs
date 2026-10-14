@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddScoped<ProgramService>();
         services.AddScoped<CareerPathService>();
         services.AddScoped<ApplicationSubmissionService>();
+        services.AddScoped<PaymentService>();
+        services.AddScoped<EnrollmentReadService>();
 
         return services;
     }

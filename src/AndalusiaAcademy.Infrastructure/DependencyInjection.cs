@@ -3,6 +3,8 @@ using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Infrastructure.Catalog.Repositories;
 using AndalusiaAcademy.Infrastructure.Data;
 using AndalusiaAcademy.Infrastructure.Enrollment.Repositories;
+using AndalusiaAcademy.Application.Enrollment;
+using AndalusiaAcademy.Infrastructure.Enrollment.Services;
 using AndalusiaAcademy.Infrastructure.Identity;
 using AndalusiaAcademy.Infrastructure.Identity.Models;
 using AndalusiaAcademy.Infrastructure.Identity.Repositories;
@@ -97,6 +99,7 @@ public static class DependencyInjection
 
         services.AddAuthorization(options =>
         {
+            options.AddPolicy(PolicyNames.RequireLearner, policy => policy.RequireRole(RoleNames.Learner));
             options.AddPolicy(PolicyNames.RequireAdmin, policy => policy.RequireRole(RoleNames.Admin));
             options.AddPolicy(
                 PolicyNames.RequireManagerOrAdmin,
@@ -116,6 +119,9 @@ public static class DependencyInjection
         services.AddScoped<IProgramRepository, ProgramRepository>();
         services.AddScoped<ICareerPathRepository, CareerPathRepository>();
         services.AddScoped<IApplicationRepository, ApplicationRepository>();
+        services.AddScoped<IPaymentProcessor, SimulatedPaymentProcessor>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 
         return services;
     }

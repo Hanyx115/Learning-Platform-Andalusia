@@ -53,6 +53,7 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 Slug = program.Slug,
                 Description = program.Description,
                 Status = program.Status,
+                Price = program.Price,
                 CreatedAt = program.CreatedAt,
             })
             .Skip((int)offset)
@@ -78,6 +79,7 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 Slug = program.Slug,
                 Description = program.Description,
                 Status = program.Status,
+                Price = program.Price,
                 CreatedAt = program.CreatedAt,
                 Courses = dbContext.ProgramCourses
                     .Where(link => link.ProgramId == program.Id)

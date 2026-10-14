@@ -145,6 +145,17 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Submit_AsAdminWithoutLearnerRole_ReturnsForbidden()
+    {
+        var adminOnlyToken = await RegisterAdminOnlyAsync();
+        var courseId = await SeedCourseAsync();
+
+        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", adminOnlyToken, new { courseId });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     private async Task<HttpResponseMessage> SendAuthorizedAsync(
         HttpMethod method,
         string url,
@@ -250,6 +261,38 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByEmailAsync(email);
             await userManager.AddToRoleAsync(user!, role);
+        }
+
+        using var loginResponse = await _client.PostAsJsonAsync("/api/v1/auth/login", new { email, password });
+        loginResponse.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await loginResponse.Content.ReadAsStringAsync());
+        return document.RootElement.GetProperty("accessToken").GetString()!;
+    }
+
+    private async Task<string> RegisterAdminOnlyAsync()
+    {
+        var email = $"{Guid.NewGuid()}@example.com";
+        const string password = "P@ssw0rd123!";
+
+        using var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            email,
+            password,
+            firstName = "Test",
+            lastName = "Staff",
+            phoneNumber = "+201234567890",
+            countryCode = "EG",
+            preferredLanguage = "en",
+        });
+        registerResponse.EnsureSuccessStatusCode();
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.FindByEmailAsync(email);
+            await userManager.AddToRoleAsync(user!, RoleNames.Admin);
+            await userManager.RemoveFromRoleAsync(user!, RoleNames.Learner);
         }
 
         using var loginResponse = await _client.PostAsJsonAsync("/api/v1/auth/login", new { email, password });

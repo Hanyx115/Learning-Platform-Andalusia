@@ -29,6 +29,12 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<LearnerApplicationStatusHistory> LearnerApplicationStatusHistories => Set<LearnerApplicationStatusHistory>();
 
+    public DbSet<Payment> Payments => Set<Payment>();
+
+    public DbSet<PaymentStatusHistory> PaymentStatusHistories => Set<PaymentStatusHistory>();
+
+    public DbSet<LearnerEnrollment> Enrollments => Set<LearnerEnrollment>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

@@ -20,6 +20,7 @@ public sealed class ApplicationsController(
     IValidator<RejectApplicationRequest> rejectValidator) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Policy = PolicyNames.RequireLearner)]
     [ProducesResponseType<ApplicationDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApplicationDto>> Submit(
