@@ -79,6 +79,32 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                 table: "Enrollments",
                 newName: "IX_Enrollments_CourseOfferingId");
 
+            // Older local development databases may still contain the offering tables from the
+            // discarded catalog-offerings branch. Preserve their rows before replacing that schema
+            // with the offering model used by the application flow.
+            migrationBuilder.Sql(
+                """
+                IF OBJECT_ID(N'[CourseOfferings]', N'U') IS NOT NULL
+                   AND COL_LENGTH(N'CourseOfferings', N'StartsAt') IS NOT NULL
+                BEGIN
+                    SELECT Id, CourseId, StartsAt, EndsAt, Price, Currency, Capacity, Status
+                    INTO [__LegacyCourseOfferingsImport]
+                    FROM [CourseOfferings];
+
+                    DROP TABLE [CourseOfferings];
+                END;
+
+                IF OBJECT_ID(N'[ProgramOfferings]', N'U') IS NOT NULL
+                   AND COL_LENGTH(N'ProgramOfferings', N'StartsAt') IS NOT NULL
+                BEGIN
+                    SELECT Id, ProgramId, StartsAt, EndsAt, Price, Currency, Capacity, Status
+                    INTO [__LegacyProgramOfferingsImport]
+                    FROM [ProgramOfferings];
+
+                    DROP TABLE [ProgramOfferings];
+                END;
+                """);
+
             migrationBuilder.CreateTable(
                 name: "CourseOfferings",
                 columns: table => new
@@ -142,6 +168,41 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.Sql(
+                """
+                IF OBJECT_ID(N'[__LegacyCourseOfferingsImport]', N'U') IS NOT NULL
+                BEGIN
+                    INSERT INTO [CourseOfferings]
+                        (Id, CourseId, StartsAtUtc, EndsAtUtc, ApplicationOpensAtUtc,
+                         ApplicationClosesAtUtc, Price, Currency, Capacity, Status, CreatedAtUtc)
+                    SELECT Id, CourseId, StartsAt, EndsAt,
+                           DATEADD(day, -30, StartsAt), DATEADD(day, -1, StartsAt),
+                           Price, Currency, Capacity,
+                           CASE WHEN Status IN ('Draft', 'Open', 'Closed', 'Cancelled')
+                                THEN Status ELSE 'Closed' END,
+                           SYSDATETIMEOFFSET()
+                    FROM [__LegacyCourseOfferingsImport];
+
+                    DROP TABLE [__LegacyCourseOfferingsImport];
+                END;
+
+                IF OBJECT_ID(N'[__LegacyProgramOfferingsImport]', N'U') IS NOT NULL
+                BEGIN
+                    INSERT INTO [ProgramOfferings]
+                        (Id, ProgramId, StartsAtUtc, EndsAtUtc, ApplicationOpensAtUtc,
+                         ApplicationClosesAtUtc, Price, Currency, Capacity, Status, CreatedAtUtc)
+                    SELECT Id, ProgramId, StartsAt, EndsAt,
+                           DATEADD(day, -30, StartsAt), DATEADD(day, -1, StartsAt),
+                           Price, Currency, Capacity,
+                           CASE WHEN Status IN ('Draft', 'Open', 'Closed', 'Cancelled')
+                                THEN Status ELSE 'Closed' END,
+                           SYSDATETIMEOFFSET()
+                    FROM [__LegacyProgramOfferingsImport];
+
+                    DROP TABLE [__LegacyProgramOfferingsImport];
+                END;
+                """);
 
             // Preserve any local development applications/enrollments created before offerings existed.
             // Each referenced catalog item receives one closed legacy offering, and both tables are
