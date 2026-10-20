@@ -3,14 +3,28 @@ import { apiRequest } from './client'
 export interface Application {
   id: string
   userId: string
+  courseOfferingId: string | null
   courseId: string | null
   courseTitle: string | null
+  programOfferingId: string | null
   programId: string | null
   programTitle: string | null
+  startsAtUtc: string
+  endsAtUtc: string
+  price: number
+  currency: string
   status: string
   submittedAt: string
   reviewedAt: string | null
   rejectionReason: string | null
+  statusHistory: ApplicationStatusHistory[]
+}
+
+export interface ApplicationStatusHistory {
+  id: string
+  status: string
+  changedAt: string
+  note: string | null
 }
 
 export interface ApplicationListQuery {
@@ -41,10 +55,14 @@ export interface Enrollment {
   id: string
   applicationId: string
   paymentId: string
+  courseOfferingId: string | null
   courseId: string | null
   courseTitle: string | null
+  programOfferingId: string | null
   programId: string | null
   programTitle: string | null
+  startsAtUtc: string
+  endsAtUtc: string
   status: string
   enrolledAt: string
   completedAt: string | null
@@ -60,7 +78,7 @@ export interface PayForApplicationResult {
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
-export function submitApplication(target: { courseId?: string; programId?: string }) {
+export function submitApplication(target: { courseOfferingId?: string; programOfferingId?: string }) {
   return apiRequest<Application>('/api/v1/applications', {
     method: 'POST',
     headers: jsonHeaders,

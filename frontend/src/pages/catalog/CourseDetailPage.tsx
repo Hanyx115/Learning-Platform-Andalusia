@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { getApiErrorMessage } from '../../api/auth'
-import { useCourse } from '../../api/catalogQueries'
+import { useCourse, useCourseOfferings } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
 import { submitApplication } from '../../api/enrollment'
 import { useAuthProfile } from '../../auth/profileContext'
@@ -10,25 +10,33 @@ import { useAuthSession } from '../../auth/session'
 import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, CatalogMeta, QueryState } from './CatalogUi'
+import OfferingSelector from './OfferingSelector'
 import './catalog.css'
 
 function CourseDetailPage() {
   const { t } = useTranslation()
   const { slug = '' } = useParams()
   const query = useCourse(slug)
+  const offeringsQuery = useCourseOfferings(slug)
   const tokens = useAuthSession()
   const { profile } = useAuthProfile()
   const isLearner = profile?.roles.includes('Learner') ?? false
   const [isApplying, setIsApplying] = useState(false)
   const [applyError, setApplyError] = useState('')
   const [hasApplied, setHasApplied] = useState(false)
+  const [selectedOfferingId, setSelectedOfferingId] = useState('')
 
-  async function handleApply(courseId: string) {
+  async function handleApply() {
+    const offeringId = selectedOfferingId || offeringsQuery.data?.[0]?.id
+    if (!offeringId) {
+      return
+    }
+
     setIsApplying(true)
     setApplyError('')
 
     try {
-      await submitApplication({ courseId })
+      await submitApplication({ courseOfferingId: offeringId })
       setHasApplied(true)
     } catch (requestError) {
       setApplyError(getApiErrorMessage(requestError, t('courses.applyError')))
@@ -73,11 +81,19 @@ function CourseDetailPage() {
             </div>
             <p dir="auto">{query.data.description}</p>
 
-            {query.data.price !== null ? (
-              <p className="catalog-detail__price">{t('courses.price', { price: query.data.price })}</p>
+            {offeringsQuery.isPending ? <QueryState kind="loading" /> : null}
+            {offeringsQuery.isError ? (
+              <QueryState kind="error" onRetry={() => void offeringsQuery.refetch()} />
             ) : null}
+            {offeringsQuery.data?.length ? (
+              <OfferingSelector
+                offerings={offeringsQuery.data}
+                selectedId={selectedOfferingId || offeringsQuery.data[0].id}
+                onSelect={setSelectedOfferingId}
+              />
+            ) : offeringsQuery.isSuccess ? <p>{t('offerings.empty')}</p> : null}
 
-            {!tokens || isLearner ? (
+            {offeringsQuery.data?.length && (!tokens || isLearner) ? (
               <div className="catalog-detail__apply">
                 {!tokens ? (
                   <Link className="button button--primary" to="/login">{t('courses.signInToApply')}</Link>
@@ -88,7 +104,7 @@ function CourseDetailPage() {
                     className="button button--primary"
                     type="button"
                     disabled={isApplying}
-                    onClick={() => void handleApply(query.data.id)}
+                    onClick={() => void handleApply()}
                   >
                     {isApplying ? t('courses.applying') : t('courses.apply')}
                   </button>

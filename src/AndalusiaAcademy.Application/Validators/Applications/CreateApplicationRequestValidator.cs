@@ -8,7 +8,7 @@ public sealed class CreateApplicationRequestValidator : AbstractValidator<Create
     public CreateApplicationRequestValidator()
     {
         RuleFor(request => request)
-            .Must(request => request.CourseId.HasValue ^ request.ProgramId.HasValue)
-            .WithMessage("Exactly one of CourseId or ProgramId must be provided.");
+            .Must(request => request.CourseOfferingId.HasValue ^ request.ProgramOfferingId.HasValue)
+            .WithMessage("Exactly one of CourseOfferingId or ProgramOfferingId must be provided.");
     }
 }

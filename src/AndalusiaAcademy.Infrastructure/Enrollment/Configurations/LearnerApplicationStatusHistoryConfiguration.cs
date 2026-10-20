@@ -21,7 +21,7 @@ public sealed class LearnerApplicationStatusHistoryConfiguration : IEntityTypeCo
             .IsRequired();
 
         builder.HasOne(history => history.Application)
-            .WithMany()
+            .WithMany(application => application.StatusHistory)
             .HasForeignKey(history => history.ApplicationId)
             .OnDelete(DeleteBehavior.Cascade);
 

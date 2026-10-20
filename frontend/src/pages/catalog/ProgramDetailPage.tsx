@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { getApiErrorMessage } from '../../api/auth'
-import { useProgram } from '../../api/catalogQueries'
+import { useProgram, useProgramOfferings } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
 import { submitApplication } from '../../api/enrollment'
 import { useAuthProfile } from '../../auth/profileContext'
@@ -10,25 +10,33 @@ import { useAuthSession } from '../../auth/session'
 import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, QueryState } from './CatalogUi'
+import OfferingSelector from './OfferingSelector'
 import './catalog.css'
 
 function ProgramDetailPage() {
   const { t } = useTranslation()
   const { slug = '' } = useParams()
   const query = useProgram(slug)
+  const offeringsQuery = useProgramOfferings(slug)
   const tokens = useAuthSession()
   const { profile } = useAuthProfile()
   const isLearner = profile?.roles.includes('Learner') ?? false
   const [isApplying, setIsApplying] = useState(false)
   const [applyError, setApplyError] = useState('')
   const [hasApplied, setHasApplied] = useState(false)
+  const [selectedOfferingId, setSelectedOfferingId] = useState('')
 
-  async function handleApply(programId: string) {
+  async function handleApply() {
+    const offeringId = selectedOfferingId || offeringsQuery.data?.[0]?.id
+    if (!offeringId) {
+      return
+    }
+
     setIsApplying(true)
     setApplyError('')
 
     try {
-      await submitApplication({ programId })
+      await submitApplication({ programOfferingId: offeringId })
       setHasApplied(true)
     } catch (requestError) {
       setApplyError(getApiErrorMessage(requestError, t('programs.applyError')))
@@ -65,11 +73,19 @@ function ProgramDetailPage() {
               className="catalog-detail__image"
               alt={query.data.title}
             />
-            {query.data.price !== null ? (
-              <p className="catalog-detail__price">{t('programs.price', { price: query.data.price })}</p>
+            {offeringsQuery.isPending ? <QueryState kind="loading" /> : null}
+            {offeringsQuery.isError ? (
+              <QueryState kind="error" onRetry={() => void offeringsQuery.refetch()} />
             ) : null}
+            {offeringsQuery.data?.length ? (
+              <OfferingSelector
+                offerings={offeringsQuery.data}
+                selectedId={selectedOfferingId || offeringsQuery.data[0].id}
+                onSelect={setSelectedOfferingId}
+              />
+            ) : offeringsQuery.isSuccess ? <p>{t('offerings.empty')}</p> : null}
 
-            {!tokens || isLearner ? (
+            {offeringsQuery.data?.length && (!tokens || isLearner) ? (
               <div className="catalog-detail__apply">
                 {!tokens ? (
                   <Link className="button button--primary" to="/login">{t('programs.signInToApply')}</Link>
@@ -80,7 +96,7 @@ function ProgramDetailPage() {
                     className="button button--primary"
                     type="button"
                     disabled={isApplying}
-                    onClick={() => void handleApply(query.data.id)}
+                    onClick={() => void handleApply()}
                   >
                     {isApplying ? t('programs.applying') : t('programs.apply')}
                   </button>

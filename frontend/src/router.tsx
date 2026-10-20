@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import RootLayout from './layouts/RootLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import AboutPage from './pages/AboutPage'
@@ -96,6 +96,10 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
+          {
+            path: 'applications',
+            element: <Navigate to="/profile/applications" replace />,
+          },
           {
             path: 'profile',
             element: <ProfileLayout />,

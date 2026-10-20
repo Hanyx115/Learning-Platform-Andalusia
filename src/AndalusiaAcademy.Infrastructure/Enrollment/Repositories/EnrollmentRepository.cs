@@ -17,10 +17,18 @@ public sealed class EnrollmentRepository(ApplicationDbContext dbContext) : IEnro
                 enrollment.Id,
                 enrollment.ApplicationId,
                 enrollment.PaymentId,
-                enrollment.CourseId,
-                enrollment.Course != null ? enrollment.Course.Title : null,
-                enrollment.ProgramId,
-                enrollment.Program != null ? enrollment.Program.Title : null,
+                enrollment.CourseOfferingId,
+                enrollment.CourseOffering != null ? enrollment.CourseOffering.CourseId : null,
+                enrollment.CourseOffering != null ? enrollment.CourseOffering.Course!.Title : null,
+                enrollment.ProgramOfferingId,
+                enrollment.ProgramOffering != null ? enrollment.ProgramOffering.ProgramId : null,
+                enrollment.ProgramOffering != null ? enrollment.ProgramOffering.Program!.Title : null,
+                enrollment.CourseOffering != null
+                    ? enrollment.CourseOffering.StartsAtUtc
+                    : enrollment.ProgramOffering!.StartsAtUtc,
+                enrollment.CourseOffering != null
+                    ? enrollment.CourseOffering.EndsAtUtc
+                    : enrollment.ProgramOffering!.EndsAtUtc,
                 enrollment.Status,
                 enrollment.EnrolledAt,
                 enrollment.CompletedAt,

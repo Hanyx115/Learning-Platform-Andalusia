@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, vi } from 'vitest'
 import CareerPathDetailPage from './CareerPathDetailPage'
 import CareerPathsPage from './CareerPathsPage'
+import CourseDetailPage from './CourseDetailPage'
 import CoursesPage from './CoursesPage'
 import ProgramDetailPage from './ProgramDetailPage'
 import ProgramsPage from './ProgramsPage'
@@ -108,6 +109,50 @@ describe('catalog pages', () => {
     expect(screen.getByRole('combobox', { name: 'Category' })).toHaveValue('')
     expect(screen.getByRole('combobox', { name: 'Course type' })).toHaveValue('')
     expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('title')
+  })
+
+  it('shows available course intakes to visitors before asking them to sign in', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/offerings')) {
+        return jsonResponse([{
+          id: 'offering-1',
+          startsAtUtc: '2027-01-18T08:00:00Z',
+          endsAtUtc: '2027-03-15T16:00:00Z',
+          applicationOpensAtUtc: '2026-01-01T00:00:00Z',
+          applicationClosesAtUtc: '2027-01-10T23:59:59Z',
+          price: 750,
+          currency: 'EGP',
+          capacity: 25,
+          status: 'Open',
+        }])
+      }
+
+      return jsonResponse({
+        id: 'course-1',
+        title: 'Patient Care Basics',
+        slug: 'patient-care-basics',
+        description: 'Learn patient care fundamentals.',
+        status: 'Published',
+        type: 'Offline',
+        price: null,
+        categorySlug: 'clinical-care',
+        categoryName: 'Clinical Care',
+        createdAt: '2026-01-01T00:00:00Z',
+      })
+    }))
+
+    renderWithCatalogProviders(
+      <Routes>
+        <Route path="/courses/:slug" element={<CourseDetailPage />} />
+      </Routes>,
+      '/courses/patient-care-basics',
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Patient Care Basics' })).toBeInTheDocument()
+    expect(await screen.findByText('750 EGP')).toBeInTheDocument()
+    expect(screen.getByText('25 seats')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Sign in to apply' })).toHaveAttribute('href', '/login')
   })
 
   it('renders the ordered courses included in a program', async () => {

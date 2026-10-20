@@ -195,12 +195,81 @@ public static class CatalogDataSeeder
             addedCount++;
         }
 
+        var courseOfferingIds = (await dbContext.CourseOfferings
+                .AsNoTracking()
+                .Select(offering => offering.Id)
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        foreach (var course in coursesBySlug.Values)
+        {
+            var offeringId = CreateOfferingId(course.Id, 0xC0);
+            if (!courseOfferingIds.Add(offeringId))
+            {
+                continue;
+            }
+
+            dbContext.CourseOfferings.Add(new CourseOffering
+            {
+                Id = offeringId,
+                CourseId = course.Id,
+                StartsAtUtc = new DateTimeOffset(2027, 1, 18, 8, 0, 0, TimeSpan.Zero),
+                EndsAtUtc = new DateTimeOffset(2027, 3, 15, 16, 0, 0, TimeSpan.Zero),
+                ApplicationOpensAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                ApplicationClosesAtUtc = new DateTimeOffset(2027, 1, 10, 23, 59, 59, TimeSpan.Zero),
+                Price = course.Price ?? 1200m,
+                Currency = "EGP",
+                Capacity = 30,
+                Status = OfferingStatuses.Open,
+                CreatedAtUtc = new DateTimeOffset(2026, 10, 20, 0, 0, 0, TimeSpan.Zero),
+            });
+            addedCount++;
+        }
+
+        var programOfferingIds = (await dbContext.ProgramOfferings
+                .AsNoTracking()
+                .Select(offering => offering.Id)
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        foreach (var program in programsBySlug.Values)
+        {
+            var offeringId = CreateOfferingId(program.Id, 0xA0);
+            if (!programOfferingIds.Add(offeringId))
+            {
+                continue;
+            }
+
+            dbContext.ProgramOfferings.Add(new ProgramOffering
+            {
+                Id = offeringId,
+                ProgramId = program.Id,
+                StartsAtUtc = new DateTimeOffset(2027, 2, 1, 8, 0, 0, TimeSpan.Zero),
+                EndsAtUtc = new DateTimeOffset(2027, 6, 30, 16, 0, 0, TimeSpan.Zero),
+                ApplicationOpensAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                ApplicationClosesAtUtc = new DateTimeOffset(2027, 1, 20, 23, 59, 59, TimeSpan.Zero),
+                Price = program.Price ?? 5000m,
+                Currency = "EGP",
+                Capacity = 25,
+                Status = OfferingStatuses.Open,
+                CreatedAtUtc = new DateTimeOffset(2026, 10, 20, 0, 0, 0, TimeSpan.Zero),
+            });
+            addedCount++;
+        }
+
         if (addedCount > 0)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         return addedCount;
+    }
+
+    private static Guid CreateOfferingId(Guid catalogItemId, byte marker)
+    {
+        var bytes = catalogItemId.ToByteArray();
+        bytes[0] = marker;
+        return new Guid(bytes);
     }
 
     private static readonly CategorySeed[] Categories =

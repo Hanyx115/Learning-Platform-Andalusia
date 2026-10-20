@@ -3,7 +3,7 @@ namespace AndalusiaAcademy.Domain.Models;
 /// <summary>
 /// Named "LearnerApplication" rather than "Application" to avoid colliding with the
 /// AndalusiaAcademy.Application project namespace throughout the codebase.
-/// Exactly one of <see cref="CourseId"/>/<see cref="ProgramId"/> is set (enforced by a DB check constraint).
+/// Exactly one of <see cref="CourseOfferingId"/>/<see cref="ProgramOfferingId"/> is set (enforced by a DB check constraint).
 /// </summary>
 public class LearnerApplication
 {
@@ -11,13 +11,13 @@ public class LearnerApplication
 
     public Guid UserId { get; set; }
 
-    public Guid? CourseId { get; set; }
+    public Guid? CourseOfferingId { get; set; }
 
-    public Course? Course { get; set; }
+    public CourseOffering? CourseOffering { get; set; }
 
-    public Guid? ProgramId { get; set; }
+    public Guid? ProgramOfferingId { get; set; }
 
-    public AcademyProgram? Program { get; set; }
+    public ProgramOffering? ProgramOffering { get; set; }
 
     public string Status { get; set; } = string.Empty;
 
@@ -28,4 +28,6 @@ public class LearnerApplication
     public Guid? ReviewedByUserId { get; set; }
 
     public string? RejectionReason { get; set; }
+
+    public ICollection<LearnerApplicationStatusHistory> StatusHistory { get; set; } = [];
 }

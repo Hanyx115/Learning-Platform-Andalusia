@@ -19,8 +19,8 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
     public async Task Pay_ForAcceptedApplication_SucceedsAndCreatesEnrollment()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync(price: 499.99m);
-        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 499.99m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseOfferingId);
 
         using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
         response.EnsureSuccessStatusCode();
@@ -48,8 +48,8 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
     public async Task Pay_Twice_ForSameApplication_ReturnsValidationProblem()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync(price: 100m);
-        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseOfferingId);
 
         using var first = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
         first.EnsureSuccessStatusCode();
@@ -63,9 +63,10 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
     public async Task Pay_ForStillPendingApplication_ReturnsValidationProblem()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync(price: 100m);
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m);
 
-        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseId });
+        using var submitResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseOfferingId });
         submitResponse.EnsureSuccessStatusCode();
         using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
         var applicationId = submitDocument.RootElement.GetProperty("id").GetString();
@@ -76,23 +77,25 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
     }
 
     [Fact]
-    public async Task Pay_ForCourseWithNoPrice_ReturnsValidationProblem()
+    public async Task Pay_UsesOfferingPriceWhenCatalogPriceIsMissing()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync(price: null);
-        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 250m, catalogPrice: null);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseOfferingId);
 
         using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+        response.EnsureSuccessStatusCode();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(250m, document.RootElement.GetProperty("payment").GetProperty("amount").GetDecimal());
     }
 
     [Fact]
     public async Task Pay_ForSomeoneElsesApplication_ReturnsValidationProblem()
     {
         var (ownerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync(price: 100m);
-        var applicationId = await SubmitAndAcceptAsync(ownerToken, courseId);
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m);
+        var applicationId = await SubmitAndAcceptAsync(ownerToken, courseOfferingId);
 
         var (otherLearnerToken, _) = await RegisterAsync();
 
@@ -105,8 +108,8 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
     public async Task Pay_AsAdminWithoutLearnerRole_ReturnsForbidden()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync(price: 100m);
-        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseId);
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseOfferingId);
 
         var adminOnlyToken = await RegisterAdminOnlyAsync();
 
@@ -147,9 +150,10 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
         return document.RootElement.GetProperty("accessToken").GetString()!;
     }
 
-    private async Task<string> SubmitAndAcceptAsync(string learnerToken, Guid courseId)
+    private async Task<string> SubmitAndAcceptAsync(string learnerToken, Guid courseOfferingId)
     {
-        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseId });
+        using var submitResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseOfferingId });
         submitResponse.EnsureSuccessStatusCode();
         using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
         var applicationId = submitDocument.RootElement.GetProperty("id").GetString()!;
@@ -179,7 +183,7 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
         return await _client.SendAsync(request);
     }
 
-    private async Task<Guid> SeedCourseAsync(decimal? price)
+    private async Task<Guid> SeedCourseOfferingAsync(decimal offeringPrice, decimal? catalogPrice = null)
     {
         using var scope = factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -194,15 +198,30 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
             Description = "Test course.",
             Status = "Published",
             Type = "Online",
-            Price = price,
+            Price = catalogPrice,
             CreatedAt = DateTimeOffset.UtcNow,
         };
 
         dbContext.CourseCategories.Add(category);
         dbContext.Courses.Add(course);
+        var offering = new CourseOffering
+        {
+            Id = Guid.NewGuid(),
+            CourseId = course.Id,
+            StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2),
+            EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(4),
+            ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(1),
+            Price = offeringPrice,
+            Currency = "EGP",
+            Capacity = 20,
+            Status = OfferingStatuses.Open,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        dbContext.CourseOfferings.Add(offering);
         await dbContext.SaveChangesAsync();
 
-        return course.Id;
+        return offering.Id;
     }
 
     private async Task<(string AccessToken, string Email)> RegisterAsync()

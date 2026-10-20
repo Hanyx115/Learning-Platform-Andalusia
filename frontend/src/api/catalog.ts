@@ -60,6 +60,18 @@ export interface ProgramDetail extends ProgramSummary {
   courses: ProgramCourse[]
 }
 
+export interface Offering {
+  id: string
+  startsAtUtc: string
+  endsAtUtc: string
+  applicationOpensAtUtc: string
+  applicationClosesAtUtc: string
+  price: number
+  currency: string
+  capacity: number
+  status: string
+}
+
 export interface CareerPathSummary {
   id: string
   title: string
@@ -107,12 +119,20 @@ export function getCourse(slug: string) {
   return apiRequest<Course>(`/api/v1/courses/${encodeURIComponent(slug)}`)
 }
 
+export function getCourseOfferings(slug: string) {
+  return apiRequest<Offering[]>(`/api/v1/courses/${encodeURIComponent(slug)}/offerings`)
+}
+
 export function getPrograms(query: CatalogListQuery = {}) {
   return apiRequest<PaginatedResult<ProgramSummary>>(`/api/v1/programs${buildQueryString(query)}`)
 }
 
 export function getProgram(slug: string) {
   return apiRequest<ProgramDetail>(`/api/v1/programs/${encodeURIComponent(slug)}`)
+}
+
+export function getProgramOfferings(slug: string) {
+  return apiRequest<Offering[]>(`/api/v1/programs/${encodeURIComponent(slug)}/offerings`)
 }
 
 export function getCareerPaths(query: CatalogListQuery = {}) {

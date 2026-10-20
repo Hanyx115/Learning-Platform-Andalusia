@@ -52,6 +52,20 @@ public sealed class CatalogListEndpointsTests(CatalogApiWebApplicationFactory fa
         Assert.Equal(1, root.GetProperty("totalCount").GetInt32());
     }
 
+    [Fact]
+    public async Task GetProgramOfferings_ReturnsCurrentlyOpenIntakes()
+    {
+        await factory.SeedProgramsAndCareerPathsAsync();
+        var offeringId = await factory.SeedProgramOfferingAsync();
+
+        using var response = await _client.GetAsync("/api/v1/programs/alpha-program/offerings");
+
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var offering = Assert.Single(document.RootElement.EnumerateArray());
+        Assert.Equal(offeringId.ToString(), offering.GetProperty("id").GetString());
+    }
+
     [Theory]
     [InlineData("programs", "Gamma Program")]
     [InlineData("career-paths", "Gamma Career")]

@@ -207,16 +207,79 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.ToTable("CourseCategories");
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseOffering", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ApplicationClosesAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ApplicationOpensAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nchar(3)")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("EndsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTimeOffset>("StartsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "StartsAtUtc")
+                        .IsUnique();
+
+                    b.HasIndex("CourseId", "Status", "StartsAtUtc");
+
+                    b.ToTable("CourseOfferings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CourseOfferings_ApplicationWindow", "[ApplicationOpensAtUtc] < [ApplicationClosesAtUtc] AND [ApplicationClosesAtUtc] <= [StartsAtUtc]");
+
+                            t.HasCheckConstraint("CK_CourseOfferings_Capacity", "[Capacity] > 0");
+
+                            t.HasCheckConstraint("CK_CourseOfferings_Price", "[Price] >= 0");
+
+                            t.HasCheckConstraint("CK_CourseOfferings_Schedule", "[StartsAtUtc] < [EndsAtUtc]");
+
+                            t.HasCheckConstraint("CK_CourseOfferings_Status", "[Status] IN ('Draft', 'Open', 'Closed', 'Cancelled')");
+                        });
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CourseId")
+                    b.Property<Guid?>("CourseOfferingId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ProgramId")
+                    b.Property<Guid?>("ProgramOfferingId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RejectionReason")
@@ -242,25 +305,25 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CourseOfferingId");
 
-                    b.HasIndex("ProgramId");
+                    b.HasIndex("ProgramOfferingId");
 
                     b.HasIndex("Status");
 
-                    b.HasIndex("UserId", "CourseId")
+                    b.HasIndex("UserId", "CourseOfferingId")
                         .IsUnique()
-                        .HasDatabaseName("IX_LearnerApplications_User_Course_Pending")
-                        .HasFilter("[Status] = 'Pending' AND [CourseId] IS NOT NULL");
+                        .HasDatabaseName("IX_LearnerApplications_User_CourseOffering_Pending")
+                        .HasFilter("[Status] = 'Pending' AND [CourseOfferingId] IS NOT NULL");
 
-                    b.HasIndex("UserId", "ProgramId")
+                    b.HasIndex("UserId", "ProgramOfferingId")
                         .IsUnique()
-                        .HasDatabaseName("IX_LearnerApplications_User_Program_Pending")
-                        .HasFilter("[Status] = 'Pending' AND [ProgramId] IS NOT NULL");
+                        .HasDatabaseName("IX_LearnerApplications_User_ProgramOffering_Pending")
+                        .HasFilter("[Status] = 'Pending' AND [ProgramOfferingId] IS NOT NULL");
 
                     b.ToTable("LearnerApplications", t =>
                         {
-                            t.HasCheckConstraint("CK_LearnerApplications_ExactlyOneTarget", "([CourseId] IS NOT NULL AND [ProgramId] IS NULL) OR ([CourseId] IS NULL AND [ProgramId] IS NOT NULL)");
+                            t.HasCheckConstraint("CK_LearnerApplications_ExactlyOneTarget", "([CourseOfferingId] IS NOT NULL AND [ProgramOfferingId] IS NULL) OR ([CourseOfferingId] IS NULL AND [ProgramOfferingId] IS NOT NULL)");
                         });
                 });
 
@@ -310,7 +373,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("CompletedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CourseId")
+                    b.Property<Guid?>("CourseOfferingId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("EnrolledAt")
@@ -319,7 +382,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Property<Guid>("PaymentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ProgramId")
+                    b.Property<Guid?>("ProgramOfferingId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -334,16 +397,19 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CourseOfferingId");
 
                     b.HasIndex("PaymentId")
                         .IsUnique();
 
-                    b.HasIndex("ProgramId");
+                    b.HasIndex("ProgramOfferingId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Enrollments");
+                    b.ToTable("Enrollments", t =>
+                        {
+                            t.HasCheckConstraint("CK_Enrollments_ExactlyOneOffering", "([CourseOfferingId] IS NOT NULL AND [ProgramOfferingId] IS NULL) OR ([CourseOfferingId] IS NULL AND [ProgramOfferingId] IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Payment", b =>
@@ -439,6 +505,69 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.HasIndex("CourseId");
 
                     b.ToTable("ProgramCourses");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramOffering", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ApplicationClosesAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ApplicationOpensAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nchar(3)")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("EndsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<Guid>("ProgramId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("StartsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgramId", "StartsAtUtc")
+                        .IsUnique();
+
+                    b.HasIndex("ProgramId", "Status", "StartsAtUtc");
+
+                    b.ToTable("ProgramOfferings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProgramOfferings_ApplicationWindow", "[ApplicationOpensAtUtc] < [ApplicationClosesAtUtc] AND [ApplicationClosesAtUtc] <= [StartsAtUtc]");
+
+                            t.HasCheckConstraint("CK_ProgramOfferings_Capacity", "[Capacity] > 0");
+
+                            t.HasCheckConstraint("CK_ProgramOfferings_Price", "[Price] >= 0");
+
+                            t.HasCheckConstraint("CK_ProgramOfferings_Schedule", "[StartsAtUtc] < [EndsAtUtc]");
+
+                            t.HasCheckConstraint("CK_ProgramOfferings_Status", "[Status] IN ('Draft', 'Open', 'Closed', 'Cancelled')");
+                        });
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationRole", b =>
@@ -754,27 +883,38 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseOffering", b =>
                 {
                     b.HasOne("AndalusiaAcademy.Domain.Models.Course", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AndalusiaAcademy.Domain.Models.AcademyProgram", "Program")
-                        .WithMany()
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Course");
+                });
 
-                    b.Navigation("Program");
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.CourseOffering", "CourseOffering")
+                        .WithMany()
+                        .HasForeignKey("CourseOfferingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AndalusiaAcademy.Domain.Models.ProgramOffering", "ProgramOffering")
+                        .WithMany()
+                        .HasForeignKey("ProgramOfferingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CourseOffering");
+
+                    b.Navigation("ProgramOffering");
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplicationStatusHistory", b =>
                 {
                     b.HasOne("AndalusiaAcademy.Domain.Models.LearnerApplication", "Application")
-                        .WithMany()
+                        .WithMany("StatusHistory")
                         .HasForeignKey("ApplicationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -790,9 +930,9 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AndalusiaAcademy.Domain.Models.Course", "Course")
+                    b.HasOne("AndalusiaAcademy.Domain.Models.CourseOffering", "CourseOffering")
                         .WithMany()
-                        .HasForeignKey("CourseId")
+                        .HasForeignKey("CourseOfferingId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("AndalusiaAcademy.Domain.Models.Payment", "Payment")
@@ -801,18 +941,18 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AndalusiaAcademy.Domain.Models.AcademyProgram", "Program")
+                    b.HasOne("AndalusiaAcademy.Domain.Models.ProgramOffering", "ProgramOffering")
                         .WithMany()
-                        .HasForeignKey("ProgramId")
+                        .HasForeignKey("ProgramOfferingId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Application");
 
-                    b.Navigation("Course");
+                    b.Navigation("CourseOffering");
 
                     b.Navigation("Payment");
 
-                    b.Navigation("Program");
+                    b.Navigation("ProgramOffering");
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Payment", b =>
@@ -852,6 +992,17 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Course");
+
+                    b.Navigation("Program");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramOffering", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.AcademyProgram", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Program");
                 });
@@ -898,6 +1049,11 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
+                {
+                    b.Navigation("StatusHistory");
                 });
 #pragma warning restore 612, 618
         }

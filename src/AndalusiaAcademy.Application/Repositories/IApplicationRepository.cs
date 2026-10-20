@@ -7,14 +7,14 @@ public interface IApplicationRepository
 {
     Task<bool> HasPendingApplicationAsync(
         Guid userId,
-        Guid? courseId,
-        Guid? programId,
+        Guid? courseOfferingId,
+        Guid? programOfferingId,
         CancellationToken cancellationToken);
 
     Task<ApplicationDto> AddAsync(
         Guid userId,
-        Guid? courseId,
-        Guid? programId,
+        Guid? courseOfferingId,
+        Guid? programOfferingId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ApplicationDto>> GetForUserAsync(Guid userId, CancellationToken cancellationToken);

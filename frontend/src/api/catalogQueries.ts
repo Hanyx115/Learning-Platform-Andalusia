@@ -3,8 +3,10 @@ import {
   getCareerPath,
   getCareerPaths,
   getCourse,
+  getCourseOfferings,
   getCourses,
   getProgram,
+  getProgramOfferings,
   getPrograms,
   type CatalogListQuery,
   type CourseCatalogQuery,
@@ -13,8 +15,10 @@ import {
 export const catalogQueryKeys = {
   courses: (query: CourseCatalogQuery) => ['courses', query] as const,
   course: (slug: string) => ['courses', slug] as const,
+  courseOfferings: (slug: string) => ['courses', slug, 'offerings'] as const,
   programs: (query: CatalogListQuery) => ['programs', query] as const,
   program: (slug: string) => ['programs', slug] as const,
+  programOfferings: (slug: string) => ['programs', slug, 'offerings'] as const,
   careerPaths: (query: CatalogListQuery) => ['career-paths', query] as const,
   careerPath: (slug: string) => ['career-paths', slug] as const,
 }
@@ -34,6 +38,14 @@ export function useCourse(slug: string) {
   })
 }
 
+export function useCourseOfferings(slug: string) {
+  return useQuery({
+    queryKey: catalogQueryKeys.courseOfferings(slug),
+    queryFn: () => getCourseOfferings(slug),
+    enabled: Boolean(slug),
+  })
+}
+
 export function usePrograms(query: CatalogListQuery = {}) {
   return useQuery({
     queryKey: catalogQueryKeys.programs(query),
@@ -45,6 +57,14 @@ export function useProgram(slug: string) {
   return useQuery({
     queryKey: catalogQueryKeys.program(slug),
     queryFn: () => getProgram(slug),
+    enabled: Boolean(slug),
+  })
+}
+
+export function useProgramOfferings(slug: string) {
+  return useQuery({
+    queryKey: catalogQueryKeys.programOfferings(slug),
+    queryFn: () => getProgramOfferings(slug),
     enabled: Boolean(slug),
   })
 }

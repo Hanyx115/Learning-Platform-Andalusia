@@ -39,6 +39,23 @@ public sealed class CoursesEndpointTests(CatalogApiWebApplicationFactory factory
         Assert.Equal(2, root.GetProperty("totalPages").GetInt32());
     }
 
+    [Fact]
+    public async Task GetCourseOfferings_ReturnsOnlyCurrentlyOpenIntakes()
+    {
+        await factory.SeedCoursesAsync();
+        var openOfferingId = await factory.SeedCourseOfferingsAsync();
+
+        using var response = await _client.GetAsync("/api/v1/courses/patient-care-basics/offerings");
+
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var offerings = document.RootElement;
+
+        Assert.Equal(1, offerings.GetArrayLength());
+        Assert.Equal(openOfferingId.ToString(), offerings[0].GetProperty("id").GetString());
+        Assert.Equal(750m, offerings[0].GetProperty("price").GetDecimal());
+    }
+
     [Theory]
     [InlineData("page=0")]
     [InlineData("pageSize=101")]
@@ -148,6 +165,72 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
             CreateCareerPath("Internal Career Draft", "internal-career-draft", "Draft"));
 
         await context.SaveChangesAsync();
+    }
+
+    public async Task<Guid> SeedCourseOfferingsAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var course = await context.Courses.SingleAsync(item => item.Slug == "patient-care-basics");
+        var now = DateTimeOffset.UtcNow;
+        var openOffering = new CourseOffering
+        {
+            Id = Guid.NewGuid(),
+            CourseId = course.Id,
+            StartsAtUtc = now.AddMonths(2),
+            EndsAtUtc = now.AddMonths(3),
+            ApplicationOpensAtUtc = now.AddDays(-1),
+            ApplicationClosesAtUtc = now.AddMonths(1),
+            Price = 750m,
+            Currency = "EGP",
+            Capacity = 25,
+            Status = OfferingStatuses.Open,
+            CreatedAtUtc = now,
+        };
+        var closedOffering = new CourseOffering
+        {
+            Id = Guid.NewGuid(),
+            CourseId = course.Id,
+            StartsAtUtc = now.AddMonths(4),
+            EndsAtUtc = now.AddMonths(5),
+            ApplicationOpensAtUtc = now.AddMonths(-2),
+            ApplicationClosesAtUtc = now.AddMonths(-1),
+            Price = 700m,
+            Currency = "EGP",
+            Capacity = 25,
+            Status = OfferingStatuses.Closed,
+            CreatedAtUtc = now,
+        };
+
+        context.CourseOfferings.AddRange(openOffering, closedOffering);
+        await context.SaveChangesAsync();
+        return openOffering.Id;
+    }
+
+    public async Task<Guid> SeedProgramOfferingAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var program = await context.Programs.SingleAsync(item => item.Slug == "alpha-program");
+        var now = DateTimeOffset.UtcNow;
+        var offering = new ProgramOffering
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            StartsAtUtc = now.AddMonths(2),
+            EndsAtUtc = now.AddMonths(6),
+            ApplicationOpensAtUtc = now.AddDays(-1),
+            ApplicationClosesAtUtc = now.AddMonths(1),
+            Price = 3000m,
+            Currency = "EGP",
+            Capacity = 20,
+            Status = OfferingStatuses.Open,
+            CreatedAtUtc = now,
+        };
+
+        context.ProgramOfferings.Add(offering);
+        await context.SaveChangesAsync();
+        return offering.Id;
     }
 
     private static Course CreateCourse(

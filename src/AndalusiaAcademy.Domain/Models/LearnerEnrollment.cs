@@ -4,8 +4,7 @@ namespace AndalusiaAcademy.Domain.Models;
 /// Named "LearnerEnrollment" rather than "Enrollment" to avoid colliding with the
 /// AndalusiaAcademy.Application.Enrollment / AndalusiaAcademy.Infrastructure.Enrollment module
 /// namespaces (same reasoning as LearnerApplication vs the Application project namespace).
-/// Course/ProgramId are snapshotted from the LearnerApplication at enrollment time, so this
-/// record stays correct even if the application is later changed or the catalog item is removed.
+/// The offering is snapshotted from the application so an enrollment always retains its exact intake.
 /// </summary>
 public class LearnerEnrollment
 {
@@ -21,13 +20,13 @@ public class LearnerEnrollment
 
     public Guid UserId { get; set; }
 
-    public Guid? CourseId { get; set; }
+    public Guid? CourseOfferingId { get; set; }
 
-    public Course? Course { get; set; }
+    public CourseOffering? CourseOffering { get; set; }
 
-    public Guid? ProgramId { get; set; }
+    public Guid? ProgramOfferingId { get; set; }
 
-    public AcademyProgram? Program { get; set; }
+    public ProgramOffering? ProgramOffering { get; set; }
 
     public string Status { get; set; } = string.Empty;
 

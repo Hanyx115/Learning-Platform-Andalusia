@@ -6,21 +6,41 @@ using AndalusiaAcademy.Application.Repositories;
 namespace AndalusiaAcademy.Application.Services;
 
 /// <summary>Named to avoid colliding with the project's own "Application" namespace.</summary>
-public sealed class ApplicationSubmissionService(IApplicationRepository applicationRepository)
+public sealed class ApplicationSubmissionService(
+    IApplicationRepository applicationRepository,
+    IOfferingRepository offeringRepository,
+    TimeProvider timeProvider)
 {
     public async Task<CreateApplicationOutcome> SubmitAsync(
         Guid userId,
         CreateApplicationRequest request,
         CancellationToken cancellationToken)
     {
-        if (await applicationRepository.HasPendingApplicationAsync(
-            userId, request.CourseId, request.ProgramId, cancellationToken))
+        var offering = request.CourseOfferingId.HasValue
+            ? await offeringRepository.GetCourseOfferingAsync(request.CourseOfferingId.Value, cancellationToken)
+            : await offeringRepository.GetProgramOfferingAsync(request.ProgramOfferingId!.Value, cancellationToken);
+
+        if (offering is null)
         {
-            return CreateApplicationOutcome.Failure("You already have a pending application for this course or program.");
+            return CreateApplicationOutcome.Failure("The selected offering was not found.");
+        }
+
+        var now = timeProvider.GetUtcNow();
+        if (offering.Status != AndalusiaAcademy.Domain.Models.OfferingStatuses.Open ||
+            offering.ApplicationOpensAtUtc > now ||
+            offering.ApplicationClosesAtUtc < now)
+        {
+            return CreateApplicationOutcome.Failure("The selected offering is not open for applications.");
+        }
+
+        if (await applicationRepository.HasPendingApplicationAsync(
+            userId, request.CourseOfferingId, request.ProgramOfferingId, cancellationToken))
+        {
+            return CreateApplicationOutcome.Failure("You already have a pending application for this offering.");
         }
 
         var application = await applicationRepository.AddAsync(
-            userId, request.CourseId, request.ProgramId, cancellationToken);
+            userId, request.CourseOfferingId, request.ProgramOfferingId, cancellationToken);
 
         return CreateApplicationOutcome.Success(application);
     }

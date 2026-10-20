@@ -1,4 +1,5 @@
 using AndalusiaAcademy.Application.DTOs;
+using AndalusiaAcademy.Application.DTOs.Applications;
 using AndalusiaAcademy.Application.Services;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public sealed class ProgramsController(ProgramService programService) : ControllerBase
+public sealed class ProgramsController(ProgramService programService, OfferingService offeringService) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<PaginatedResult<ProgramSummaryDto>>(StatusCodes.Status200OK)]
@@ -26,5 +27,15 @@ public sealed class ProgramsController(ProgramService programService) : Controll
     {
         var program = await programService.GetProgramBySlugAsync(slug, cancellationToken);
         return program is null ? NotFound() : Ok(program);
+    }
+
+    [HttpGet("{slug}/offerings")]
+    [ProducesResponseType<IReadOnlyList<OfferingDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<OfferingDto>>> GetOpenOfferings(
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        var offerings = await offeringService.GetOpenProgramOfferingsAsync(slug, cancellationToken);
+        return Ok(offerings);
     }
 }

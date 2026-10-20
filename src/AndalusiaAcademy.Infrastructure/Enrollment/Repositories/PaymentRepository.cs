@@ -26,12 +26,23 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
                 a.Id,
                 a.UserId,
                 a.Status,
-                a.CourseId,
-                CourseTitle = a.Course != null ? a.Course.Title : null,
-                CoursePrice = a.Course != null ? a.Course.Price : null,
-                a.ProgramId,
-                ProgramTitle = a.Program != null ? a.Program.Title : null,
-                ProgramPrice = a.Program != null ? a.Program.Price : null,
+                a.CourseOfferingId,
+                CourseId = a.CourseOffering != null ? a.CourseOffering.CourseId : (Guid?)null,
+                CourseTitle = a.CourseOffering != null ? a.CourseOffering.Course!.Title : null,
+                CoursePrice = a.CourseOffering != null ? a.CourseOffering.Price : (decimal?)null,
+                a.ProgramOfferingId,
+                ProgramId = a.ProgramOffering != null ? a.ProgramOffering.ProgramId : (Guid?)null,
+                ProgramTitle = a.ProgramOffering != null ? a.ProgramOffering.Program!.Title : null,
+                ProgramPrice = a.ProgramOffering != null ? a.ProgramOffering.Price : (decimal?)null,
+                StartsAtUtc = a.CourseOffering != null
+                    ? a.CourseOffering.StartsAtUtc
+                    : a.ProgramOffering!.StartsAtUtc,
+                EndsAtUtc = a.CourseOffering != null
+                    ? a.CourseOffering.EndsAtUtc
+                    : a.ProgramOffering!.EndsAtUtc,
+                Currency = a.CourseOffering != null
+                    ? a.CourseOffering.Currency
+                    : a.ProgramOffering!.Currency,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -56,7 +67,7 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             return PayForApplicationOutcome.Failure("A payment already exists for this application.");
         }
 
-        var amount = application.CourseId.HasValue ? application.CoursePrice : application.ProgramPrice;
+        var amount = application.CourseOfferingId.HasValue ? application.CoursePrice : application.ProgramPrice;
 
         if (amount is null)
         {
@@ -70,7 +81,7 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             ApplicationId = applicationId,
             UserId = userId,
             Amount = amount.Value,
-            Currency = PaymentCurrency.Default,
+            Currency = application.Currency,
             Status = PaymentStatus.Pending,
             IdempotencyKey = Guid.NewGuid(),
             CreatedAt = now,
@@ -127,8 +138,8 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             ApplicationId = applicationId,
             PaymentId = payment.Id,
             UserId = userId,
-            CourseId = application.CourseId,
-            ProgramId = application.ProgramId,
+            CourseOfferingId = application.CourseOfferingId,
+            ProgramOfferingId = application.ProgramOfferingId,
             Status = EnrollmentStatus.Active,
             EnrolledAt = completedAt,
         };
@@ -144,8 +155,11 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
 
         var enrollmentDto = new EnrollmentDto(
             enrollment.Id, enrollment.ApplicationId, enrollment.PaymentId,
-            enrollment.CourseId, application.CourseTitle,
-            enrollment.ProgramId, application.ProgramTitle,
+            enrollment.CourseOfferingId,
+            application.CourseId, application.CourseTitle,
+            enrollment.ProgramOfferingId,
+            application.ProgramId, application.ProgramTitle,
+            application.StartsAtUtc, application.EndsAtUtc,
             enrollment.Status, enrollment.EnrolledAt, enrollment.CompletedAt, enrollment.CancelledAt);
 
         return PayForApplicationOutcome.Success(paymentDto, enrollmentDto);

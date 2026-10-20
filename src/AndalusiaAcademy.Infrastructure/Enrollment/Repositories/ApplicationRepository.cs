@@ -14,19 +14,41 @@ public sealed class ApplicationRepository(ApplicationDbContext dbContext) : IApp
     private static readonly Expression<Func<LearnerApplication, ApplicationDto>> ToDto = application => new ApplicationDto(
         application.Id,
         application.UserId,
-        application.CourseId,
-        application.Course != null ? application.Course.Title : null,
-        application.ProgramId,
-        application.Program != null ? application.Program.Title : null,
+        application.CourseOfferingId,
+        application.CourseOffering != null ? application.CourseOffering.CourseId : null,
+        application.CourseOffering != null ? application.CourseOffering.Course!.Title : null,
+        application.ProgramOfferingId,
+        application.ProgramOffering != null ? application.ProgramOffering.ProgramId : null,
+        application.ProgramOffering != null ? application.ProgramOffering.Program!.Title : null,
+        application.CourseOffering != null
+            ? application.CourseOffering.StartsAtUtc
+            : application.ProgramOffering!.StartsAtUtc,
+        application.CourseOffering != null
+            ? application.CourseOffering.EndsAtUtc
+            : application.ProgramOffering!.EndsAtUtc,
+        application.CourseOffering != null
+            ? application.CourseOffering.Price
+            : application.ProgramOffering!.Price,
+        application.CourseOffering != null
+            ? application.CourseOffering.Currency
+            : application.ProgramOffering!.Currency,
         application.Status,
         application.SubmittedAt,
         application.ReviewedAt,
-        application.RejectionReason);
+        application.RejectionReason,
+        application.StatusHistory
+            .OrderBy(history => history.ChangedAt)
+            .Select(history => new ApplicationStatusHistoryDto(
+                history.Id,
+                history.Status,
+                history.ChangedAt,
+                history.Note))
+            .ToList());
 
     public async Task<bool> HasPendingApplicationAsync(
         Guid userId,
-        Guid? courseId,
-        Guid? programId,
+        Guid? courseOfferingId,
+        Guid? programOfferingId,
         CancellationToken cancellationToken)
     {
         return await dbContext.LearnerApplications
@@ -34,23 +56,23 @@ public sealed class ApplicationRepository(ApplicationDbContext dbContext) : IApp
             .AnyAsync(
                 application => application.UserId == userId
                     && application.Status == ApplicationStatus.Pending
-                    && application.CourseId == courseId
-                    && application.ProgramId == programId,
+                    && application.CourseOfferingId == courseOfferingId
+                    && application.ProgramOfferingId == programOfferingId,
                 cancellationToken);
     }
 
     public async Task<ApplicationDto> AddAsync(
         Guid userId,
-        Guid? courseId,
-        Guid? programId,
+        Guid? courseOfferingId,
+        Guid? programOfferingId,
         CancellationToken cancellationToken)
     {
         var application = new LearnerApplication
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            CourseId = courseId,
-            ProgramId = programId,
+            CourseOfferingId = courseOfferingId,
+            ProgramOfferingId = programOfferingId,
             Status = ApplicationStatus.Pending,
             SubmittedAt = DateTimeOffset.UtcNow,
         };

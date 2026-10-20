@@ -208,6 +208,56 @@
   margin-block: 1.25rem;
 }
 
+.offering-selector {
+  display: grid;
+  gap: 0.75rem;
+  margin-block: 1.5rem;
+  border: 0;
+  padding: 0;
+}
+
+.offering-selector legend {
+  color: var(--color-primary-dark);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.offering-selector > p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.offering-selector__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.offering-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border: 1px solid rgb(52 74 78 / 18%);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  background: var(--color-surface);
+}
+
+.offering-card--selected {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgb(176 121 99 / 14%);
+}
+
+.offering-card > span {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.offering-card > span > span {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
 .catalog-detail--sections {
   display: grid;
   gap: 2rem;

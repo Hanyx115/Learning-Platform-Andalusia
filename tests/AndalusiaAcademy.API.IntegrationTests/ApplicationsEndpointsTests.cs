@@ -19,9 +19,10 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
     public async Task Submit_ForACourse_CreatesPendingApplication()
     {
         var (accessToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync();
+        var (courseId, courseOfferingId) = await SeedCourseOfferingAsync();
 
-        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", accessToken, new { courseId });
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/applications", accessToken, new { courseOfferingId });
         response.EnsureSuccessStatusCode();
 
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -29,17 +30,19 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
 
         Assert.Equal("Pending", root.GetProperty("status").GetString());
         Assert.Equal(courseId.ToString(), root.GetProperty("courseId").GetString());
+        Assert.Equal(courseOfferingId.ToString(), root.GetProperty("courseOfferingId").GetString());
+        Assert.Single(root.GetProperty("statusHistory").EnumerateArray());
     }
 
     [Fact]
     public async Task Submit_WithBothCourseAndProgram_ReturnsValidationProblem()
     {
         var (accessToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync();
-        var programId = await SeedProgramAsync();
+        var (_, courseOfferingId) = await SeedCourseOfferingAsync();
+        var programOfferingId = await SeedProgramOfferingAsync();
 
         using var response = await SendAuthorizedAsync(
-            HttpMethod.Post, "/api/v1/applications", accessToken, new { courseId, programId });
+            HttpMethod.Post, "/api/v1/applications", accessToken, new { courseOfferingId, programOfferingId });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -48,12 +51,12 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
     public async Task Submit_Twice_ForSameCourse_ReturnsValidationProblem()
     {
         var (accessToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync();
+        var (_, courseOfferingId) = await SeedCourseOfferingAsync();
 
-        using var first = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", accessToken, new { courseId });
+        using var first = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", accessToken, new { courseOfferingId });
         first.EnsureSuccessStatusCode();
 
-        using var second = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", accessToken, new { courseId });
+        using var second = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", accessToken, new { courseOfferingId });
 
         Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
     }
@@ -62,9 +65,9 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
     public async Task GetMine_ReturnsOnlyOwnApplications()
     {
         var (accessToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync();
+        var (_, courseOfferingId) = await SeedCourseOfferingAsync();
 
-        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", accessToken, new { courseId });
+        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", accessToken, new { courseOfferingId });
         submitResponse.EnsureSuccessStatusCode();
 
         using var response = await SendAuthorizedAsync(HttpMethod.Get, "/api/v1/applications/me", accessToken);
@@ -88,9 +91,9 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
     public async Task Accept_AsAdmin_TransitionsApplicationToAccepted()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync();
+        var (_, courseOfferingId) = await SeedCourseOfferingAsync();
 
-        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseId });
+        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseOfferingId });
         submitResponse.EnsureSuccessStatusCode();
         using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
         var applicationId = submitDocument.RootElement.GetProperty("id").GetString();
@@ -103,15 +106,16 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
 
         using var acceptDocument = JsonDocument.Parse(await acceptResponse.Content.ReadAsStringAsync());
         Assert.Equal("Accepted", acceptDocument.RootElement.GetProperty("status").GetString());
+        Assert.Equal(2, acceptDocument.RootElement.GetProperty("statusHistory").GetArrayLength());
     }
 
     [Fact]
     public async Task Reject_ThenAcceptAgain_ReturnsNotFoundSinceNoLongerPending()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync();
+        var (_, courseOfferingId) = await SeedCourseOfferingAsync();
 
-        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseId });
+        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseOfferingId });
         submitResponse.EnsureSuccessStatusCode();
         using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
         var applicationId = submitDocument.RootElement.GetProperty("id").GetString();
@@ -132,9 +136,9 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
     public async Task Accept_AsLearner_ReturnsForbidden()
     {
         var (learnerToken, _) = await RegisterAsync();
-        var courseId = await SeedCourseAsync();
+        var (_, courseOfferingId) = await SeedCourseOfferingAsync();
 
-        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseId });
+        using var submitResponse = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", learnerToken, new { courseOfferingId });
         submitResponse.EnsureSuccessStatusCode();
         using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
         var applicationId = submitDocument.RootElement.GetProperty("id").GetString();
@@ -149,9 +153,9 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
     public async Task Submit_AsAdminWithoutLearnerRole_ReturnsForbidden()
     {
         var adminOnlyToken = await RegisterAdminOnlyAsync();
-        var courseId = await SeedCourseAsync();
+        var (_, courseOfferingId) = await SeedCourseOfferingAsync();
 
-        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", adminOnlyToken, new { courseId });
+        using var response = await SendAuthorizedAsync(HttpMethod.Post, "/api/v1/applications", adminOnlyToken, new { courseOfferingId });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -173,7 +177,7 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
         return await _client.SendAsync(request);
     }
 
-    private async Task<Guid> SeedCourseAsync()
+    private async Task<(Guid CourseId, Guid OfferingId)> SeedCourseOfferingAsync()
     {
         using var scope = factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -193,12 +197,27 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
 
         dbContext.CourseCategories.Add(category);
         dbContext.Courses.Add(course);
+        var offering = new CourseOffering
+        {
+            Id = Guid.NewGuid(),
+            CourseId = course.Id,
+            StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2),
+            EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(4),
+            ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(1),
+            Price = 500m,
+            Currency = "EGP",
+            Capacity = 20,
+            Status = OfferingStatuses.Open,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        dbContext.CourseOfferings.Add(offering);
         await dbContext.SaveChangesAsync();
 
-        return course.Id;
+        return (course.Id, offering.Id);
     }
 
-    private async Task<Guid> SeedProgramAsync()
+    private async Task<Guid> SeedProgramOfferingAsync()
     {
         using var scope = factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -214,9 +233,24 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
         };
 
         dbContext.Programs.Add(program);
+        var offering = new ProgramOffering
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2),
+            EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(6),
+            ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(1),
+            Price = 2000m,
+            Currency = "EGP",
+            Capacity = 20,
+            Status = OfferingStatuses.Open,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        dbContext.ProgramOfferings.Add(offering);
         await dbContext.SaveChangesAsync();
 
-        return program.Id;
+        return offering.Id;
     }
 
     private async Task<(string AccessToken, string Email)> RegisterAsync()

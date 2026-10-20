@@ -108,9 +108,34 @@ function ApplicationsPage() {
                       date: new Date(application.submittedAt).toLocaleDateString(),
                     })}
                   </span>
+                  <span>
+                    {t('applications.offeringDates', {
+                      start: new Date(application.startsAtUtc).toLocaleDateString(),
+                      end: new Date(application.endsAtUtc).toLocaleDateString(),
+                    })}
+                  </span>
+                  <span>
+                    {t('applications.offeringPrice', {
+                      price: application.price,
+                      currency: application.currency,
+                    })}
+                  </span>
                   {application.status === 'Rejected' && application.rejectionReason ? (
                     <span>{t('applications.rejectionReason', { reason: application.rejectionReason })}</span>
                   ) : null}
+                </div>
+
+                <div className="application-history">
+                  <h3>{t('applications.historyTitle')}</h3>
+                  <ol>
+                    {application.statusHistory.map((history) => (
+                      <li key={history.id}>
+                        <strong>{t(`applications.status.${history.status}`, history.status)}</strong>
+                        <span>{new Date(history.changedAt).toLocaleString()}</span>
+                        {history.note ? <span>{history.note}</span> : null}
+                      </li>
+                    ))}
+                  </ol>
                 </div>
 
                 {payError ? <p className="auth-message auth-message--error" role="alert">{payError}</p> : null}

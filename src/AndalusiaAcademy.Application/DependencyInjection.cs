@@ -9,10 +9,12 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+        services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<CourseService>();
         services.AddScoped<ProgramService>();
         services.AddScoped<CareerPathService>();
+        services.AddScoped<OfferingService>();
         services.AddScoped<ApplicationSubmissionService>();
         services.AddScoped<PaymentService>();
         services.AddScoped<EnrollmentReadService>();
