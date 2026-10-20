@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
-import { getMyApplications, payForApplication, type Application } from '../../api/enrollment'
+import { getMyApplications, getMyPayments, payForApplication, type Application } from '../../api/enrollment'
 import { Link } from 'react-router-dom'
 import Container from '../../components/Container'
 
@@ -26,8 +26,15 @@ function ApplicationsPage() {
   const [paidIds, setPaidIds] = useState<Set<string>>(new Set())
 
   const loadApplications = useCallback(() => {
-    getMyApplications()
-      .then(setApplications)
+    Promise.all([getMyApplications(), getMyPayments()])
+      .then(([loadedApplications, payments]) => {
+        setApplications(loadedApplications)
+        setPaidIds(new Set(
+          payments
+            .filter((payment) => payment.status === 'Succeeded')
+            .map((payment) => payment.applicationId),
+        ))
+      })
       .catch((requestError: unknown) => {
         if (getApiErrorStatus(requestError) === 403) {
           setIsForbidden(true)

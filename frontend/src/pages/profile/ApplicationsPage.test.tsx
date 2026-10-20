@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, it, vi } from 'vitest'
 import * as enrollmentApi from '../../api/enrollment'
-import type { Application } from '../../api/enrollment'
+import type { Application, Payment } from '../../api/enrollment'
 import ApplicationsPage from './ApplicationsPage'
 
 const applications: Application[] = [{
@@ -41,6 +41,7 @@ const applications: Application[] = [{
 describe('ApplicationsPage', () => {
   beforeEach(() => {
     vi.spyOn(enrollmentApi, 'getMyApplications').mockResolvedValue(applications)
+    vi.spyOn(enrollmentApi, 'getMyPayments').mockResolvedValue([])
   })
 
   it('shows the selected intake and complete status history', async () => {
@@ -55,5 +56,28 @@ describe('ApplicationsPage', () => {
     expect(screen.getByRole('heading', { name: 'Status history' })).toBeInTheDocument()
     expect(screen.getAllByText('Pending review')).toHaveLength(1)
     expect(screen.getAllByText('Accepted')).toHaveLength(2)
+  })
+
+  it('restores successful payment state after the page is reloaded', async () => {
+    const payment: Payment = {
+      id: 'payment-1',
+      applicationId: 'application-1',
+      amount: 750,
+      currency: 'EGP',
+      status: 'Succeeded',
+      createdAt: '2026-10-21T09:00:00Z',
+      completedAt: '2026-10-21T09:00:01Z',
+    }
+    vi.mocked(enrollmentApi.getMyPayments).mockResolvedValue([payment])
+
+    render(
+      <MemoryRouter>
+        <ApplicationsPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Payment successful — you are now enrolled.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'View my enrollments' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Pay now' })).not.toBeInTheDocument()
   })
 })
