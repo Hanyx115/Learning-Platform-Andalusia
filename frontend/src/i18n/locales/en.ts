@@ -433,7 +433,7 @@ export const enTranslations = {
     loading: 'Loading your enrollments…',
     empty: 'You are not enrolled in anything yet. Pay for an accepted application to get started.',
     enrolledOn: 'Enrolled on {{date}}',
-    viewMaterials: 'Open course materials',
+    viewMaterials: 'Continue learning',
     status: {
       Active: 'Active',
       Completed: 'Completed',
@@ -441,6 +441,24 @@ export const enTranslations = {
     },
     errors: {
       load: 'We could not load your enrollments. Please try again.',
+    },
+  },
+  courseLearning: {
+    description: 'Your schedule, materials, assignments, and progress for this enrollment, all in one place.',
+    loading: 'Loading your course…',
+    progressTitle: 'My progress',
+    scheduleTitle: 'Schedule',
+    assignmentsTitle: 'Assignments',
+    assignmentsEmpty: 'No assignments have been posted for this course yet.',
+    graded: 'Graded: {{score}}/{{max}}',
+    submissionLabel: 'My submission',
+    submit: 'Submit',
+    updateSubmission: 'Update submission',
+    submitting: 'Submitting…',
+    errors: {
+      load: 'We could not load this course. Please try again.',
+      contentRequired: 'Enter your submission before sending it.',
+      submit: 'We could not submit this assignment. Please try again.',
     },
   },
   materials: {

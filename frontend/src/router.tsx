@@ -23,7 +23,7 @@ import ProfileLayout from './pages/profile/ProfileLayout'
 import ApplicationsPage from './pages/profile/ApplicationsPage'
 import EnrollmentsPage from './pages/profile/EnrollmentsPage'
 import SchedulePage from './pages/profile/SchedulePage'
-import MaterialsPage from './pages/profile/MaterialsPage'
+import CourseLearningPage from './pages/profile/CourseLearningPage'
 import StaffApplicationsPage from './pages/staff/StaffApplicationsPage'
 import InstructorLayout from './pages/instructor/InstructorLayout'
 import InstructorSessionsPage from './pages/instructor/InstructorSessionsPage'
@@ -135,8 +135,8 @@ export const router = createBrowserRouter([
                 element: <EnrollmentsPage />,
               },
               {
-                path: 'enrollments/:enrollmentId/materials',
-                element: <MaterialsPage />,
+                path: 'enrollments/:enrollmentId/learn',
+                element: <CourseLearningPage />,
               },
               {
                 path: 'schedule',

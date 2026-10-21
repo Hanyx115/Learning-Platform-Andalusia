@@ -195,6 +195,8 @@ public sealed class AssignmentRepository(ApplicationDbContext dbContext) : IAssi
                 assignment.Id,
                 assignment.Title,
                 assignment.Description,
+                assignment.CourseOfferingId,
+                assignment.ProgramOfferingId,
                 assignment.DueAtUtc,
                 assignment.MaxScore,
                 CourseTitle = assignment.CourseOffering != null ? assignment.CourseOffering.Course!.Title : null,
@@ -214,7 +216,8 @@ public sealed class AssignmentRepository(ApplicationDbContext dbContext) : IAssi
                 submissions.TryGetValue(assignment.Id, out var submission);
                 return new LearnerAssignmentDto(
                     assignment.Id, assignment.Title, assignment.Description,
-                    assignment.CourseTitle, assignment.ProgramTitle,
+                    assignment.CourseOfferingId, assignment.CourseTitle,
+                    assignment.ProgramOfferingId, assignment.ProgramTitle,
                     assignment.DueAtUtc, assignment.MaxScore,
                     submission?.Content, submission?.SubmittedAtUtc, submission?.Score, submission?.Feedback);
             })
