@@ -33,6 +33,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<CourseMaterial> CourseMaterials => Set<CourseMaterial>();
 
+    public DbSet<Assignment> Assignments => Set<Assignment>();
+
+    public DbSet<AssignmentSubmission> AssignmentSubmissions => Set<AssignmentSubmission>();
+
     public DbSet<ProgramCourse> ProgramCourses => Set<ProgramCourse>();
 
     public DbSet<CareerPath> CareerPaths => Set<CareerPath>();
