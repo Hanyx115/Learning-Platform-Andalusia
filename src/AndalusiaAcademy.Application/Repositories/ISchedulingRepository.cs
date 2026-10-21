@@ -54,6 +54,12 @@ public interface ISchedulingRepository
 
     Task<OfferingDto?> GetProgramOfferingDetailsAsync(Guid offeringId, CancellationToken cancellationToken);
 
+    /// <summary>Every offering regardless of status, for staff management. The public counterpart
+    /// (OfferingRepository.GetOpenCourseOfferingsAsync) only ever returns currently-open ones.</summary>
+    Task<IReadOnlyList<OfferingDto>> GetOfferingsForCourseAsync(Guid courseId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<OfferingDto>> GetOfferingsForProgramAsync(Guid programId, CancellationToken cancellationToken);
+
     Task<bool> CourseExistsAsync(Guid courseId, CancellationToken cancellationToken);
 
     Task<bool> ProgramExistsAsync(Guid programId, CancellationToken cancellationToken);

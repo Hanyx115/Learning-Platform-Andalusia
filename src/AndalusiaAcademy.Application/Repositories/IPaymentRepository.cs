@@ -15,4 +15,6 @@ public interface IPaymentRepository
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PaymentDto>> GetForUserAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<AdminPaymentDto>> GetAllAsync(CancellationToken cancellationToken);
 }

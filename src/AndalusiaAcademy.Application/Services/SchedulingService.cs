@@ -25,6 +25,12 @@ public sealed class SchedulingService(ISchedulingRepository repository, TimeProv
     public Task<OfferingDto?> GetProgramOfferingDetailsAsync(Guid id, CancellationToken cancellationToken)
         => repository.GetProgramOfferingDetailsAsync(id, cancellationToken);
 
+    public Task<IReadOnlyList<OfferingDto>> GetOfferingsForCourseAsync(Guid courseId, CancellationToken cancellationToken)
+        => repository.GetOfferingsForCourseAsync(courseId, cancellationToken);
+
+    public Task<IReadOnlyList<OfferingDto>> GetOfferingsForProgramAsync(Guid programId, CancellationToken cancellationToken)
+        => repository.GetOfferingsForProgramAsync(programId, cancellationToken);
+
     public Task<IReadOnlyList<SchedulingConflictDto>> GetConflictsAsync(
         DateTimeOffset startsAtUtc,
         DateTimeOffset endsAtUtc,

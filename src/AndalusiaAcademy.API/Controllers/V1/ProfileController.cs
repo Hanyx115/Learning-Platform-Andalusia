@@ -56,5 +56,12 @@ public sealed class ProfileController(
         return profile is null ? NotFound() : Ok(profile);
     }
 
+    [HttpGet("by-role/{role}")]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<IReadOnlyList<ProfileDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<ProfileDto>>> GetUsersInRole(
+        string role, CancellationToken cancellationToken)
+        => Ok(await profileService.GetUsersInRoleAsync(role, cancellationToken));
+
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

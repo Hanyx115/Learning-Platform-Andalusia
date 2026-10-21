@@ -243,6 +243,34 @@ public sealed class SchedulingRepository(ApplicationDbContext dbContext) : ISche
                     offering.Location.Capacity, offering.Location.IsActive)))
             .SingleOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<OfferingDto>> GetOfferingsForCourseAsync(Guid courseId, CancellationToken cancellationToken)
+        => await dbContext.CourseOfferings.AsNoTracking()
+            .Where(offering => offering.CourseId == courseId)
+            .OrderByDescending(offering => offering.StartsAtUtc)
+            .Select(offering => new OfferingDto(
+                offering.Id, offering.StartsAtUtc, offering.EndsAtUtc,
+                offering.ApplicationOpensAtUtc, offering.ApplicationClosesAtUtc,
+                offering.Price, offering.Currency, offering.Capacity, offering.Status,
+                offering.Location == null ? null : new TrainingLocationDto(
+                    offering.Location.Id, offering.Location.BranchName, offering.Location.RoomName,
+                    offering.Location.City, offering.Location.Address, offering.Location.MapUrl,
+                    offering.Location.Capacity, offering.Location.IsActive)))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OfferingDto>> GetOfferingsForProgramAsync(Guid programId, CancellationToken cancellationToken)
+        => await dbContext.ProgramOfferings.AsNoTracking()
+            .Where(offering => offering.ProgramId == programId)
+            .OrderByDescending(offering => offering.StartsAtUtc)
+            .Select(offering => new OfferingDto(
+                offering.Id, offering.StartsAtUtc, offering.EndsAtUtc,
+                offering.ApplicationOpensAtUtc, offering.ApplicationClosesAtUtc,
+                offering.Price, offering.Currency, offering.Capacity, offering.Status,
+                offering.Location == null ? null : new TrainingLocationDto(
+                    offering.Location.Id, offering.Location.BranchName, offering.Location.RoomName,
+                    offering.Location.City, offering.Location.Address, offering.Location.MapUrl,
+                    offering.Location.Capacity, offering.Location.IsActive)))
+            .ToListAsync(cancellationToken);
+
     public Task<bool> CourseExistsAsync(Guid id, CancellationToken cancellationToken)
         => dbContext.Courses.AnyAsync(course => course.Id == id, cancellationToken);
 

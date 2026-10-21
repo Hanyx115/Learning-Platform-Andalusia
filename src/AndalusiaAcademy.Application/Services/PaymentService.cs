@@ -10,4 +10,7 @@ public sealed class PaymentService(IPaymentRepository paymentRepository)
 
     public Task<IReadOnlyList<PaymentDto>> GetMyPaymentsAsync(Guid userId, CancellationToken cancellationToken)
         => paymentRepository.GetForUserAsync(userId, cancellationToken);
+
+    public Task<IReadOnlyList<AdminPaymentDto>> GetAllAsync(CancellationToken cancellationToken)
+        => paymentRepository.GetAllAsync(cancellationToken);
 }

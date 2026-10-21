@@ -29,6 +29,18 @@ public sealed class ScheduledOfferingsController(
         return offering is null ? NotFound() : Ok(offering);
     }
 
+    [HttpGet("api/v{version:apiVersion}/courses/{courseId:guid}/offerings/manage")]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    public async Task<ActionResult<IReadOnlyList<OfferingDto>>> GetCourseOfferingsForManagement(
+        Guid courseId, CancellationToken cancellationToken)
+        => Ok(await schedulingService.GetOfferingsForCourseAsync(courseId, cancellationToken));
+
+    [HttpGet("api/v{version:apiVersion}/programs/{programId:guid}/offerings/manage")]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    public async Task<ActionResult<IReadOnlyList<OfferingDto>>> GetProgramOfferingsForManagement(
+        Guid programId, CancellationToken cancellationToken)
+        => Ok(await schedulingService.GetOfferingsForProgramAsync(programId, cancellationToken));
+
     [HttpPost("api/v{version:apiVersion}/courses/{courseId:guid}/offerings")]
     [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
     public async Task<ActionResult<OfferingDto>> CreateCourseOffering(

@@ -57,4 +57,58 @@ public sealed class EnrollmentRepository(ApplicationDbContext dbContext) : IEnro
                 enrollment.CancelledAt))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<AdminEnrollmentDto>> GetAllAsync(CancellationToken cancellationToken)
+    {
+        return await dbContext.Enrollments
+            .AsNoTracking()
+            .OrderByDescending(enrollment => enrollment.EnrolledAt)
+            .Select(enrollment => new AdminEnrollmentDto(
+                enrollment.Id,
+                enrollment.UserId,
+                dbContext.Users.Where(user => user.Id == enrollment.UserId)
+                    .Select(user => user.FirstName + " " + user.LastName).Single(),
+                dbContext.Users.Where(user => user.Id == enrollment.UserId)
+                    .Select(user => user.Email!).Single(),
+                enrollment.ApplicationId,
+                enrollment.PaymentId,
+                enrollment.CourseOfferingId,
+                enrollment.CourseOffering != null ? enrollment.CourseOffering.CourseId : null,
+                enrollment.CourseOffering != null ? enrollment.CourseOffering.Course!.Title : null,
+                enrollment.ProgramOfferingId,
+                enrollment.ProgramOffering != null ? enrollment.ProgramOffering.ProgramId : null,
+                enrollment.ProgramOffering != null ? enrollment.ProgramOffering.Program!.Title : null,
+                enrollment.CourseOffering != null
+                    ? enrollment.CourseOffering.StartsAtUtc
+                    : enrollment.ProgramOffering!.StartsAtUtc,
+                enrollment.CourseOffering != null
+                    ? enrollment.CourseOffering.EndsAtUtc
+                    : enrollment.ProgramOffering!.EndsAtUtc,
+                enrollment.CourseOffering != null && enrollment.CourseOffering.Location != null
+                    ? new TrainingLocationDto(
+                        enrollment.CourseOffering.Location.Id,
+                        enrollment.CourseOffering.Location.BranchName,
+                        enrollment.CourseOffering.Location.RoomName,
+                        enrollment.CourseOffering.Location.City,
+                        enrollment.CourseOffering.Location.Address,
+                        enrollment.CourseOffering.Location.MapUrl,
+                        enrollment.CourseOffering.Location.Capacity,
+                        enrollment.CourseOffering.Location.IsActive)
+                    : enrollment.ProgramOffering != null && enrollment.ProgramOffering.Location != null
+                    ? new TrainingLocationDto(
+                        enrollment.ProgramOffering.Location.Id,
+                        enrollment.ProgramOffering.Location.BranchName,
+                        enrollment.ProgramOffering.Location.RoomName,
+                        enrollment.ProgramOffering.Location.City,
+                        enrollment.ProgramOffering.Location.Address,
+                        enrollment.ProgramOffering.Location.MapUrl,
+                        enrollment.ProgramOffering.Location.Capacity,
+                        enrollment.ProgramOffering.Location.IsActive)
+                    : null,
+                enrollment.Status,
+                enrollment.EnrolledAt,
+                enrollment.CompletedAt,
+                enrollment.CancelledAt))
+            .ToListAsync(cancellationToken);
+    }
 }

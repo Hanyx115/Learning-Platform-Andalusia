@@ -212,4 +212,31 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
                 payment.CreatedAt, payment.CompletedAt))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<AdminPaymentDto>> GetAllAsync(CancellationToken cancellationToken)
+    {
+        return await dbContext.Payments
+            .AsNoTracking()
+            .OrderByDescending(payment => payment.CreatedAt)
+            .Select(payment => new AdminPaymentDto(
+                payment.Id,
+                payment.UserId,
+                dbContext.Users.Where(user => user.Id == payment.UserId)
+                    .Select(user => user.FirstName + " " + user.LastName).Single(),
+                dbContext.Users.Where(user => user.Id == payment.UserId)
+                    .Select(user => user.Email!).Single(),
+                payment.ApplicationId,
+                payment.Application != null && payment.Application.CourseOffering != null
+                    ? payment.Application.CourseOffering.Course!.Title
+                    : null,
+                payment.Application != null && payment.Application.ProgramOffering != null
+                    ? payment.Application.ProgramOffering.Program!.Title
+                    : null,
+                payment.Amount,
+                payment.Currency,
+                payment.Status,
+                payment.CreatedAt,
+                payment.CompletedAt))
+            .ToListAsync(cancellationToken);
+    }
 }

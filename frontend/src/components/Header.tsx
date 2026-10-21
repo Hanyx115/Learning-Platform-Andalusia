@@ -91,6 +91,13 @@ function Header() {
                       </NavLink>
                     </li>
                   ) : null}
+                  {canReviewApplications ? (
+                    <li className="site-nav__auth-item">
+                      <NavLink className="site-nav__link" to="/admin/catalog" onClick={() => setIsNavOpen(false)}>
+                        {t('nav.adminDashboard')}
+                      </NavLink>
+                    </li>
+                  ) : null}
                   {isInstructor ? (
                     <li className="site-nav__auth-item">
                       <NavLink className="site-nav__link" to="/instructor" onClick={() => setIsNavOpen(false)}>
@@ -137,6 +144,11 @@ function Header() {
                 {canReviewApplications ? (
                   <NavLink className="site-header__auth-link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
                     {t('nav.reviewApplications')}
+                  </NavLink>
+                ) : null}
+                {canReviewApplications ? (
+                  <NavLink className="site-header__auth-link" to="/admin/catalog" onClick={() => setIsNavOpen(false)}>
+                    {t('nav.adminDashboard')}
                   </NavLink>
                 ) : null}
                 {isInstructor ? (
