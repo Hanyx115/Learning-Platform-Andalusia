@@ -269,6 +269,7 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
             RoomName = "Room 1",
             City = "Alexandria",
             Address = "Test address",
+            Capacity = 100,
             IsActive = true,
         };
     }

@@ -218,6 +218,7 @@ public static class CatalogDataSeeder
                 City = seed.City,
                 Address = seed.Address,
                 MapUrl = seed.MapUrl,
+                Capacity = seed.Capacity,
                 IsActive = true,
             };
 
@@ -241,7 +242,7 @@ public static class CatalogDataSeeder
 
             var locationKey = course.Type switch
             {
-                "Online" => CreateLocationKey("Online Learning", "Virtual Classroom", "Online"),
+                "Online" => null,
                 "Hybrid" => CreateLocationKey("Alexandria Campus", "Technology Lab", "Alexandria"),
                 _ => CreateLocationKey("Alexandria Campus", "Training Room A", "Alexandria"),
             };
@@ -249,7 +250,7 @@ public static class CatalogDataSeeder
             {
                 Id = offeringId,
                 CourseId = course.Id,
-                LocationId = locationsByKey[locationKey].Id,
+                LocationId = locationKey is null ? null : locationsByKey[locationKey].Id,
                 StartsAtUtc = new DateTimeOffset(2027, 1, 18, 8, 0, 0, TimeSpan.Zero),
                 EndsAtUtc = new DateTimeOffset(2027, 3, 15, 16, 0, 0, TimeSpan.Zero),
                 ApplicationOpensAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
@@ -308,8 +309,9 @@ public static class CatalogDataSeeder
         foreach (var course in coursesBySlug.Values.OrderBy(course => course.Slug))
         {
             var offering = courseOfferingsById[CreateOfferingId(course.Id, 0xC0)];
-            var locationUseCount = locationUseCounts.GetValueOrDefault(offering.LocationId);
-            locationUseCounts[offering.LocationId] = locationUseCount + 1;
+            var locationKey = offering.LocationId ?? Guid.Empty;
+            var locationUseCount = locationUseCounts.GetValueOrDefault(locationKey);
+            locationUseCounts[locationKey] = locationUseCount + 1;
             var dayOffset = locationUseCount / 4;
             var hourOffset = (locationUseCount % 4) * 2;
 
@@ -372,28 +374,32 @@ public static class CatalogDataSeeder
             "Training Room A",
             "Alexandria",
             "39 Khalil El-Khayat Basha, Sidi Gaber",
-            null),
+            null,
+            40),
         new(
             new Guid("50000000-0000-0000-0000-000000000002"),
             "Alexandria Campus",
             "Technology Lab",
             "Alexandria",
             "39 Khalil El-Khayat Basha, Sidi Gaber",
-            null),
+            null,
+            32),
         new(
             new Guid("50000000-0000-0000-0000-000000000003"),
             "Online Learning",
             "Virtual Classroom",
             "Online",
             "Live online delivery",
-            null),
+            null,
+            500),
         new(
             new Guid("50000000-0000-0000-0000-000000000004"),
             "Cairo Training Center",
             "Training Room B",
             "Cairo",
             "Central Cairo training center",
-            null),
+            null,
+            35),
     ];
 
     private static readonly CategorySeed[] Categories =
@@ -821,5 +827,6 @@ public static class CatalogDataSeeder
         string RoomName,
         string City,
         string Address,
-        string? MapUrl);
+        string? MapUrl,
+        int Capacity);
 }

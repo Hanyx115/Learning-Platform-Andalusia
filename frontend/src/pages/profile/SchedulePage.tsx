@@ -6,6 +6,7 @@ import Container from '../../components/Container'
 
 function SchedulePage() {
   const { i18n, t } = useTranslation()
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const [sessions, setSessions] = useState<UpcomingSession[] | null>(null)
   const [loadError, setLoadError] = useState('')
   const [isForbidden, setIsForbidden] = useState(false)
@@ -64,14 +65,19 @@ function SchedulePage() {
             <article key={session.sessionId} className="dashboard-card schedule-card">
               <div className="dashboard-card__heading">
                 <div>
-                  <h2 dir="auto">{session.courseTitle}</h2>
+                  <h2 dir="auto">{session.offeringTitle}</h2>
                   <strong dir="auto">{session.sessionTitle}</strong>
                 </div>
                 <time dateTime={session.startsAtUtc}>
                   {new Date(session.startsAtUtc).toLocaleString(i18n.language)}
                 </time>
+                {session.status === 'Cancelled' ? (
+                  <span className="status-badge status-badge--negative">{t('schedule.cancelled')}</span>
+                ) : null}
               </div>
               <div className="dashboard-card__meta">
+                <span>{t('schedule.timeZone', { timeZone })}</span>
+                {session.location ? <>
                 <span>
                   {t('schedule.location', {
                     branch: session.location.branchName,
@@ -80,8 +86,12 @@ function SchedulePage() {
                   })}
                 </span>
                 <span>{session.location.address}</span>
+                </> : <span>{t('schedule.online')}</span>}
                 {session.instructorName ? (
                   <span>{t('schedule.instructor', { name: session.instructorName })}</span>
+                ) : null}
+                {session.cancellationReason ? (
+                  <span>{t('schedule.cancellationReason', { reason: session.cancellationReason })}</span>
                 ) : null}
               </div>
             </article>

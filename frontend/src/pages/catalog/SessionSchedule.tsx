@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next'
-import type { CourseSession } from '../../api/catalog'
+import type { CourseSession, ProgramSession } from '../../api/catalog'
 
 interface SessionScheduleProps {
-  sessions: CourseSession[]
+  sessions: Array<CourseSession | ProgramSession>
 }
 
 function SessionSchedule({ sessions }: SessionScheduleProps) {
   const { i18n, t } = useTranslation()
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   return (
     <section className="session-schedule" aria-labelledby="session-schedule-title">
@@ -24,17 +25,26 @@ function SessionSchedule({ sessions }: SessionScheduleProps) {
                   {' – '}
                   {new Date(session.endsAtUtc).toLocaleTimeString(i18n.language)}
                 </span>
+                <span>{t('schedule.timeZone', { timeZone })}</span>
+                {session.status === 'Cancelled' ? (
+                  <span className="status-badge status-badge--negative">
+                    {t('schedule.cancelled')}
+                  </span>
+                ) : null}
               </div>
               <div>
-                <span>
+                {session.location ? <span>
                   {t('schedule.location', {
                     branch: session.location.branchName,
                     room: session.location.roomName,
                     city: session.location.city,
                   })}
-                </span>
+                </span> : <span>{t('schedule.online')}</span>}
                 {session.instructorName ? (
                   <span>{t('schedule.instructor', { name: session.instructorName })}</span>
+                ) : null}
+                {session.cancellationReason ? (
+                  <span>{t('schedule.cancellationReason', { reason: session.cancellationReason })}</span>
                 ) : null}
               </div>
             </li>

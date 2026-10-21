@@ -250,6 +250,7 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
             RoomName = "Room 1",
             City = "Alexandria",
             Address = "Test address",
+            Capacity = 100,
             IsActive = true,
         };
     }

@@ -70,7 +70,7 @@ export interface Offering {
   currency: string
   capacity: number
   status: string
-  location: TrainingLocation
+  location: TrainingLocation | null
 }
 
 export interface TrainingLocation {
@@ -80,6 +80,7 @@ export interface TrainingLocation {
   city: string
   address: string
   mapUrl: string | null
+  capacity: number
   isActive: boolean
 }
 
@@ -95,7 +96,22 @@ export interface CourseSession {
   reschedulingNote: string | null
   instructorUserId: string | null
   instructorName: string | null
-  location: TrainingLocation
+  location: TrainingLocation | null
+}
+
+export interface ProgramSession {
+  id: string
+  programOfferingId: string
+  programTitle: string
+  title: string
+  startsAtUtc: string
+  endsAtUtc: string
+  status: string
+  cancellationReason: string | null
+  reschedulingNote: string | null
+  instructorUserId: string | null
+  instructorName: string | null
+  location: TrainingLocation | null
 }
 
 export interface CareerPathSummary {
@@ -165,6 +181,12 @@ export function getProgram(slug: string) {
 
 export function getProgramOfferings(slug: string) {
   return apiRequest<Offering[]>(`/api/v1/programs/${encodeURIComponent(slug)}/offerings`)
+}
+
+export function getProgramOfferingSessions(offeringId: string) {
+  return apiRequest<ProgramSession[]>(
+    `/api/v1/program-offerings/${encodeURIComponent(offeringId)}/sessions`,
+  )
 }
 
 export function getCareerPaths(query: CatalogListQuery = {}) {

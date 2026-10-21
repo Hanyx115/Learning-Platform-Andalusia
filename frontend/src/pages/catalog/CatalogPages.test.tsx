@@ -132,6 +132,7 @@ describe('catalog pages', () => {
             city: 'Alexandria',
             address: '39 Khalil El-Khayat Basha, Sidi Gaber',
             mapUrl: null,
+            capacity: 30,
             isActive: true,
           },
         }])
@@ -156,6 +157,7 @@ describe('catalog pages', () => {
             city: 'Alexandria',
             address: '39 Khalil El-Khayat Basha, Sidi Gaber',
             mapUrl: null,
+            capacity: 30,
             isActive: true,
           },
         }])

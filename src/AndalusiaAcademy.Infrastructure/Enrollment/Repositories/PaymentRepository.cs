@@ -42,26 +42,29 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
                     ? a.CourseOffering.EndsAtUtc
                     : a.ProgramOffering!.EndsAtUtc,
                 LocationId = a.CourseOffering != null
-                    ? a.CourseOffering.Location!.Id
-                    : a.ProgramOffering!.Location!.Id,
+                    ? a.CourseOffering.LocationId
+                    : a.ProgramOffering!.LocationId,
                 LocationBranchName = a.CourseOffering != null
-                    ? a.CourseOffering.Location!.BranchName
-                    : a.ProgramOffering!.Location!.BranchName,
+                    ? (a.CourseOffering.Location == null ? null : a.CourseOffering.Location.BranchName)
+                    : (a.ProgramOffering!.Location == null ? null : a.ProgramOffering.Location.BranchName),
                 LocationRoomName = a.CourseOffering != null
-                    ? a.CourseOffering.Location!.RoomName
-                    : a.ProgramOffering!.Location!.RoomName,
+                    ? (a.CourseOffering.Location == null ? null : a.CourseOffering.Location.RoomName)
+                    : (a.ProgramOffering!.Location == null ? null : a.ProgramOffering.Location.RoomName),
                 LocationCity = a.CourseOffering != null
-                    ? a.CourseOffering.Location!.City
-                    : a.ProgramOffering!.Location!.City,
+                    ? (a.CourseOffering.Location == null ? null : a.CourseOffering.Location.City)
+                    : (a.ProgramOffering!.Location == null ? null : a.ProgramOffering.Location.City),
                 LocationAddress = a.CourseOffering != null
-                    ? a.CourseOffering.Location!.Address
-                    : a.ProgramOffering!.Location!.Address,
+                    ? (a.CourseOffering.Location == null ? null : a.CourseOffering.Location.Address)
+                    : (a.ProgramOffering!.Location == null ? null : a.ProgramOffering.Location.Address),
                 LocationMapUrl = a.CourseOffering != null
-                    ? a.CourseOffering.Location!.MapUrl
-                    : a.ProgramOffering!.Location!.MapUrl,
+                    ? (a.CourseOffering.Location == null ? null : a.CourseOffering.Location.MapUrl)
+                    : (a.ProgramOffering!.Location == null ? null : a.ProgramOffering.Location.MapUrl),
+                LocationCapacity = a.CourseOffering != null
+                    ? (a.CourseOffering.Location == null ? (int?)null : a.CourseOffering.Location.Capacity)
+                    : (a.ProgramOffering!.Location == null ? (int?)null : a.ProgramOffering.Location.Capacity),
                 LocationIsActive = a.CourseOffering != null
-                    ? a.CourseOffering.Location!.IsActive
-                    : a.ProgramOffering!.Location!.IsActive,
+                    ? (a.CourseOffering.Location == null ? (bool?)null : a.CourseOffering.Location.IsActive)
+                    : (a.ProgramOffering!.Location == null ? (bool?)null : a.ProgramOffering.Location.IsActive),
                 Currency = a.CourseOffering != null
                     ? a.CourseOffering.Currency
                     : a.ProgramOffering!.Currency,
@@ -182,14 +185,17 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             enrollment.ProgramOfferingId,
             application.ProgramId, application.ProgramTitle,
             application.StartsAtUtc, application.EndsAtUtc,
-            new TrainingLocationDto(
-                application.LocationId,
-                application.LocationBranchName,
-                application.LocationRoomName,
-                application.LocationCity,
-                application.LocationAddress,
-                application.LocationMapUrl,
-                application.LocationIsActive),
+            application.LocationId.HasValue
+                ? new TrainingLocationDto(
+                    application.LocationId.Value,
+                    application.LocationBranchName!,
+                    application.LocationRoomName!,
+                    application.LocationCity!,
+                    application.LocationAddress!,
+                    application.LocationMapUrl,
+                    application.LocationCapacity!.Value,
+                    application.LocationIsActive!.Value)
+                : null,
             enrollment.Status, enrollment.EnrolledAt, enrollment.CompletedAt, enrollment.CancelledAt);
 
         return PayForApplicationOutcome.Success(paymentDto, enrollmentDto);

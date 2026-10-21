@@ -17,7 +17,8 @@ public sealed class SchedulingValidatorsTests
             "Training Room A",
             "Alexandria",
             "39 Khalil El-Khayat Basha, Sidi Gaber",
-            mapUrl);
+            mapUrl,
+            30);
 
         var result = new CreateTrainingLocationRequestValidator().Validate(request);
 
@@ -32,7 +33,8 @@ public sealed class SchedulingValidatorsTests
             "Training Room A",
             "Alexandria",
             "39 Khalil El-Khayat Basha, Sidi Gaber",
-            "/locations/alexandria");
+            "/locations/alexandria",
+            30);
 
         var result = new CreateTrainingLocationRequestValidator().Validate(request);
 
@@ -45,7 +47,7 @@ public sealed class SchedulingValidatorsTests
         var startsAtUtc = DateTimeOffset.UtcNow.AddDays(1);
         var request = new ScheduleCourseSessionRequest(
             Guid.NewGuid(),
-            null,
+            Guid.NewGuid(),
             "Session 1",
             startsAtUtc,
             startsAtUtc);
@@ -61,7 +63,7 @@ public sealed class SchedulingValidatorsTests
         var startsAtUtc = DateTimeOffset.UtcNow.AddDays(1);
         var request = new RescheduleCourseSessionRequest(
             Guid.NewGuid(),
-            null,
+            Guid.NewGuid(),
             "Session 1",
             startsAtUtc,
             startsAtUtc.AddHours(1),

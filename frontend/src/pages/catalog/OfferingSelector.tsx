@@ -36,6 +36,7 @@ function OfferingSelector({ offerings, selectedId, onSelect }: OfferingSelectorP
               </strong>
               <span>{t('offerings.price', { price: offering.price, currency: offering.currency })}</span>
               <span>{t('offerings.capacity', { capacity: offering.capacity })}</span>
+              {offering.location ? <>
               <span>
                 {t('offerings.location', {
                   branch: offering.location.branchName,
@@ -44,6 +45,7 @@ function OfferingSelector({ offerings, selectedId, onSelect }: OfferingSelectorP
                 })}
               </span>
               <span>{offering.location.address}</span>
+              </> : <span>{t('offerings.online')}</span>}
               <span>
                 {t('offerings.applyBy', {
                   date: new Date(offering.applicationClosesAtUtc).toLocaleDateString(i18n.language),

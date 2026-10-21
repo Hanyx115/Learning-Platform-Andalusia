@@ -7,4 +7,5 @@ public sealed record TrainingLocationDto(
     string City,
     string Address,
     string? MapUrl,
+    int Capacity,
     bool IsActive);

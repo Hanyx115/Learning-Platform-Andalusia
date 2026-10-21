@@ -14,7 +14,7 @@ public sealed record EnrollmentDto(
     string? ProgramTitle,
     DateTimeOffset StartsAtUtc,
     DateTimeOffset EndsAtUtc,
-    TrainingLocationDto Location,
+    TrainingLocationDto? Location,
     string Status,
     DateTimeOffset EnrolledAt,
     DateTimeOffset? CompletedAt,

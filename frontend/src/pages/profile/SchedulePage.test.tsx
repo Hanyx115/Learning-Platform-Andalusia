@@ -9,10 +9,14 @@ const upcomingSession: UpcomingSession = {
   enrollmentId: 'enrollment-1',
   sessionId: 'session-1',
   courseOfferingId: 'offering-1',
-  courseTitle: 'Computer Networks Fundamentals',
+  programOfferingId: null,
+  offeringType: 'Course',
+  offeringTitle: 'Computer Networks Fundamentals',
   sessionTitle: 'Network models and protocols',
   startsAtUtc: '2027-01-18T08:00:00Z',
   endsAtUtc: '2027-01-18T10:00:00Z',
+  status: 'Scheduled',
+  cancellationReason: null,
   instructorName: 'Mona Hassan',
   location: {
     id: 'location-1',
@@ -21,6 +25,7 @@ const upcomingSession: UpcomingSession = {
     city: 'Alexandria',
     address: '39 Khalil El-Khayat Basha, Sidi Gaber',
     mapUrl: null,
+    capacity: 30,
     isActive: true,
   },
 }

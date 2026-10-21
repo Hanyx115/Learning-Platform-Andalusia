@@ -303,7 +303,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("EndsAtUtc")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid>("LocationId")
+                    b.Property<Guid?>("LocationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Price")
@@ -363,7 +363,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Property<Guid?>("InstructorUserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("LocationId")
+                    b.Property<Guid?>("LocationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ReschedulingNote")
@@ -671,7 +671,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("EndsAtUtc")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid>("LocationId")
+                    b.Property<Guid?>("LocationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Price")
@@ -712,6 +712,72 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("EndsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("InstructorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProgramOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ReschedulingNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset>("StartsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgramOfferingId", "StartsAtUtc")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "StartsAtUtc");
+
+                    b.HasIndex("InstructorUserId", "StartsAtUtc", "EndsAtUtc");
+
+                    b.HasIndex("LocationId", "StartsAtUtc", "EndsAtUtc");
+
+                    b.ToTable("ProgramSessions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProgramSessions_Cancellation", "([Status] = 'Cancelled' AND [CancellationReason] IS NOT NULL) OR ([Status] <> 'Cancelled' AND [CancellationReason] IS NULL)");
+
+                            t.HasCheckConstraint("CK_ProgramSessions_Schedule", "[StartsAtUtc] < [EndsAtUtc]");
+
+                            t.HasCheckConstraint("CK_ProgramSessions_Status", "[Status] IN ('Scheduled', 'Completed', 'Cancelled')");
+                        });
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.TrainingLocation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -727,6 +793,9 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
 
                     b.Property<string>("City")
                         .IsRequired()
@@ -752,7 +821,10 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.HasIndex("BranchName", "RoomName", "City")
                         .IsUnique();
 
-                    b.ToTable("TrainingLocations", (string)null);
+                    b.ToTable("TrainingLocations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TrainingLocations_Capacity", "[Capacity] > 0");
+                        });
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationRole", b =>
@@ -1103,8 +1175,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.HasOne("AndalusiaAcademy.Domain.Models.TrainingLocation", "Location")
                         .WithMany()
                         .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Course");
 
@@ -1127,8 +1198,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.HasOne("AndalusiaAcademy.Domain.Models.TrainingLocation", "Location")
                         .WithMany()
                         .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CourseOffering");
 
@@ -1242,8 +1312,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.HasOne("AndalusiaAcademy.Domain.Models.TrainingLocation", "Location")
                         .WithMany()
                         .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("AndalusiaAcademy.Domain.Models.AcademyProgram", "Program")
                         .WithMany()
@@ -1254,6 +1323,29 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Navigation("Location");
 
                     b.Navigation("Program");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramSession", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("InstructorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AndalusiaAcademy.Domain.Models.TrainingLocation", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AndalusiaAcademy.Domain.Models.ProgramOffering", "ProgramOffering")
+                        .WithMany()
+                        .HasForeignKey("ProgramOfferingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Location");
+
+                    b.Navigation("ProgramOffering");
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Infrastructure.Identity.Models.RefreshToken", b =>

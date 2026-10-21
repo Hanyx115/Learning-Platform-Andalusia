@@ -30,23 +30,27 @@ public sealed class EnrollmentRepository(ApplicationDbContext dbContext) : IEnro
                 enrollment.CourseOffering != null
                     ? enrollment.CourseOffering.EndsAtUtc
                     : enrollment.ProgramOffering!.EndsAtUtc,
-                enrollment.CourseOffering != null
+                enrollment.CourseOffering != null && enrollment.CourseOffering.Location != null
                     ? new TrainingLocationDto(
-                        enrollment.CourseOffering.Location!.Id,
+                        enrollment.CourseOffering.Location.Id,
                         enrollment.CourseOffering.Location.BranchName,
                         enrollment.CourseOffering.Location.RoomName,
                         enrollment.CourseOffering.Location.City,
                         enrollment.CourseOffering.Location.Address,
                         enrollment.CourseOffering.Location.MapUrl,
+                        enrollment.CourseOffering.Location.Capacity,
                         enrollment.CourseOffering.Location.IsActive)
-                    : new TrainingLocationDto(
-                        enrollment.ProgramOffering!.Location!.Id,
+                    : enrollment.ProgramOffering != null && enrollment.ProgramOffering.Location != null
+                    ? new TrainingLocationDto(
+                        enrollment.ProgramOffering.Location.Id,
                         enrollment.ProgramOffering.Location.BranchName,
                         enrollment.ProgramOffering.Location.RoomName,
                         enrollment.ProgramOffering.Location.City,
                         enrollment.ProgramOffering.Location.Address,
                         enrollment.ProgramOffering.Location.MapUrl,
-                        enrollment.ProgramOffering.Location.IsActive),
+                        enrollment.ProgramOffering.Location.Capacity,
+                        enrollment.ProgramOffering.Location.IsActive)
+                    : null,
                 enrollment.Status,
                 enrollment.EnrolledAt,
                 enrollment.CompletedAt,

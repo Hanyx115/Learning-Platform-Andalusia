@@ -8,7 +8,8 @@ public sealed class TrainingLocationConfiguration : IEntityTypeConfiguration<Tra
 {
     public void Configure(EntityTypeBuilder<TrainingLocation> builder)
     {
-        builder.ToTable("TrainingLocations");
+        builder.ToTable("TrainingLocations", table =>
+            table.HasCheckConstraint("CK_TrainingLocations_Capacity", "[Capacity] > 0"));
 
         builder.HasKey(location => location.Id);
         builder.Property(location => location.BranchName).HasMaxLength(150).IsRequired();
