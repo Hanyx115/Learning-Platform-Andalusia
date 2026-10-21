@@ -14,5 +14,7 @@ public sealed class TrainingLocation
 
     public string? MapUrl { get; set; }
 
+    public int Capacity { get; set; }
+
     public bool IsActive { get; set; }
 }

@@ -211,6 +211,7 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
             RoomName = "Virtual Room",
             City = "Online",
             Address = "Online",
+            Capacity = 100,
             IsActive = true,
         };
         dbContext.TrainingLocations.Add(location);

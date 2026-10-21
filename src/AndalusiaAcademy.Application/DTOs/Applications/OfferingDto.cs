@@ -12,4 +12,4 @@ public sealed record OfferingDto(
     string Currency,
     int Capacity,
     string Status,
-    TrainingLocationDto Location);
+    TrainingLocationDto? Location);

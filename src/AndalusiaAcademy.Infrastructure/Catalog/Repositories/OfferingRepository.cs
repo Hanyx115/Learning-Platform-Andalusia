@@ -31,13 +31,14 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
                 offering.Currency,
                 offering.Capacity,
                 offering.Status,
-                new TrainingLocationDto(
-                    offering.Location!.Id,
+                offering.Location == null ? null : new TrainingLocationDto(
+                    offering.Location.Id,
                     offering.Location.BranchName,
                     offering.Location.RoomName,
                     offering.Location.City,
                     offering.Location.Address,
                     offering.Location.MapUrl,
+                    offering.Location.Capacity,
                     offering.Location.IsActive)))
             .ToListAsync(cancellationToken);
 
@@ -63,13 +64,14 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
                 offering.Currency,
                 offering.Capacity,
                 offering.Status,
-                new TrainingLocationDto(
-                    offering.Location!.Id,
+                offering.Location == null ? null : new TrainingLocationDto(
+                    offering.Location.Id,
                     offering.Location.BranchName,
                     offering.Location.RoomName,
                     offering.Location.City,
                     offering.Location.Address,
                     offering.Location.MapUrl,
+                    offering.Location.Capacity,
                     offering.Location.IsActive)))
             .ToListAsync(cancellationToken);
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { getApiErrorMessage } from '../../api/auth'
-import { useProgram, useProgramOfferings } from '../../api/catalogQueries'
+import { useProgram, useProgramOfferings, useProgramOfferingSessions } from '../../api/catalogQueries'
 import { ApiError } from '../../api/client'
 import { submitApplication } from '../../api/enrollment'
 import { useAuthProfile } from '../../auth/profileContext'
@@ -11,6 +11,7 @@ import CatalogPhoto from '../../components/CatalogPhoto'
 import Container from '../../components/Container'
 import { CatalogHero, QueryState } from './CatalogUi'
 import OfferingSelector from './OfferingSelector'
+import SessionSchedule from './SessionSchedule'
 import './catalog.css'
 
 function ProgramDetailPage() {
@@ -25,6 +26,8 @@ function ProgramDetailPage() {
   const [applyError, setApplyError] = useState('')
   const [hasApplied, setHasApplied] = useState(false)
   const [selectedOfferingId, setSelectedOfferingId] = useState('')
+  const effectiveOfferingId = selectedOfferingId || offeringsQuery.data?.[0]?.id || ''
+  const sessionsQuery = useProgramOfferingSessions(effectiveOfferingId)
 
   async function handleApply() {
     const offeringId = selectedOfferingId || offeringsQuery.data?.[0]?.id
@@ -80,10 +83,16 @@ function ProgramDetailPage() {
             {offeringsQuery.data?.length ? (
               <OfferingSelector
                 offerings={offeringsQuery.data}
-                selectedId={selectedOfferingId || offeringsQuery.data[0].id}
+                selectedId={effectiveOfferingId}
                 onSelect={setSelectedOfferingId}
               />
             ) : offeringsQuery.isSuccess ? <p>{t('offerings.empty')}</p> : null}
+
+            {effectiveOfferingId && sessionsQuery.isPending ? <QueryState kind="loading" /> : null}
+            {sessionsQuery.isError ? (
+              <QueryState kind="error" onRetry={() => void sessionsQuery.refetch()} />
+            ) : null}
+            {sessionsQuery.data ? <SessionSchedule sessions={sessionsQuery.data} /> : null}
 
             {offeringsQuery.data?.length && (!tokens || isLearner) ? (
               <div className="catalog-detail__apply">

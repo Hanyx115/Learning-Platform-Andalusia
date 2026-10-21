@@ -11,6 +11,7 @@ public sealed class CreateTrainingLocationRequestValidator : AbstractValidator<C
         RuleFor(request => request.RoomName).NotEmpty().MaximumLength(100);
         RuleFor(request => request.City).NotEmpty().MaximumLength(100);
         RuleFor(request => request.Address).NotEmpty().MaximumLength(500);
+        RuleFor(request => request.Capacity).GreaterThan(0);
         RuleFor(request => request.MapUrl)
             .MaximumLength(500)
             .Must(value =>

@@ -256,6 +256,7 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
             RoomName = "Room 1",
             City = "Alexandria",
             Address = "Test materials address",
+            Capacity = 100,
             IsActive = true,
         };
         var offering = new CourseOffering
@@ -323,6 +324,7 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
             RoomName = "Room 2",
             City = "Alexandria",
             Address = "Test program materials address",
+            Capacity = 100,
             IsActive = true,
         };
         var offering = new ProgramOffering

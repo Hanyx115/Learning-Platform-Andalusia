@@ -7,7 +7,7 @@ public sealed class RescheduleCourseSessionRequestValidator : AbstractValidator<
 {
     public RescheduleCourseSessionRequestValidator()
     {
-        RuleFor(request => request.LocationId).NotEmpty();
+        RuleFor(request => request.InstructorUserId).NotEmpty();
         RuleFor(request => request.Title).NotEmpty().MaximumLength(200);
         RuleFor(request => request.EndsAtUtc)
             .GreaterThan(request => request.StartsAtUtc)

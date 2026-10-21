@@ -12,4 +12,4 @@ public sealed record CourseSessionDto(
     string? ReschedulingNote,
     Guid? InstructorUserId,
     string? InstructorName,
-    TrainingLocationDto Location);
+    TrainingLocationDto? Location);

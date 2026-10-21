@@ -6,4 +6,5 @@ public sealed record UpdateTrainingLocationRequest(
     string City,
     string Address,
     string? MapUrl,
+    int Capacity,
     bool IsActive);

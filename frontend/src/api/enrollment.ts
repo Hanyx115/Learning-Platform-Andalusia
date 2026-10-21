@@ -24,13 +24,17 @@ export interface Application {
 export interface UpcomingSession {
   enrollmentId: string
   sessionId: string
-  courseOfferingId: string
-  courseTitle: string
+  courseOfferingId: string | null
+  programOfferingId: string | null
+  offeringType: 'Course' | 'Program'
+  offeringTitle: string
   sessionTitle: string
   startsAtUtc: string
   endsAtUtc: string
+  status: string
+  cancellationReason: string | null
   instructorName: string | null
-  location: TrainingLocation
+  location: TrainingLocation | null
 }
 
 export interface ApplicationStatusHistory {
@@ -76,7 +80,7 @@ export interface Enrollment {
   programTitle: string | null
   startsAtUtc: string
   endsAtUtc: string
-  location: TrainingLocation
+  location: TrainingLocation | null
   status: string
   enrolledAt: string
   completedAt: string | null

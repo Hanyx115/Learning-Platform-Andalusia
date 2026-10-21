@@ -8,7 +8,7 @@ public sealed class ProgramOffering
 
     public AcademyProgram? Program { get; set; }
 
-    public Guid LocationId { get; set; }
+    public Guid? LocationId { get; set; }
 
     public TrainingLocation? Location { get; set; }
 

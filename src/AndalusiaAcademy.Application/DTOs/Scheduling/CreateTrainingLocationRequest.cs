@@ -5,4 +5,5 @@ public sealed record CreateTrainingLocationRequest(
     string RoomName,
     string City,
     string Address,
-    string? MapUrl);
+    string? MapUrl,
+    int Capacity);

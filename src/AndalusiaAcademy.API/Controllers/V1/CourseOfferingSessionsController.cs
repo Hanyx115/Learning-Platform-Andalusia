@@ -21,7 +21,7 @@ public sealed class CourseOfferingSessionsController(
         Guid courseOfferingId,
         CancellationToken cancellationToken)
         => Ok(await schedulingService.GetSessionsForOfferingAsync(
-            courseOfferingId, includeCancelled: false, cancellationToken));
+            courseOfferingId, includeCancelled: true, cancellationToken));
 
     [HttpPost]
     [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
