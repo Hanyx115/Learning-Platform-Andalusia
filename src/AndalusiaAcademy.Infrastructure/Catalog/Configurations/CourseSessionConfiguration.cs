@@ -24,6 +24,7 @@ public sealed class CourseSessionConfiguration : IEntityTypeConfiguration<Course
         builder.Property(session => session.Title).HasMaxLength(200).IsRequired();
         builder.Property(session => session.Status).HasMaxLength(32).IsRequired();
         builder.Property(session => session.CancellationReason).HasMaxLength(500);
+        builder.Property(session => session.ReschedulingNote).HasMaxLength(500);
 
         builder.HasIndex(session => new { session.CourseOfferingId, session.StartsAtUtc }).IsUnique();
         builder.HasIndex(session => new { session.LocationId, session.StartsAtUtc, session.EndsAtUtc });

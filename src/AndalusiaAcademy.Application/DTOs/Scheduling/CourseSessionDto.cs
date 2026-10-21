@@ -9,6 +9,7 @@ public sealed record CourseSessionDto(
     DateTimeOffset EndsAtUtc,
     string Status,
     string? CancellationReason,
+    string? ReschedulingNote,
     Guid? InstructorUserId,
     string? InstructorName,
     TrainingLocationDto Location);

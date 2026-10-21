@@ -5,4 +5,5 @@ public sealed record RescheduleCourseSessionRequest(
     Guid? InstructorUserId,
     string Title,
     DateTimeOffset StartsAtUtc,
-    DateTimeOffset EndsAtUtc);
+    DateTimeOffset EndsAtUtc,
+    string? Note);

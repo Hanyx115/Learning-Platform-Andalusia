@@ -24,6 +24,8 @@ public sealed class CourseSession
 
     public string? CancellationReason { get; set; }
 
+    public string? ReschedulingNote { get; set; }
+
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public DateTimeOffset? UpdatedAtUtc { get; set; }

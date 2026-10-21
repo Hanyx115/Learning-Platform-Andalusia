@@ -92,6 +92,7 @@ export interface CourseSession {
   endsAtUtc: string
   status: string
   cancellationReason: string | null
+  reschedulingNote: string | null
   instructorUserId: string | null
   instructorName: string | null
   location: TrainingLocation

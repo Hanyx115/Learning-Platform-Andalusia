@@ -194,6 +194,7 @@ public sealed class SchedulingService(ISchedulingRepository repository, TimeProv
         session.Title = request.Title.Trim();
         session.StartsAtUtc = request.StartsAtUtc;
         session.EndsAtUtc = request.EndsAtUtc;
+        session.ReschedulingNote = NormalizeOptional(request.Note);
         session.UpdatedAtUtc = timeProvider.GetUtcNow();
 
         await repository.SaveChangesAsync(cancellationToken);

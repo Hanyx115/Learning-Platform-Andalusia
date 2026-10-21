@@ -12,5 +12,6 @@ public sealed class RescheduleCourseSessionRequestValidator : AbstractValidator<
         RuleFor(request => request.EndsAtUtc)
             .GreaterThan(request => request.StartsAtUtc)
             .WithMessage("The session end time must be after its start time.");
+        RuleFor(request => request.Note).MaximumLength(500);
     }
 }

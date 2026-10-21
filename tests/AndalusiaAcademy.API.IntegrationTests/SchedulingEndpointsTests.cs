@@ -61,6 +61,56 @@ public sealed class SchedulingEndpointsTests(ApiWebApplicationFactory factory) :
     }
 
     [Fact]
+    public async Task Admin_CanRescheduleSession_WithOptionalNote()
+    {
+        var seeded = await SeedCourseOfferingAsync();
+        var adminToken = await RegisterAsAsync(RoleNames.Admin);
+        var startsAtUtc = seeded.OfferingStartsAtUtc.AddDays(1);
+
+        using var createResponse = await SendAuthorizedAsync(
+            HttpMethod.Post,
+            $"/api/v1/course-offerings/{seeded.OfferingId}/sessions",
+            adminToken,
+            new
+            {
+                seeded.LocationId,
+                title = "Original session",
+                startsAtUtc,
+                endsAtUtc = startsAtUtc.AddHours(2),
+            });
+        createResponse.EnsureSuccessStatusCode();
+
+        using var createDocument = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+        var sessionId = createDocument.RootElement.GetProperty("id").GetGuid();
+        var rescheduledStart = startsAtUtc.AddDays(1);
+
+        using var rescheduleResponse = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"/api/v1/course-sessions/{sessionId}",
+            adminToken,
+            new
+            {
+                seeded.LocationId,
+                instructorUserId = (Guid?)null,
+                title = "Rescheduled session",
+                startsAtUtc = rescheduledStart,
+                endsAtUtc = rescheduledStart.AddHours(2),
+                note = "Moved to accommodate the cohort schedule.",
+            });
+        rescheduleResponse.EnsureSuccessStatusCode();
+
+        using var rescheduleDocument = JsonDocument.Parse(await rescheduleResponse.Content.ReadAsStringAsync());
+        Assert.Equal(
+            "Moved to accommodate the cohort schedule.",
+            rescheduleDocument.RootElement.GetProperty("reschedulingNote").GetString());
+
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var storedSession = await dbContext.CourseSessions.FindAsync(sessionId);
+        Assert.Equal("Moved to accommodate the cohort schedule.", storedSession!.ReschedulingNote);
+    }
+
+    [Fact]
     public async Task ConcurrentOverlappingSessions_AllowOnlyOneBooking()
     {
         var seeded = await SeedCourseOfferingAsync();

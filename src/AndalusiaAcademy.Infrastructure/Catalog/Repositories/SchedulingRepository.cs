@@ -98,6 +98,7 @@ public sealed class SchedulingRepository(ApplicationDbContext dbContext) : ISche
                 session.EndsAtUtc,
                 session.Status,
                 session.CancellationReason,
+                session.ReschedulingNote,
                 session.InstructorUserId,
                 session.InstructorUserId == null
                     ? null

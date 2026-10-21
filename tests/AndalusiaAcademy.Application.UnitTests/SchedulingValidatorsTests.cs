@@ -54,4 +54,21 @@ public sealed class SchedulingValidatorsTests
 
         Assert.Contains(result.Errors, error => error.PropertyName == nameof(request.EndsAtUtc));
     }
+
+    [Fact]
+    public void RescheduleSession_RejectsNoteLongerThanMaximum()
+    {
+        var startsAtUtc = DateTimeOffset.UtcNow.AddDays(1);
+        var request = new RescheduleCourseSessionRequest(
+            Guid.NewGuid(),
+            null,
+            "Session 1",
+            startsAtUtc,
+            startsAtUtc.AddHours(1),
+            new string('x', 501));
+
+        var result = new RescheduleCourseSessionRequestValidator().Validate(request);
+
+        Assert.Contains(result.Errors, error => error.PropertyName == nameof(request.Note));
+    }
 }
