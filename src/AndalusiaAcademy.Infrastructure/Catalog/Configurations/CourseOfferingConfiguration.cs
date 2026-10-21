@@ -28,10 +28,16 @@ public sealed class CourseOfferingConfiguration : IEntityTypeConfiguration<Cours
 
         builder.HasIndex(offering => new { offering.CourseId, offering.StartsAtUtc }).IsUnique();
         builder.HasIndex(offering => new { offering.CourseId, offering.Status, offering.StartsAtUtc });
+        builder.HasIndex(offering => new { offering.LocationId, offering.Status, offering.StartsAtUtc });
 
         builder.HasOne(offering => offering.Course)
             .WithMany()
             .HasForeignKey(offering => offering.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(offering => offering.Location)
+            .WithMany()
+            .HasForeignKey(offering => offering.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,5 +1,6 @@
 using AndalusiaAcademy.Application.DTOs.Enrollments;
 using AndalusiaAcademy.Application.DTOs.Payments;
+using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Enrollment;
 using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Domain.Models;
@@ -40,6 +41,27 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
                 EndsAtUtc = a.CourseOffering != null
                     ? a.CourseOffering.EndsAtUtc
                     : a.ProgramOffering!.EndsAtUtc,
+                LocationId = a.CourseOffering != null
+                    ? a.CourseOffering.Location!.Id
+                    : a.ProgramOffering!.Location!.Id,
+                LocationBranchName = a.CourseOffering != null
+                    ? a.CourseOffering.Location!.BranchName
+                    : a.ProgramOffering!.Location!.BranchName,
+                LocationRoomName = a.CourseOffering != null
+                    ? a.CourseOffering.Location!.RoomName
+                    : a.ProgramOffering!.Location!.RoomName,
+                LocationCity = a.CourseOffering != null
+                    ? a.CourseOffering.Location!.City
+                    : a.ProgramOffering!.Location!.City,
+                LocationAddress = a.CourseOffering != null
+                    ? a.CourseOffering.Location!.Address
+                    : a.ProgramOffering!.Location!.Address,
+                LocationMapUrl = a.CourseOffering != null
+                    ? a.CourseOffering.Location!.MapUrl
+                    : a.ProgramOffering!.Location!.MapUrl,
+                LocationIsActive = a.CourseOffering != null
+                    ? a.CourseOffering.Location!.IsActive
+                    : a.ProgramOffering!.Location!.IsActive,
                 Currency = a.CourseOffering != null
                     ? a.CourseOffering.Currency
                     : a.ProgramOffering!.Currency,
@@ -160,6 +182,14 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             enrollment.ProgramOfferingId,
             application.ProgramId, application.ProgramTitle,
             application.StartsAtUtc, application.EndsAtUtc,
+            new TrainingLocationDto(
+                application.LocationId,
+                application.LocationBranchName,
+                application.LocationRoomName,
+                application.LocationCity,
+                application.LocationAddress,
+                application.LocationMapUrl,
+                application.LocationIsActive),
             enrollment.Status, enrollment.EnrolledAt, enrollment.CompletedAt, enrollment.CancelledAt);
 
         return PayForApplicationOutcome.Success(paymentDto, enrollmentDto);

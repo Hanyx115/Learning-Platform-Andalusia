@@ -14,7 +14,7 @@ public sealed class CatalogDataSeederTests
 
         var addedRows = await CatalogDataSeeder.SeedAsync(context);
 
-        Assert.Equal(142, addedRows);
+        Assert.Equal(212, addedRows);
         Assert.Equal(7, await context.CourseCategories.CountAsync());
         Assert.Equal(22, await context.Courses.CountAsync());
         Assert.Equal(9, await context.Programs.CountAsync());
@@ -24,6 +24,8 @@ public sealed class CatalogDataSeederTests
         Assert.Equal(26, await context.CareerPathCourses.CountAsync());
         Assert.Equal(22, await context.CourseOfferings.CountAsync());
         Assert.Equal(9, await context.ProgramOfferings.CountAsync());
+        Assert.Equal(4, await context.TrainingLocations.CountAsync());
+        Assert.Equal(66, await context.CourseSessions.CountAsync());
 
         var emergencyProgram = await context.Programs
             .SingleAsync(program => program.Slug == "emergency-care-foundations");
@@ -90,7 +92,7 @@ public sealed class CatalogDataSeederTests
         var firstAddedRows = await CatalogDataSeeder.SeedAsync(context);
         var secondAddedRows = await CatalogDataSeeder.SeedAsync(context);
 
-        Assert.Equal(141, firstAddedRows);
+        Assert.Equal(211, firstAddedRows);
         Assert.Equal(0, secondAddedRows);
         Assert.Equal(7, await context.CourseCategories.CountAsync());
         Assert.Equal(22, await context.Courses.CountAsync());
@@ -98,6 +100,8 @@ public sealed class CatalogDataSeederTests
         Assert.Equal(10, await context.CareerPaths.CountAsync());
         Assert.Equal(22, await context.CourseOfferings.CountAsync());
         Assert.Equal(9, await context.ProgramOfferings.CountAsync());
+        Assert.Equal(4, await context.TrainingLocations.CountAsync());
+        Assert.Equal(66, await context.CourseSessions.CountAsync());
 
         var preservedCategory = await context.CourseCategories
             .SingleAsync(category => category.Slug == "clinical-care");

@@ -4,6 +4,7 @@ import {
   getCareerPaths,
   getCourse,
   getCourseOfferings,
+  getCourseOfferingSessions,
   getCourses,
   getProgram,
   getProgramOfferings,
@@ -16,6 +17,7 @@ export const catalogQueryKeys = {
   courses: (query: CourseCatalogQuery) => ['courses', query] as const,
   course: (slug: string) => ['courses', slug] as const,
   courseOfferings: (slug: string) => ['courses', slug, 'offerings'] as const,
+  courseOfferingSessions: (offeringId: string) => ['course-offerings', offeringId, 'sessions'] as const,
   programs: (query: CatalogListQuery) => ['programs', query] as const,
   program: (slug: string) => ['programs', slug] as const,
   programOfferings: (slug: string) => ['programs', slug, 'offerings'] as const,
@@ -43,6 +45,14 @@ export function useCourseOfferings(slug: string) {
     queryKey: catalogQueryKeys.courseOfferings(slug),
     queryFn: () => getCourseOfferings(slug),
     enabled: Boolean(slug),
+  })
+}
+
+export function useCourseOfferingSessions(offeringId: string) {
+  return useQuery({
+    queryKey: catalogQueryKeys.courseOfferingSessions(offeringId),
+    queryFn: () => getCourseOfferingSessions(offeringId),
+    enabled: Boolean(offeringId),
   })
 }
 

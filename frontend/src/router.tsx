@@ -22,6 +22,7 @@ import ProgramsPage from './pages/catalog/ProgramsPage'
 import ProfileLayout from './pages/profile/ProfileLayout'
 import ApplicationsPage from './pages/profile/ApplicationsPage'
 import EnrollmentsPage from './pages/profile/EnrollmentsPage'
+import SchedulePage from './pages/profile/SchedulePage'
 import StaffApplicationsPage from './pages/staff/StaffApplicationsPage'
 
 export const router = createBrowserRouter([
@@ -115,6 +116,10 @@ export const router = createBrowserRouter([
               {
                 path: 'enrollments',
                 element: <EnrollmentsPage />,
+              },
+              {
+                path: 'schedule',
+                element: <SchedulePage />,
               },
             ],
           },

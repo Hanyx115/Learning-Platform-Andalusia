@@ -1,4 +1,5 @@
 using AndalusiaAcademy.Application.DTOs.Applications;
+using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Domain.Models;
 using AndalusiaAcademy.Infrastructure.Data;
@@ -29,7 +30,15 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
                 offering.Price,
                 offering.Currency,
                 offering.Capacity,
-                offering.Status))
+                offering.Status,
+                new TrainingLocationDto(
+                    offering.Location!.Id,
+                    offering.Location.BranchName,
+                    offering.Location.RoomName,
+                    offering.Location.City,
+                    offering.Location.Address,
+                    offering.Location.MapUrl,
+                    offering.Location.IsActive)))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<OfferingDto>> GetOpenProgramOfferingsAsync(
@@ -53,7 +62,15 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
                 offering.Price,
                 offering.Currency,
                 offering.Capacity,
-                offering.Status))
+                offering.Status,
+                new TrainingLocationDto(
+                    offering.Location!.Id,
+                    offering.Location.BranchName,
+                    offering.Location.RoomName,
+                    offering.Location.City,
+                    offering.Location.Address,
+                    offering.Location.MapUrl,
+                    offering.Location.IsActive)))
             .ToListAsync(cancellationToken);
 
     public Task<OfferingTargetDto?> GetCourseOfferingAsync(Guid offeringId, CancellationToken cancellationToken)

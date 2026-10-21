@@ -173,10 +173,13 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var course = await context.Courses.SingleAsync(item => item.Slug == "patient-care-basics");
         var now = DateTimeOffset.UtcNow;
+        var location = CreateLocation();
+        context.TrainingLocations.Add(location);
         var openOffering = new CourseOffering
         {
             Id = Guid.NewGuid(),
             CourseId = course.Id,
+            LocationId = location.Id,
             StartsAtUtc = now.AddMonths(2),
             EndsAtUtc = now.AddMonths(3),
             ApplicationOpensAtUtc = now.AddDays(-1),
@@ -191,6 +194,7 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
         {
             Id = Guid.NewGuid(),
             CourseId = course.Id,
+            LocationId = location.Id,
             StartsAtUtc = now.AddMonths(4),
             EndsAtUtc = now.AddMonths(5),
             ApplicationOpensAtUtc = now.AddMonths(-2),
@@ -213,10 +217,13 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var program = await context.Programs.SingleAsync(item => item.Slug == "alpha-program");
         var now = DateTimeOffset.UtcNow;
+        var location = CreateLocation();
+        context.TrainingLocations.Add(location);
         var offering = new ProgramOffering
         {
             Id = Guid.NewGuid(),
             ProgramId = program.Id,
+            LocationId = location.Id,
             StartsAtUtc = now.AddMonths(2),
             EndsAtUtc = now.AddMonths(6),
             ApplicationOpensAtUtc = now.AddDays(-1),
@@ -231,6 +238,20 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
         context.ProgramOfferings.Add(offering);
         await context.SaveChangesAsync();
         return offering.Id;
+    }
+
+    private static TrainingLocation CreateLocation()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        return new TrainingLocation
+        {
+            Id = Guid.NewGuid(),
+            BranchName = $"Test Branch {suffix}",
+            RoomName = "Room 1",
+            City = "Alexandria",
+            Address = "Test address",
+            IsActive = true,
+        };
     }
 
     private static Course CreateCourse(

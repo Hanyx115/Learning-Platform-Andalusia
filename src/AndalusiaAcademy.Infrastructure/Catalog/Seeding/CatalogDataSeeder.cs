@@ -195,24 +195,61 @@ public static class CatalogDataSeeder
             addedCount++;
         }
 
-        var courseOfferingIds = (await dbContext.CourseOfferings
+        var locationsByKey = (await dbContext.TrainingLocations
                 .AsNoTracking()
-                .Select(offering => offering.Id)
                 .ToListAsync(cancellationToken))
-            .ToHashSet();
+            .ToDictionary(
+                location => CreateLocationKey(location.BranchName, location.RoomName, location.City),
+                StringComparer.OrdinalIgnoreCase);
 
-        foreach (var course in coursesBySlug.Values)
+        foreach (var seed in TrainingLocations)
         {
-            var offeringId = CreateOfferingId(course.Id, 0xC0);
-            if (!courseOfferingIds.Add(offeringId))
+            var key = CreateLocationKey(seed.BranchName, seed.RoomName, seed.City);
+            if (locationsByKey.ContainsKey(key))
             {
                 continue;
             }
 
-            dbContext.CourseOfferings.Add(new CourseOffering
+            var location = new TrainingLocation
+            {
+                Id = seed.Id,
+                BranchName = seed.BranchName,
+                RoomName = seed.RoomName,
+                City = seed.City,
+                Address = seed.Address,
+                MapUrl = seed.MapUrl,
+                IsActive = true,
+            };
+
+            dbContext.TrainingLocations.Add(location);
+            locationsByKey.Add(key, location);
+            addedCount++;
+        }
+
+        var courseOfferingsById = (await dbContext.CourseOfferings
+                .AsNoTracking()
+                .ToListAsync(cancellationToken))
+            .ToDictionary(offering => offering.Id);
+
+        foreach (var course in coursesBySlug.Values)
+        {
+            var offeringId = CreateOfferingId(course.Id, 0xC0);
+            if (courseOfferingsById.ContainsKey(offeringId))
+            {
+                continue;
+            }
+
+            var locationKey = course.Type switch
+            {
+                "Online" => CreateLocationKey("Online Learning", "Virtual Classroom", "Online"),
+                "Hybrid" => CreateLocationKey("Alexandria Campus", "Technology Lab", "Alexandria"),
+                _ => CreateLocationKey("Alexandria Campus", "Training Room A", "Alexandria"),
+            };
+            var offering = new CourseOffering
             {
                 Id = offeringId,
                 CourseId = course.Id,
+                LocationId = locationsByKey[locationKey].Id,
                 StartsAtUtc = new DateTimeOffset(2027, 1, 18, 8, 0, 0, TimeSpan.Zero),
                 EndsAtUtc = new DateTimeOffset(2027, 3, 15, 16, 0, 0, TimeSpan.Zero),
                 ApplicationOpensAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
@@ -222,7 +259,9 @@ public static class CatalogDataSeeder
                 Capacity = 30,
                 Status = OfferingStatuses.Open,
                 CreatedAtUtc = new DateTimeOffset(2026, 10, 20, 0, 0, 0, TimeSpan.Zero),
-            });
+            };
+            dbContext.CourseOfferings.Add(offering);
+            courseOfferingsById.Add(offering.Id, offering);
             addedCount++;
         }
 
@@ -244,6 +283,8 @@ public static class CatalogDataSeeder
             {
                 Id = offeringId,
                 ProgramId = program.Id,
+                LocationId = locationsByKey[
+                    CreateLocationKey("Alexandria Campus", "Training Room A", "Alexandria")].Id,
                 StartsAtUtc = new DateTimeOffset(2027, 2, 1, 8, 0, 0, TimeSpan.Zero),
                 EndsAtUtc = new DateTimeOffset(2027, 6, 30, 16, 0, 0, TimeSpan.Zero),
                 ApplicationOpensAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
@@ -255,6 +296,54 @@ public static class CatalogDataSeeder
                 CreatedAtUtc = new DateTimeOffset(2026, 10, 20, 0, 0, 0, TimeSpan.Zero),
             });
             addedCount++;
+        }
+
+        var courseSessionIds = (await dbContext.CourseSessions
+                .AsNoTracking()
+                .Select(session => session.Id)
+                .ToListAsync(cancellationToken))
+            .ToHashSet();
+        var locationUseCounts = new Dictionary<Guid, int>();
+
+        foreach (var course in coursesBySlug.Values.OrderBy(course => course.Slug))
+        {
+            var offering = courseOfferingsById[CreateOfferingId(course.Id, 0xC0)];
+            var locationUseCount = locationUseCounts.GetValueOrDefault(offering.LocationId);
+            locationUseCounts[offering.LocationId] = locationUseCount + 1;
+            var dayOffset = locationUseCount / 4;
+            var hourOffset = (locationUseCount % 4) * 2;
+
+            for (var sequence = 1; sequence <= 3; sequence++)
+            {
+                var sessionId = CreateOfferingId(course.Id, (byte)(0xD0 + sequence));
+                if (!courseSessionIds.Add(sessionId))
+                {
+                    continue;
+                }
+
+                var startsAtUtc = offering.StartsAtUtc
+                    .AddDays(dayOffset + ((sequence - 1) * 7))
+                    .AddHours(hourOffset);
+                var endsAtUtc = startsAtUtc.AddHours(2);
+
+                if (endsAtUtc > offering.EndsAtUtc)
+                {
+                    continue;
+                }
+
+                dbContext.CourseSessions.Add(new CourseSession
+                {
+                    Id = sessionId,
+                    CourseOfferingId = offering.Id,
+                    LocationId = offering.LocationId,
+                    Title = $"Session {sequence}",
+                    StartsAtUtc = startsAtUtc,
+                    EndsAtUtc = endsAtUtc,
+                    Status = CourseSessionStatuses.Scheduled,
+                    CreatedAtUtc = new DateTimeOffset(2026, 10, 21, 0, 0, 0, TimeSpan.Zero),
+                });
+                addedCount++;
+            }
         }
 
         if (addedCount > 0)
@@ -271,6 +360,41 @@ public static class CatalogDataSeeder
         bytes[0] = marker;
         return new Guid(bytes);
     }
+
+    private static string CreateLocationKey(string branchName, string roomName, string city)
+        => $"{branchName.Trim()}|{roomName.Trim()}|{city.Trim()}";
+
+    private static readonly TrainingLocationSeed[] TrainingLocations =
+    [
+        new(
+            new Guid("50000000-0000-0000-0000-000000000001"),
+            "Alexandria Campus",
+            "Training Room A",
+            "Alexandria",
+            "39 Khalil El-Khayat Basha, Sidi Gaber",
+            null),
+        new(
+            new Guid("50000000-0000-0000-0000-000000000002"),
+            "Alexandria Campus",
+            "Technology Lab",
+            "Alexandria",
+            "39 Khalil El-Khayat Basha, Sidi Gaber",
+            null),
+        new(
+            new Guid("50000000-0000-0000-0000-000000000003"),
+            "Online Learning",
+            "Virtual Classroom",
+            "Online",
+            "Live online delivery",
+            null),
+        new(
+            new Guid("50000000-0000-0000-0000-000000000004"),
+            "Cairo Training Center",
+            "Training Room B",
+            "Cairo",
+            "Central Cairo training center",
+            null),
+    ];
 
     private static readonly CategorySeed[] Categories =
     [
@@ -690,4 +814,12 @@ public static class CatalogDataSeeder
     private sealed record CareerPathProgramSeed(string CareerPathSlug, string ProgramSlug);
 
     private sealed record CareerPathCourseSeed(string CareerPathSlug, string CourseSlug);
+
+    private sealed record TrainingLocationSeed(
+        Guid Id,
+        string BranchName,
+        string RoomName,
+        string City,
+        string Address,
+        string? MapUrl);
 }

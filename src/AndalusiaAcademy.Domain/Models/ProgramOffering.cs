@@ -8,6 +8,10 @@ public sealed class ProgramOffering
 
     public AcademyProgram? Program { get; set; }
 
+    public Guid LocationId { get; set; }
+
+    public TrainingLocation? Location { get; set; }
+
     public DateTimeOffset StartsAtUtc { get; set; }
 
     public DateTimeOffset EndsAtUtc { get; set; }

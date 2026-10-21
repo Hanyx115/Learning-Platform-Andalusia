@@ -1,4 +1,5 @@
 using AndalusiaAcademy.Application.DTOs.Enrollments;
+using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,23 @@ public sealed class EnrollmentRepository(ApplicationDbContext dbContext) : IEnro
                 enrollment.CourseOffering != null
                     ? enrollment.CourseOffering.EndsAtUtc
                     : enrollment.ProgramOffering!.EndsAtUtc,
+                enrollment.CourseOffering != null
+                    ? new TrainingLocationDto(
+                        enrollment.CourseOffering.Location!.Id,
+                        enrollment.CourseOffering.Location.BranchName,
+                        enrollment.CourseOffering.Location.RoomName,
+                        enrollment.CourseOffering.Location.City,
+                        enrollment.CourseOffering.Location.Address,
+                        enrollment.CourseOffering.Location.MapUrl,
+                        enrollment.CourseOffering.Location.IsActive)
+                    : new TrainingLocationDto(
+                        enrollment.ProgramOffering!.Location!.Id,
+                        enrollment.ProgramOffering.Location.BranchName,
+                        enrollment.ProgramOffering.Location.RoomName,
+                        enrollment.ProgramOffering.Location.City,
+                        enrollment.ProgramOffering.Location.Address,
+                        enrollment.ProgramOffering.Location.MapUrl,
+                        enrollment.ProgramOffering.Location.IsActive),
                 enrollment.Status,
                 enrollment.EnrolledAt,
                 enrollment.CompletedAt,

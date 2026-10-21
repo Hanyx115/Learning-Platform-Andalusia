@@ -1,3 +1,5 @@
+using AndalusiaAcademy.Application.DTOs.Scheduling;
+
 namespace AndalusiaAcademy.Application.DTOs.Enrollments;
 
 public sealed record EnrollmentDto(
@@ -12,6 +14,7 @@ public sealed record EnrollmentDto(
     string? ProgramTitle,
     DateTimeOffset StartsAtUtc,
     DateTimeOffset EndsAtUtc,
+    TrainingLocationDto Location,
     string Status,
     DateTimeOffset EnrolledAt,
     DateTimeOffset? CompletedAt,

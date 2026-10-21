@@ -123,6 +123,7 @@ export const arTranslations = {
     profile: 'ملفي الشخصي',
     applications: 'طلباتي',
     enrollments: 'تسجيلاتي',
+    schedule: 'جدولي',
   },
   offerings: {
     title: 'المواعيد المتاحة',
@@ -131,7 +132,21 @@ export const arTranslations = {
     price: '{{price}} {{currency}}',
     capacity: '{{capacity}} مقعدًا',
     applyBy: 'آخر موعد للتقديم {{date}}',
+    location: '{{branch}}، {{room}} - {{city}}',
     empty: 'لا توجد مواعيد متاحة للتقديم حاليًا.',
+  },
+  schedule: {
+    title: 'جدول الدورة',
+    empty: 'لم يتم نشر جدول الجلسات التفصيلي بعد.',
+    location: '{{branch}}، {{room}} - {{city}}',
+    instructor: 'المدرّب: {{name}}',
+    myTitle: 'جدولي',
+    myDescription: 'الجلسات القادمة ومواقعها وبيانات المدرّب.',
+    loading: 'جارٍ تحميل الجلسات القادمة…',
+    myEmpty: 'لا توجد لديك جلسات دورة قادمة.',
+    errors: {
+      load: 'تعذر تحميل جدولك. حاول مرة أخرى.',
+    },
   },
   applications: {
     title: 'طلباتي',

@@ -1,3 +1,5 @@
+using AndalusiaAcademy.Application.DTOs.Scheduling;
+
 namespace AndalusiaAcademy.Application.DTOs.Applications;
 
 public sealed record OfferingDto(
@@ -9,4 +11,5 @@ public sealed record OfferingDto(
     decimal Price,
     string Currency,
     int Capacity,
-    string Status);
+    string Status,
+    TrainingLocationDto Location);

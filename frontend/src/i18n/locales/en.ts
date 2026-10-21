@@ -123,6 +123,7 @@ export const enTranslations = {
     profile: 'My profile',
     applications: 'My applications',
     enrollments: 'My enrollments',
+    schedule: 'My schedule',
   },
   offerings: {
     title: 'Available intakes',
@@ -131,7 +132,21 @@ export const enTranslations = {
     price: '{{price}} {{currency}}',
     capacity: '{{capacity}} seats',
     applyBy: 'Apply by {{date}}',
+    location: '{{branch}}, {{room}} - {{city}}',
     empty: 'There are no intakes open for applications right now.',
+  },
+  schedule: {
+    title: 'Course schedule',
+    empty: 'The detailed session schedule has not been published yet.',
+    location: '{{branch}}, {{room}} - {{city}}',
+    instructor: 'Instructor: {{name}}',
+    myTitle: 'My schedule',
+    myDescription: 'Your upcoming sessions, locations, and instructor details.',
+    loading: 'Loading your upcoming sessions…',
+    myEmpty: 'You do not have any upcoming course sessions.',
+    errors: {
+      load: 'We could not load your schedule. Please try again.',
+    },
   },
   applications: {
     title: 'My applications',

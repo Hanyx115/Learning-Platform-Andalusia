@@ -204,10 +204,21 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
 
         dbContext.CourseCategories.Add(category);
         dbContext.Courses.Add(course);
+        var location = new TrainingLocation
+        {
+            Id = Guid.NewGuid(),
+            BranchName = $"Test Branch {Guid.NewGuid():N}",
+            RoomName = "Virtual Room",
+            City = "Online",
+            Address = "Online",
+            IsActive = true,
+        };
+        dbContext.TrainingLocations.Add(location);
         var offering = new CourseOffering
         {
             Id = Guid.NewGuid(),
             CourseId = course.Id,
+            LocationId = location.Id,
             StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2),
             EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(4),
             ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),

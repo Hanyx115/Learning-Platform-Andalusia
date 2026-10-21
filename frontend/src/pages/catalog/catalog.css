@@ -258,6 +258,37 @@
   font-size: 0.9rem;
 }
 
+.session-schedule {
+  margin-block: 1.5rem;
+}
+
+.session-schedule__list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.session-schedule__list li {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-inline-start: 0.25rem solid var(--color-brand);
+  border-radius: 0.65rem;
+  background: var(--color-bg-warm);
+}
+
+.session-schedule__list li > div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.session-schedule__list span {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
 .catalog-detail--sections {
   display: grid;
   gap: 2rem;

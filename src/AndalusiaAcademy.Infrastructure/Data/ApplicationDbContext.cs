@@ -21,6 +21,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<ProgramOffering> ProgramOfferings => Set<ProgramOffering>();
 
+    public DbSet<TrainingLocation> TrainingLocations => Set<TrainingLocation>();
+
+    public DbSet<CourseSession> CourseSessions => Set<CourseSession>();
+
     public DbSet<ProgramCourse> ProgramCourses => Set<ProgramCourse>();
 
     public DbSet<CareerPath> CareerPaths => Set<CareerPath>();

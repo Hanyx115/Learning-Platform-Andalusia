@@ -70,6 +70,31 @@ export interface Offering {
   currency: string
   capacity: number
   status: string
+  location: TrainingLocation
+}
+
+export interface TrainingLocation {
+  id: string
+  branchName: string
+  roomName: string
+  city: string
+  address: string
+  mapUrl: string | null
+  isActive: boolean
+}
+
+export interface CourseSession {
+  id: string
+  courseOfferingId: string
+  courseTitle: string
+  title: string
+  startsAtUtc: string
+  endsAtUtc: string
+  status: string
+  cancellationReason: string | null
+  instructorUserId: string | null
+  instructorName: string | null
+  location: TrainingLocation
 }
 
 export interface CareerPathSummary {
@@ -121,6 +146,12 @@ export function getCourse(slug: string) {
 
 export function getCourseOfferings(slug: string) {
   return apiRequest<Offering[]>(`/api/v1/courses/${encodeURIComponent(slug)}/offerings`)
+}
+
+export function getCourseOfferingSessions(offeringId: string) {
+  return apiRequest<CourseSession[]>(
+    `/api/v1/course-offerings/${encodeURIComponent(offeringId)}/sessions`,
+  )
 }
 
 export function getPrograms(query: CatalogListQuery = {}) {

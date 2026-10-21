@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import type { TrainingLocation } from './catalog'
 
 export interface Application {
   id: string
@@ -18,6 +19,18 @@ export interface Application {
   reviewedAt: string | null
   rejectionReason: string | null
   statusHistory: ApplicationStatusHistory[]
+}
+
+export interface UpcomingSession {
+  enrollmentId: string
+  sessionId: string
+  courseOfferingId: string
+  courseTitle: string
+  sessionTitle: string
+  startsAtUtc: string
+  endsAtUtc: string
+  instructorName: string | null
+  location: TrainingLocation
 }
 
 export interface ApplicationStatusHistory {
@@ -63,6 +76,7 @@ export interface Enrollment {
   programTitle: string | null
   startsAtUtc: string
   endsAtUtc: string
+  location: TrainingLocation
   status: string
   enrolledAt: string
   completedAt: string | null
@@ -135,4 +149,8 @@ export function getMyPayments() {
 
 export function getMyEnrollments() {
   return apiRequest<Enrollment[]>('/api/v1/enrollments/me')
+}
+
+export function getMyUpcomingSessions() {
+  return apiRequest<UpcomingSession[]>('/api/v1/learner/upcoming-sessions')
 }

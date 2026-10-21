@@ -85,6 +85,13 @@ function EnrollmentsPage() {
                     date: new Date(enrollment.enrolledAt).toLocaleDateString(),
                   })}
                 </span>
+                <span>
+                  {t('schedule.location', {
+                    branch: enrollment.location.branchName,
+                    room: enrollment.location.roomName,
+                    city: enrollment.location.city,
+                  })}
+                </span>
               </div>
             </article>
           ))}

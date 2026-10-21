@@ -125,6 +125,39 @@ describe('catalog pages', () => {
           currency: 'EGP',
           capacity: 25,
           status: 'Open',
+          location: {
+            id: 'location-1',
+            branchName: 'Alexandria Campus',
+            roomName: 'Training Room A',
+            city: 'Alexandria',
+            address: '39 Khalil El-Khayat Basha, Sidi Gaber',
+            mapUrl: null,
+            isActive: true,
+          },
+        }])
+      }
+
+      if (url.endsWith('/sessions')) {
+        return jsonResponse([{
+          id: 'session-1',
+          courseOfferingId: 'offering-1',
+          courseTitle: 'Patient Care Basics',
+          title: 'Session 1',
+          startsAtUtc: '2027-01-18T09:00:00Z',
+          endsAtUtc: '2027-01-18T11:00:00Z',
+          status: 'Scheduled',
+          cancellationReason: null,
+          instructorUserId: null,
+          instructorName: null,
+          location: {
+            id: 'location-1',
+            branchName: 'Alexandria Campus',
+            roomName: 'Training Room A',
+            city: 'Alexandria',
+            address: '39 Khalil El-Khayat Basha, Sidi Gaber',
+            mapUrl: null,
+            isActive: true,
+          },
         }])
       }
 
@@ -152,6 +185,8 @@ describe('catalog pages', () => {
     expect(await screen.findByRole('heading', { name: 'Patient Care Basics' })).toBeInTheDocument()
     expect(await screen.findByText('750 EGP')).toBeInTheDocument()
     expect(screen.getByText('25 seats')).toBeInTheDocument()
+    expect(screen.getAllByText('Alexandria Campus, Training Room A - Alexandria')).toHaveLength(2)
+    expect(await screen.findByText('Session 1')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sign in to apply' })).toHaveAttribute('href', '/login')
   })
 

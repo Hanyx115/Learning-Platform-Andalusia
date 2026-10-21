@@ -87,6 +87,16 @@
   color: var(--color-primary-dark);
 }
 
+.schedule-card time {
+  color: var(--color-brand-hover);
+  font-weight: 700;
+}
+
+.schedule-card .dashboard-card__heading > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
 .dashboard-card__meta {
   display: flex;
   gap: 0.75rem;

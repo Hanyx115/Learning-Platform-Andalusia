@@ -37,6 +37,14 @@ function OfferingSelector({ offerings, selectedId, onSelect }: OfferingSelectorP
               <span>{t('offerings.price', { price: offering.price, currency: offering.currency })}</span>
               <span>{t('offerings.capacity', { capacity: offering.capacity })}</span>
               <span>
+                {t('offerings.location', {
+                  branch: offering.location.branchName,
+                  room: offering.location.roomName,
+                  city: offering.location.city,
+                })}
+              </span>
+              <span>{offering.location.address}</span>
+              <span>
                 {t('offerings.applyBy', {
                   date: new Date(offering.applicationClosesAtUtc).toLocaleDateString(i18n.language),
                 })}

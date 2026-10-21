@@ -197,10 +197,13 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
 
         dbContext.CourseCategories.Add(category);
         dbContext.Courses.Add(course);
+        var location = CreateLocation();
+        dbContext.TrainingLocations.Add(location);
         var offering = new CourseOffering
         {
             Id = Guid.NewGuid(),
             CourseId = course.Id,
+            LocationId = location.Id,
             StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2),
             EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(4),
             ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
@@ -233,10 +236,13 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
         };
 
         dbContext.Programs.Add(program);
+        var location = CreateLocation();
+        dbContext.TrainingLocations.Add(location);
         var offering = new ProgramOffering
         {
             Id = Guid.NewGuid(),
             ProgramId = program.Id,
+            LocationId = location.Id,
             StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2),
             EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(6),
             ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
@@ -251,6 +257,20 @@ public sealed class ApplicationsEndpointsTests(ApiWebApplicationFactory factory)
         await dbContext.SaveChangesAsync();
 
         return offering.Id;
+    }
+
+    private static TrainingLocation CreateLocation()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        return new TrainingLocation
+        {
+            Id = Guid.NewGuid(),
+            BranchName = $"Test Branch {suffix}",
+            RoomName = "Room 1",
+            City = "Alexandria",
+            Address = "Test address",
+            IsActive = true,
+        };
     }
 
     private async Task<(string AccessToken, string Email)> RegisterAsync()

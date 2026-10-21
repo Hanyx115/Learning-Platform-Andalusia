@@ -28,10 +28,16 @@ public sealed class ProgramOfferingConfiguration : IEntityTypeConfiguration<Prog
 
         builder.HasIndex(offering => new { offering.ProgramId, offering.StartsAtUtc }).IsUnique();
         builder.HasIndex(offering => new { offering.ProgramId, offering.Status, offering.StartsAtUtc });
+        builder.HasIndex(offering => new { offering.LocationId, offering.Status, offering.StartsAtUtc });
 
         builder.HasOne(offering => offering.Program)
             .WithMany()
             .HasForeignKey(offering => offering.ProgramId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(offering => offering.Location)
+            .WithMany()
+            .HasForeignKey(offering => offering.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
