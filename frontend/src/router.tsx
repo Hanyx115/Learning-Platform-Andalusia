@@ -33,6 +33,14 @@ import InstructorOfferingAssignmentsPage from './pages/instructor/InstructorOffe
 import InstructorAssignmentSubmissionsPage from './pages/instructor/InstructorAssignmentSubmissionsPage'
 import InstructorOfferingProgressPage from './pages/instructor/InstructorOfferingProgressPage'
 import InstructorStudentsPage from './pages/instructor/InstructorStudentsPage'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminCatalogPage from './pages/admin/AdminCatalogPage'
+import AdminLocationsPage from './pages/admin/AdminLocationsPage'
+import AdminOfferingsPage from './pages/admin/AdminOfferingsPage'
+import AdminSessionsPage from './pages/admin/AdminSessionsPage'
+import AdminStudentsPage from './pages/admin/AdminStudentsPage'
+import AdminInstructorsPage from './pages/admin/AdminInstructorsPage'
+import AdminPaymentsPage from './pages/admin/AdminPaymentsPage'
 
 export const router = createBrowserRouter([
   {
@@ -175,6 +183,52 @@ export const router = createBrowserRouter([
               {
                 path: 'students',
                 element: <InstructorStudentsPage />,
+              },
+            ],
+          },
+          {
+            path: 'admin',
+            element: <AdminLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/admin/catalog" replace />,
+              },
+              {
+                path: 'catalog',
+                element: <AdminCatalogPage />,
+              },
+              {
+                path: 'locations',
+                element: <AdminLocationsPage />,
+              },
+              {
+                path: 'courses/:courseId/offerings',
+                element: <AdminOfferingsPage />,
+              },
+              {
+                path: 'programs/:programId/offerings',
+                element: <AdminOfferingsPage />,
+              },
+              {
+                path: 'course-offerings/:courseOfferingId/sessions',
+                element: <AdminSessionsPage />,
+              },
+              {
+                path: 'program-offerings/:programOfferingId/sessions',
+                element: <AdminSessionsPage />,
+              },
+              {
+                path: 'students',
+                element: <AdminStudentsPage />,
+              },
+              {
+                path: 'instructors',
+                element: <AdminInstructorsPage />,
+              },
+              {
+                path: 'payments',
+                element: <AdminPaymentsPage />,
               },
             ],
           },

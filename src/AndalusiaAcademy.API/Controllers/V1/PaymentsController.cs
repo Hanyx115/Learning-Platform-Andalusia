@@ -48,5 +48,11 @@ public sealed class PaymentsController(
         return Ok(payments);
     }
 
+    [HttpGet]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<IReadOnlyList<AdminPaymentDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<AdminPaymentDto>>> GetAll(CancellationToken cancellationToken)
+        => Ok(await paymentService.GetAllAsync(cancellationToken));
+
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

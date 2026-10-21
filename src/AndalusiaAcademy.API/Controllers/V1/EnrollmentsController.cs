@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using AndalusiaAcademy.Application.DTOs.Enrollments;
+using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Services;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
@@ -23,4 +24,10 @@ public sealed class EnrollmentsController(EnrollmentReadService enrollmentServic
 
         return Ok(enrollments);
     }
+
+    [HttpGet]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<IReadOnlyList<AdminEnrollmentDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<AdminEnrollmentDto>>> GetAll(CancellationToken cancellationToken)
+        => Ok(await enrollmentService.GetAllAsync(cancellationToken));
 }

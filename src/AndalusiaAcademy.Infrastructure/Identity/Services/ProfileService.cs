@@ -41,6 +41,19 @@ public sealed class ProfileService(UserManager<ApplicationUser> userManager) : I
         return UpdateProfileOutcome.Success(await ToDtoAsync(user));
     }
 
+    public async Task<IReadOnlyList<ProfileDto>> GetUsersInRoleAsync(string role, CancellationToken cancellationToken)
+    {
+        var users = await userManager.GetUsersInRoleAsync(role);
+        var profiles = new List<ProfileDto>(users.Count);
+
+        foreach (var user in users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName))
+        {
+            profiles.Add(await ToDtoAsync(user));
+        }
+
+        return profiles;
+    }
+
     private async Task<ProfileDto> ToDtoAsync(ApplicationUser user)
     {
         var roles = await userManager.GetRolesAsync(user);

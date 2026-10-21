@@ -10,4 +10,6 @@ public interface IProfileService
         Guid userId,
         UpdateProfileRequest request,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ProfileDto>> GetUsersInRoleAsync(string role, CancellationToken cancellationToken);
 }
