@@ -23,6 +23,7 @@ import ProfileLayout from './pages/profile/ProfileLayout'
 import ApplicationsPage from './pages/profile/ApplicationsPage'
 import EnrollmentsPage from './pages/profile/EnrollmentsPage'
 import SchedulePage from './pages/profile/SchedulePage'
+import MaterialsPage from './pages/profile/MaterialsPage'
 import StaffApplicationsPage from './pages/staff/StaffApplicationsPage'
 
 export const router = createBrowserRouter([
@@ -116,6 +117,10 @@ export const router = createBrowserRouter([
               {
                 path: 'enrollments',
                 element: <EnrollmentsPage />,
+              },
+              {
+                path: 'enrollments/:enrollmentId/materials',
+                element: <MaterialsPage />,
               },
               {
                 path: 'schedule',

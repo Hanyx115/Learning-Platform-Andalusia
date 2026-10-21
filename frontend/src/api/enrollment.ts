@@ -83,6 +83,21 @@ export interface Enrollment {
   cancelledAt: string | null
 }
 
+export interface CourseMaterial {
+  id: string
+  courseId: string
+  courseSessionId: string | null
+  sessionTitle: string | null
+  title: string
+  description: string | null
+  resourceUrl: string
+  materialType: string
+  sortOrder: number
+  visibility: string
+  createdAtUtc: string
+  updatedAtUtc: string | null
+}
+
 export interface PayForApplicationResult {
   succeeded: boolean
   payment: Payment | null
@@ -153,4 +168,8 @@ export function getMyEnrollments() {
 
 export function getMyUpcomingSessions() {
   return apiRequest<UpcomingSession[]>('/api/v1/learner/upcoming-sessions')
+}
+
+export function getEnrollmentMaterials(enrollmentId: string) {
+  return apiRequest<CourseMaterial[]>(`/api/v1/learner/enrollments/${enrollmentId}/materials`)
 }

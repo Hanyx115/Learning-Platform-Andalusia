@@ -178,6 +178,7 @@ export const enTranslations = {
     loading: 'Loading your enrollments…',
     empty: 'You are not enrolled in anything yet. Pay for an accepted application to get started.',
     enrolledOn: 'Enrolled on {{date}}',
+    viewMaterials: 'Open course materials',
     status: {
       Active: 'Active',
       Completed: 'Completed',
@@ -185,6 +186,25 @@ export const enTranslations = {
     },
     errors: {
       load: 'We could not load your enrollments. Please try again.',
+    },
+  },
+  materials: {
+    title: 'Course materials',
+    description: 'Learning resources available through this enrollment.',
+    loading: 'Loading course materials…',
+    empty: 'No course materials have been published yet.',
+    back: 'Back to my enrollments',
+    openResource: 'Open resource',
+    session: 'Session: {{title}}',
+    types: {
+      Document: 'Document',
+      Video: 'Video',
+      Link: 'Link',
+      Other: 'Resource',
+    },
+    errors: {
+      load: 'We could not load the course materials. Please try again.',
+      notFound: 'This enrollment was not found or learning access is unavailable.',
     },
   },
   staffApplications: {

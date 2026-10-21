@@ -178,6 +178,7 @@ export const arTranslations = {
     loading: 'جارٍ تحميل تسجيلاتك…',
     empty: 'لم تُسجَّل في أي شيء بعد. ادفع مقابل طلب مقبول للبدء.',
     enrolledOn: 'تم التسجيل في {{date}}',
+    viewMaterials: 'فتح مواد الدورة',
     status: {
       Active: 'نشط',
       Completed: 'مكتمل',
@@ -185,6 +186,25 @@ export const arTranslations = {
     },
     errors: {
       load: 'تعذر تحميل تسجيلاتك. حاول مرة أخرى.',
+    },
+  },
+  materials: {
+    title: 'مواد الدورة',
+    description: 'المصادر التعليمية المتاحة من خلال هذا التسجيل.',
+    loading: 'جارٍ تحميل مواد الدورة…',
+    empty: 'لم يتم نشر أي مواد للدورة بعد.',
+    back: 'العودة إلى تسجيلاتي',
+    openResource: 'فتح المصدر',
+    session: 'الجلسة: {{title}}',
+    types: {
+      Document: 'مستند',
+      Video: 'فيديو',
+      Link: 'رابط',
+      Other: 'مصدر',
+    },
+    errors: {
+      load: 'تعذر تحميل مواد الدورة. حاول مرة أخرى.',
+      notFound: 'هذا التسجيل غير موجود أو الوصول إلى المحتوى غير متاح.',
     },
   },
   staffApplications: {

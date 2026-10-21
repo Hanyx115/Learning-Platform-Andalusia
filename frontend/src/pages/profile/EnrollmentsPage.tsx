@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
 import { getMyEnrollments, type Enrollment } from '../../api/enrollment'
 import Container from '../../components/Container'
@@ -93,6 +94,16 @@ function EnrollmentsPage() {
                   })}
                 </span>
               </div>
+              {enrollment.status !== 'Cancelled' ? (
+                <div className="dashboard-card__actions">
+                  <Link
+                    className="button button--primary"
+                    to={`/profile/enrollments/${enrollment.id}/materials`}
+                  >
+                    {t('enrollments.viewMaterials')}
+                  </Link>
+                </div>
+              ) : null}
             </article>
           ))}
         </div>

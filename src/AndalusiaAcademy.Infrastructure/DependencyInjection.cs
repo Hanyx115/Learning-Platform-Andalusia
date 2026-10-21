@@ -9,6 +9,7 @@ using AndalusiaAcademy.Infrastructure.Identity;
 using AndalusiaAcademy.Infrastructure.Identity.Models;
 using AndalusiaAcademy.Infrastructure.Identity.Repositories;
 using AndalusiaAcademy.Infrastructure.Identity.Services;
+using AndalusiaAcademy.Infrastructure.Lms.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -124,6 +125,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentProcessor, SimulatedPaymentProcessor>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+        services.AddScoped<ICourseMaterialRepository, CourseMaterialRepository>();
 
         return services;
     }

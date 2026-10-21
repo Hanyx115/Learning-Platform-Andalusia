@@ -207,6 +207,72 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.ToTable("CourseCategories");
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseMaterial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("MaterialType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ResourceUrl")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseSessionId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("CourseId", "Visibility", "SortOrder");
+
+                    b.ToTable("CourseMaterials", t =>
+                        {
+                            t.HasCheckConstraint("CK_CourseMaterials_MaterialType", "[MaterialType] IN ('Document', 'Video', 'Link', 'Other')");
+
+                            t.HasCheckConstraint("CK_CourseMaterials_SortOrder", "[SortOrder] >= 0");
+
+                            t.HasCheckConstraint("CK_CourseMaterials_Visibility", "[Visibility] IN ('Published', 'Hidden')");
+                        });
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseOffering", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1000,6 +1066,30 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseMaterial", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AndalusiaAcademy.Domain.Models.CourseSession", "CourseSession")
+                        .WithMany()
+                        .HasForeignKey("CourseSessionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("CourseSession");
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseOffering", b =>
