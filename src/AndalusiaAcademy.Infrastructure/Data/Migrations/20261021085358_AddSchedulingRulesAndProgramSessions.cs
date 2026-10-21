@@ -155,32 +155,49 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                 name: "Capacity",
                 table: "TrainingLocations");
 
+            // Reverting LocationId to NOT NULL is only safe if nothing actually relies on it being
+            // null (e.g. an online offering with no physical location). Rather than silently
+            // assigning a dangling all-zero Guid that no TrainingLocation row actually has — which
+            // either fails loudly on the FK (if enforced) or corrupts the reference (if not) — fail
+            // loudly and explicitly here, so a human resolves the data before rolling back.
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (SELECT 1 FROM ProgramOfferings WHERE LocationId IS NULL)
+                    THROW 51000, 'Cannot roll back AddSchedulingRulesAndProgramSessions: ProgramOfferings has rows with a NULL LocationId (e.g. online offerings). Assign a real location to these rows before downgrading.', 1;
+                """);
             migrationBuilder.AlterColumn<Guid>(
                 name: "LocationId",
                 table: "ProgramOfferings",
                 type: "uniqueidentifier",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier",
                 oldNullable: true);
 
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (SELECT 1 FROM CourseSessions WHERE LocationId IS NULL)
+                    THROW 51000, 'Cannot roll back AddSchedulingRulesAndProgramSessions: CourseSessions has rows with a NULL LocationId (e.g. online sessions). Assign a real location to these rows before downgrading.', 1;
+                """);
             migrationBuilder.AlterColumn<Guid>(
                 name: "LocationId",
                 table: "CourseSessions",
                 type: "uniqueidentifier",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier",
                 oldNullable: true);
 
+            migrationBuilder.Sql(
+                """
+                IF EXISTS (SELECT 1 FROM CourseOfferings WHERE LocationId IS NULL)
+                    THROW 51000, 'Cannot roll back AddSchedulingRulesAndProgramSessions: CourseOfferings has rows with a NULL LocationId (e.g. online offerings). Assign a real location to these rows before downgrading.', 1;
+                """);
             migrationBuilder.AlterColumn<Guid>(
                 name: "LocationId",
                 table: "CourseOfferings",
                 type: "uniqueidentifier",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier",
                 oldNullable: true);
