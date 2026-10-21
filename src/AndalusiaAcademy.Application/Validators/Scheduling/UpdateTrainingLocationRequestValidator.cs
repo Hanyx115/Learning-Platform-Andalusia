@@ -13,7 +13,10 @@ public sealed class UpdateTrainingLocationRequestValidator : AbstractValidator<U
         RuleFor(request => request.Address).NotEmpty().MaximumLength(500);
         RuleFor(request => request.MapUrl)
             .MaximumLength(500)
-            .Must(value => string.IsNullOrWhiteSpace(value) || Uri.TryCreate(value, UriKind.Absolute, out _))
+            .Must(value =>
+                string.IsNullOrWhiteSpace(value)
+                || (Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                    && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)))
             .WithMessage("Map URL must be an absolute URL.");
     }
 }
