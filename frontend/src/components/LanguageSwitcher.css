@@ -4,6 +4,7 @@
 }
 
 .language-switcher button {
+  white-space: nowrap;
   padding: 0.4rem 0.65rem;
   border: 1px solid var(--color-brand-light);
   border-radius: 0.375rem;
