@@ -18,6 +18,7 @@ function Header() {
   const tokens = useAuthSession()
   const { profile } = useAuthProfile()
   const canReviewApplications = profile?.roles.includes('Manager') || profile?.roles.includes('Admin')
+  const isInstructor = profile?.roles.includes('Instructor') ?? false
   const [isNavOpen, setIsNavOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const navToggleRef = useRef<HTMLButtonElement>(null)
@@ -90,6 +91,13 @@ function Header() {
                       </NavLink>
                     </li>
                   ) : null}
+                  {isInstructor ? (
+                    <li className="site-nav__auth-item">
+                      <NavLink className="site-nav__link" to="/instructor" onClick={() => setIsNavOpen(false)}>
+                        {t('nav.instructorDashboard')}
+                      </NavLink>
+                    </li>
+                  ) : null}
                   <li className="site-nav__auth-item">
                     <button
                       className="site-nav__link site-nav__button"
@@ -129,6 +137,11 @@ function Header() {
                 {canReviewApplications ? (
                   <NavLink className="site-header__auth-link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
                     {t('nav.reviewApplications')}
+                  </NavLink>
+                ) : null}
+                {isInstructor ? (
+                  <NavLink className="site-header__auth-link" to="/instructor" onClick={() => setIsNavOpen(false)}>
+                    {t('nav.instructorDashboard')}
                   </NavLink>
                 ) : null}
                 <button

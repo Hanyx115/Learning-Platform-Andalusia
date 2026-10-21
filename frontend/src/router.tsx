@@ -25,6 +25,14 @@ import EnrollmentsPage from './pages/profile/EnrollmentsPage'
 import SchedulePage from './pages/profile/SchedulePage'
 import MaterialsPage from './pages/profile/MaterialsPage'
 import StaffApplicationsPage from './pages/staff/StaffApplicationsPage'
+import InstructorLayout from './pages/instructor/InstructorLayout'
+import InstructorSessionsPage from './pages/instructor/InstructorSessionsPage'
+import InstructorSessionAttendancePage from './pages/instructor/InstructorSessionAttendancePage'
+import InstructorOfferingsPage from './pages/instructor/InstructorOfferingsPage'
+import InstructorOfferingAssignmentsPage from './pages/instructor/InstructorOfferingAssignmentsPage'
+import InstructorAssignmentSubmissionsPage from './pages/instructor/InstructorAssignmentSubmissionsPage'
+import InstructorOfferingProgressPage from './pages/instructor/InstructorOfferingProgressPage'
+import InstructorStudentsPage from './pages/instructor/InstructorStudentsPage'
 
 export const router = createBrowserRouter([
   {
@@ -131,6 +139,44 @@ export const router = createBrowserRouter([
           {
             path: 'staff/applications',
             element: <StaffApplicationsPage />,
+          },
+          {
+            path: 'instructor',
+            element: <InstructorLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/instructor/sessions" replace />,
+              },
+              {
+                path: 'sessions',
+                element: <InstructorSessionsPage />,
+              },
+              {
+                path: 'sessions/:sessionId/attendance',
+                element: <InstructorSessionAttendancePage />,
+              },
+              {
+                path: 'offerings',
+                element: <InstructorOfferingsPage />,
+              },
+              {
+                path: 'offerings/:offeringId/assignments',
+                element: <InstructorOfferingAssignmentsPage />,
+              },
+              {
+                path: 'offerings/:offeringId/progress',
+                element: <InstructorOfferingProgressPage />,
+              },
+              {
+                path: 'assignments/:assignmentId/submissions',
+                element: <InstructorAssignmentSubmissionsPage />,
+              },
+              {
+                path: 'students',
+                element: <InstructorStudentsPage />,
+              },
+            ],
           },
         ],
       },
