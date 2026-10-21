@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AndalusiaAcademy.Application.DTOs.Attendance;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Services;
@@ -12,7 +13,9 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/learner")]
 [Authorize(Policy = PolicyNames.RequireLearner)]
-public sealed class LearnerScheduleController(SchedulingService schedulingService) : ControllerBase
+public sealed class LearnerScheduleController(
+    SchedulingService schedulingService,
+    AttendanceService attendanceService) : ControllerBase
 {
     [HttpGet("upcoming-sessions")]
     [ProducesResponseType<IReadOnlyList<UpcomingSessionDto>>(StatusCodes.Status200OK)]
@@ -24,5 +27,17 @@ public sealed class LearnerScheduleController(SchedulingService schedulingServic
             cancellationToken);
 
         return Ok(sessions);
+    }
+
+    [HttpGet("attendance")]
+    [ProducesResponseType<IReadOnlyList<LearnerSessionAttendanceDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<LearnerSessionAttendanceDto>>> GetMyAttendance(
+        CancellationToken cancellationToken)
+    {
+        var records = await attendanceService.GetMyAttendanceAsync(
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            cancellationToken);
+
+        return Ok(records);
     }
 }

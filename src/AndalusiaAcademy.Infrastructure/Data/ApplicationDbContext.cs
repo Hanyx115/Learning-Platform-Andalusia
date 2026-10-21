@@ -27,6 +27,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<ProgramSession> ProgramSessions => Set<ProgramSession>();
 
+    public DbSet<CourseSessionAttendance> CourseSessionAttendances => Set<CourseSessionAttendance>();
+
+    public DbSet<ProgramSessionAttendance> ProgramSessionAttendances => Set<ProgramSessionAttendance>();
+
     public DbSet<CourseMaterial> CourseMaterials => Set<CourseMaterial>();
 
     public DbSet<ProgramCourse> ProgramCourses => Set<ProgramCourse>();
