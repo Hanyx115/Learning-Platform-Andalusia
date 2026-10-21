@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using AndalusiaAcademy.Application.DTOs.Assignments;
 using AndalusiaAcademy.Application.DTOs.Attendance;
+using AndalusiaAcademy.Application.DTOs.Progress;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Services;
@@ -17,7 +18,8 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 public sealed class LearnerScheduleController(
     SchedulingService schedulingService,
     AttendanceService attendanceService,
-    AssignmentService assignmentService) : ControllerBase
+    AssignmentService assignmentService,
+    ProgressService progressService) : ControllerBase
 {
     [HttpGet("upcoming-sessions")]
     [ProducesResponseType<IReadOnlyList<UpcomingSessionDto>>(StatusCodes.Status200OK)]
@@ -53,5 +55,17 @@ public sealed class LearnerScheduleController(
             cancellationToken);
 
         return Ok(assignments);
+    }
+
+    [HttpGet("progress")]
+    [ProducesResponseType<IReadOnlyList<LearnerProgressDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<LearnerProgressDto>>> GetMyProgress(
+        CancellationToken cancellationToken)
+    {
+        var progress = await progressService.GetMyProgressAsync(
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            cancellationToken);
+
+        return Ok(progress);
     }
 }
