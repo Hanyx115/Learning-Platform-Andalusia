@@ -98,7 +98,7 @@ function EnrollmentsPage() {
                 <div className="dashboard-card__actions">
                   <Link
                     className="button button--primary"
-                    to={`/profile/enrollments/${enrollment.id}/materials`}
+                    to={`/profile/enrollments/${enrollment.id}/learn`}
                   >
                     {t('enrollments.viewMaterials')}
                   </Link>

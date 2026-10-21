@@ -433,7 +433,7 @@ export const arTranslations = {
     loading: 'جارٍ تحميل تسجيلاتك…',
     empty: 'لم تُسجَّل في أي شيء بعد. ادفع مقابل طلب مقبول للبدء.',
     enrolledOn: 'تم التسجيل في {{date}}',
-    viewMaterials: 'فتح مواد الدورة',
+    viewMaterials: 'متابعة التعلم',
     status: {
       Active: 'نشط',
       Completed: 'مكتمل',
@@ -441,6 +441,24 @@ export const arTranslations = {
     },
     errors: {
       load: 'تعذر تحميل تسجيلاتك. حاول مرة أخرى.',
+    },
+  },
+  courseLearning: {
+    description: 'جدولك ومواد الدورة وواجباتك وتقدمك لهذا التسجيل، كل ذلك في مكان واحد.',
+    loading: 'جارٍ تحميل دورتك…',
+    progressTitle: 'تقدمي',
+    scheduleTitle: 'الجدول',
+    assignmentsTitle: 'الواجبات',
+    assignmentsEmpty: 'لم يتم نشر أي واجبات لهذه الدورة حتى الآن.',
+    graded: 'الدرجة: {{score}}/{{max}}',
+    submissionLabel: 'تسليمي',
+    submit: 'إرسال',
+    updateSubmission: 'تحديث التسليم',
+    submitting: 'جارٍ الإرسال…',
+    errors: {
+      load: 'تعذر تحميل هذه الدورة. حاول مرة أخرى.',
+      contentRequired: 'أدخل تسليمك قبل الإرسال.',
+      submit: 'تعذر إرسال هذا الواجب. حاول مرة أخرى.',
     },
   },
   materials: {

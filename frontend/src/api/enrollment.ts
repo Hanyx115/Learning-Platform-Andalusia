@@ -177,3 +177,54 @@ export function getMyUpcomingSessions() {
 export function getEnrollmentMaterials(enrollmentId: string) {
   return apiRequest<CourseMaterial[]>(`/api/v1/learner/enrollments/${enrollmentId}/materials`)
 }
+
+export interface LearnerAssignment {
+  assignmentId: string
+  title: string
+  description: string | null
+  courseOfferingId: string | null
+  courseTitle: string | null
+  programOfferingId: string | null
+  programTitle: string | null
+  dueAtUtc: string
+  maxScore: number
+  mySubmissionContent: string | null
+  mySubmittedAtUtc: string | null
+  myScore: number | null
+  myFeedback: string | null
+}
+
+export function getMyAssignments() {
+  return apiRequest<LearnerAssignment[]>('/api/v1/learner/assignments')
+}
+
+export function submitAssignment(assignmentId: string, content: string) {
+  return apiRequest<{ assignmentId: string; content: string; submittedAtUtc: string }>(
+    `/api/v1/assignments/${assignmentId}/submit`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ content }),
+    },
+  )
+}
+
+export interface LearnerProgress {
+  enrollmentId: string
+  courseOfferingId: string | null
+  courseTitle: string | null
+  programOfferingId: string | null
+  programTitle: string | null
+  totalSessions: number
+  attendedSessions: number
+  attendanceRatePercentage: number
+  totalAssignments: number
+  submittedAssignments: number
+  gradedAssignments: number
+  averageScorePercentage: number | null
+  overallProgressPercentage: number
+}
+
+export function getMyProgress() {
+  return apiRequest<LearnerProgress[]>('/api/v1/learner/progress')
+}
