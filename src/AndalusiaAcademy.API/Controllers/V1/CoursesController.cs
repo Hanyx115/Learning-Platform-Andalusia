@@ -1,7 +1,11 @@
 using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.DTOs.Applications;
+using AndalusiaAcademy.Application.DTOs.Scheduling;
+using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Services;
 using Asp.Versioning;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AndalusiaAcademy.API.Controllers.V1;
@@ -9,7 +13,11 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/courses")]
-public sealed class CoursesController(CourseService courseService, OfferingService offeringService) : ControllerBase
+public sealed class CoursesController(
+    CourseService courseService,
+    OfferingService offeringService,
+    IValidator<CreateCourseRequest> createValidator,
+    IValidator<UpdateCourseRequest> updateValidator) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<PaginatedResult<CourseDto>>(StatusCodes.Status200OK)]
@@ -42,4 +50,48 @@ public sealed class CoursesController(CourseService courseService, OfferingServi
         var offerings = await offeringService.GetOpenCourseOfferingsAsync(slug, cancellationToken);
         return Ok(offerings);
     }
+
+    [HttpPost]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<CourseDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<CourseDto>> Create(CreateCourseRequest request, CancellationToken cancellationToken)
+    {
+        await createValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var outcome = await courseService.CreateAsync(request, cancellationToken);
+
+        if (outcome.Succeeded)
+        {
+            return Created($"/api/v1/courses/{outcome.Value!.Slug}", outcome.Value);
+        }
+
+        return ToFailureResult(outcome.FailureKind, outcome.Error);
+    }
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<CourseDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<CourseDto>> Update(
+        Guid id, UpdateCourseRequest request, CancellationToken cancellationToken)
+    {
+        await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var outcome = await courseService.UpdateAsync(id, request, cancellationToken);
+
+        return outcome.Succeeded ? Ok(outcome.Value) : ToFailureResult(outcome.FailureKind, outcome.Error);
+    }
+
+    private ActionResult ToFailureResult(SchedulingFailureKind? kind, string? error)
+        => kind switch
+        {
+            SchedulingFailureKind.NotFound => NotFound(new ProblemDetails { Title = error }),
+            SchedulingFailureKind.Conflict => Conflict(new ProblemDetails { Title = error }),
+            _ => ValidationProblem(new ValidationProblemDetails(new Dictionary<string, string[]>
+            {
+                ["request"] = [error ?? "The course request is invalid."],
+            })),
+        };
 }

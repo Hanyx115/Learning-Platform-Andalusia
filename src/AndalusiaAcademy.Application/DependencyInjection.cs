@@ -12,6 +12,7 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<CourseService>();
+        services.AddScoped<CourseCategoryService>();
         services.AddScoped<ProgramService>();
         services.AddScoped<CareerPathService>();
         services.AddScoped<OfferingService>();
