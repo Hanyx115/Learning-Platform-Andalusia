@@ -63,6 +63,110 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.ToTable("Programs", (string)null);
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Assignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset>("DueAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("MaxScore")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<Guid?>("ProgramOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseOfferingId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ProgramOfferingId");
+
+                    b.ToTable("Assignments", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Assignments_ExactlyOneOffering", "([CourseOfferingId] IS NOT NULL AND [ProgramOfferingId] IS NULL) OR ([CourseOfferingId] IS NULL AND [ProgramOfferingId] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_Assignments_MaxScore", "[MaxScore] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.AssignmentSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset?>("GradedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("GradedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("Score")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<DateTimeOffset>("SubmittedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradedByUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("AssignmentId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentSubmissions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AssignmentSubmissions_Grading", "([Score] IS NULL AND [GradedByUserId] IS NULL AND [GradedAtUtc] IS NULL) OR ([Score] IS NOT NULL AND [GradedByUserId] IS NOT NULL AND [GradedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_AssignmentSubmissions_ScoreNonNegative", "[Score] IS NULL OR [Score] >= 0");
+                        });
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CareerPath", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1179,6 +1283,51 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Assignment", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.CourseOffering", "CourseOffering")
+                        .WithMany()
+                        .HasForeignKey("CourseOfferingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AndalusiaAcademy.Domain.Models.ProgramOffering", "ProgramOffering")
+                        .WithMany()
+                        .HasForeignKey("ProgramOfferingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CourseOffering");
+
+                    b.Navigation("ProgramOffering");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.AssignmentSubmission", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.Assignment", "Assignment")
+                        .WithMany()
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("GradedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CareerPathCourse", b =>
