@@ -107,6 +107,9 @@ public static class DependencyInjection
                 policy => policy.RequireRole(RoleNames.Manager, RoleNames.Admin));
             options.AddPolicy(PolicyNames.RequireInstructor, policy => policy.RequireRole(RoleNames.Instructor));
             options.AddPolicy(
+                PolicyNames.RequireInstructorManagerOrAdmin,
+                policy => policy.RequireRole(RoleNames.Instructor, RoleNames.Manager, RoleNames.Admin));
+            options.AddPolicy(
                 PolicyNames.RequireContentManager,
                 policy => policy.RequireRole(RoleNames.ContentManager));
         });
@@ -121,6 +124,7 @@ public static class DependencyInjection
         services.AddScoped<ICareerPathRepository, CareerPathRepository>();
         services.AddScoped<IOfferingRepository, OfferingRepository>();
         services.AddScoped<ISchedulingRepository, SchedulingRepository>();
+        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<IApplicationRepository, ApplicationRepository>();
         services.AddScoped<IPaymentProcessor, SimulatedPaymentProcessor>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();

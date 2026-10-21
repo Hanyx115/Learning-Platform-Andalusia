@@ -407,6 +407,51 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseSessionAttendance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset>("RecordedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordedByUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CourseSessionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("CourseSessionAttendances", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CourseSessionAttendances_Status", "[Status] IN ('Present', 'Absent', 'Late', 'Excused')");
+                        });
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
                 {
                     b.Property<Guid>("Id")
@@ -775,6 +820,51 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("CK_ProgramSessions_Schedule", "[StartsAtUtc] < [EndsAtUtc]");
 
                             t.HasCheckConstraint("CK_ProgramSessions_Status", "[Status] IN ('Scheduled', 'Completed', 'Cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramSessionAttendance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ProgramSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("RecordedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordedByUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ProgramSessionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ProgramSessionAttendances", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProgramSessionAttendances_Status", "[Status] IN ('Present', 'Absent', 'Late', 'Excused')");
                         });
                 });
 
@@ -1205,6 +1295,29 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Navigation("Location");
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CourseSessionAttendance", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.CourseSession", "CourseSession")
+                        .WithMany()
+                        .HasForeignKey("CourseSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("RecordedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CourseSession");
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
                 {
                     b.HasOne("AndalusiaAcademy.Domain.Models.CourseOffering", "CourseOffering")
@@ -1346,6 +1459,29 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Navigation("Location");
 
                     b.Navigation("ProgramOffering");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.ProgramSessionAttendance", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.ProgramSession", "ProgramSession")
+                        .WithMany()
+                        .HasForeignKey("ProgramSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("RecordedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProgramSession");
                 });
 
             modelBuilder.Entity("AndalusiaAcademy.Infrastructure.Identity.Models.RefreshToken", b =>
