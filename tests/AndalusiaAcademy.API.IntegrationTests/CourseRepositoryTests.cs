@@ -77,8 +77,11 @@ public sealed class CourseRepositoryTests
 
         var result = await repository.GetPageAsync(query, CancellationToken.None);
 
-        Assert.Equal(["Leadership Essentials", "Patient Care Basics"], result.Items.Select(course => course.Title));
-        Assert.Equal(4, result.TotalCount);
+        // Only 3 of the 4 seeded courses are Published ("Emergency Care" is Draft); with no
+        // explicit status filter the listing defaults to Published only, so page 2 of 2 holds
+        // just the third title.
+        Assert.Equal(["Patient Care Basics"], result.Items.Select(course => course.Title));
+        Assert.Equal(3, result.TotalCount);
         Assert.Equal(2, result.TotalPages);
     }
 

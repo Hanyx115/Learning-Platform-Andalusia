@@ -1,5 +1,6 @@
 using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Domain.Models;
 using AndalusiaAcademy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,11 +22,11 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 program.Description.Contains(search));
         }
 
-        if (!string.IsNullOrWhiteSpace(query.Status))
-        {
-            var status = query.Status.Trim();
-            programsQuery = programsQuery.Where(program => program.Status == status);
-        }
+        // Defaults to Published only, so a Draft/Archived program never leaks into public browsing
+        // unless a caller explicitly asks for another status (staff management views).
+        programsQuery = string.IsNullOrWhiteSpace(query.Status)
+            ? programsQuery.Where(program => program.Status == CatalogStatuses.Published)
+            : programsQuery.Where(program => program.Status == query.Status.Trim());
 
         var totalCount = await programsQuery.CountAsync(cancellationToken);
         var offset = (long)(query.Page - 1) * query.PageSize;
@@ -71,7 +72,7 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
     {
         var program = await dbContext.Programs
             .AsNoTracking()
-            .Where(program => program.Slug == slug)
+            .Where(program => program.Slug == slug && program.Status == CatalogStatuses.Published)
             .Select(program => new ProgramDetailDto
             {
                 Id = program.Id,
@@ -97,4 +98,32 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
 
         return program;
     }
+
+    public Task<bool> SlugExistsAsync(string slug, Guid? excludedId, CancellationToken cancellationToken)
+        => dbContext.Programs.AnyAsync(
+            program => program.Slug == slug && (excludedId == null || program.Id != excludedId),
+            cancellationToken);
+
+    public void Add(AcademyProgram program) => dbContext.Programs.Add(program);
+
+    public Task<AcademyProgram?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken)
+        => dbContext.Programs.FirstOrDefaultAsync(program => program.Id == id, cancellationToken);
+
+    public Task<ProgramSummaryDto?> GetSummaryByIdAsync(Guid id, CancellationToken cancellationToken)
+        => dbContext.Programs
+            .AsNoTracking()
+            .Where(program => program.Id == id)
+            .Select(program => new ProgramSummaryDto
+            {
+                Id = program.Id,
+                Title = program.Title,
+                Slug = program.Slug,
+                Description = program.Description,
+                Status = program.Status,
+                Price = program.Price,
+                CreatedAt = program.CreatedAt,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
 }

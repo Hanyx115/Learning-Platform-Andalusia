@@ -1,5 +1,6 @@
 using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Domain.Models;
 using AndalusiaAcademy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,11 +29,11 @@ public sealed class CourseRepository(ApplicationDbContext dbContext) : ICourseRe
             courses = courses.Where(course => course.Category!.Slug == category);
         }
 
-        if (!string.IsNullOrWhiteSpace(query.Status))
-        {
-            var status = query.Status.Trim();
-            courses = courses.Where(course => course.Status == status);
-        }
+        // Defaults to Published only, so a Draft/Archived course never leaks into public browsing
+        // unless a caller explicitly asks for another status (staff management views).
+        courses = string.IsNullOrWhiteSpace(query.Status)
+            ? courses.Where(course => course.Status == CatalogStatuses.Published)
+            : courses.Where(course => course.Status == query.Status.Trim());
 
         if (!string.IsNullOrWhiteSpace(query.Type))
         {
@@ -89,7 +90,7 @@ public sealed class CourseRepository(ApplicationDbContext dbContext) : ICourseRe
     {
         return await dbContext.Courses
             .AsNoTracking()
-            .Where(course => course.Slug == slug)
+            .Where(course => course.Slug == slug && course.Status == CatalogStatuses.Published)
             .Select(course => new CourseDto
             {
                 Id = course.Id,
@@ -105,4 +106,38 @@ public sealed class CourseRepository(ApplicationDbContext dbContext) : ICourseRe
             })
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken cancellationToken)
+        => dbContext.CourseCategories.AnyAsync(category => category.Id == categoryId, cancellationToken);
+
+    public Task<bool> SlugExistsAsync(string slug, Guid? excludedId, CancellationToken cancellationToken)
+        => dbContext.Courses.AnyAsync(
+            course => course.Slug == slug && (excludedId == null || course.Id != excludedId),
+            cancellationToken);
+
+    public void Add(Course course) => dbContext.Courses.Add(course);
+
+    public Task<Course?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken)
+        => dbContext.Courses.FirstOrDefaultAsync(course => course.Id == id, cancellationToken);
+
+    public Task<CourseDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        => dbContext.Courses
+            .AsNoTracking()
+            .Where(course => course.Id == id)
+            .Select(course => new CourseDto
+            {
+                Id = course.Id,
+                Title = course.Title,
+                Slug = course.Slug,
+                Description = course.Description,
+                Status = course.Status,
+                Type = course.Type,
+                Price = course.Price,
+                CategorySlug = course.Category!.Slug,
+                CategoryName = course.Category!.Name,
+                CreatedAt = course.CreatedAt,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
 }
