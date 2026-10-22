@@ -189,6 +189,12 @@ function AdminOfferingsPage() {
                 >
                   {t('adminOfferings.manageSessions')}
                 </Link>
+                <Link
+                  className="button button--secondary"
+                  to={`/admin/${offeringType === 'Course' ? 'course-offerings' : 'program-offerings'}/${offering.id}/assignments?type=${offeringType}`}
+                >
+                  {t('adminOfferings.manageAssignments')}
+                </Link>
               </div>
             </article>
           ))}

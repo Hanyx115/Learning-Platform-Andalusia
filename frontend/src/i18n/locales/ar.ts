@@ -179,6 +179,7 @@ export const arTranslations = {
     studentCount: '{{count}} طالب',
     viewAssignments: 'عرض الواجبات',
     viewProgress: 'عرض التقدم',
+    manageMaterials: 'إدارة المواد',
     errors: {
       load: 'تعذر تحميل دوراتك. حاول مرة أخرى.',
     },
@@ -192,8 +193,17 @@ export const arTranslations = {
     maxScore: 'من {{score}}',
     dueOn: 'الموعد النهائي {{date}}',
     viewSubmissions: 'عرض التسليمات',
+    newAssignment: 'واجب جديد',
+    editAssignment: 'تعديل الواجب',
+    fields: {
+      title: 'العنوان',
+      description: 'الوصف (اختياري)',
+      dueAt: 'تاريخ الاستحقاق',
+      maxScore: 'الدرجة القصوى',
+    },
     errors: {
       load: 'تعذر تحميل الواجبات. حاول مرة أخرى.',
+      save: 'تعذر حفظ الواجب. حاول مرة أخرى.',
     },
   },
   instructorSubmissions: {
@@ -262,6 +272,7 @@ export const arTranslations = {
     newProgram: 'برنامج جديد',
     editProgram: 'تعديل البرنامج',
     manageOfferings: 'إدارة العروض',
+    manageMaterials: 'إدارة المواد',
     fields: {
       title: 'العنوان',
       category: 'الفئة',
@@ -306,6 +317,7 @@ export const arTranslations = {
     empty: 'لم يتم إنشاء أي عروض حتى الآن.',
     capacity: '{{capacity}} مقعدًا',
     manageSessions: 'إدارة الجلسات',
+    manageAssignments: 'إدارة الواجبات',
     newOffering: 'عرض جديد',
     editOffering: 'تعديل العرض',
     fields: {
@@ -323,6 +335,27 @@ export const arTranslations = {
     errors: {
       load: 'تعذر تحميل العروض. حاول مرة أخرى.',
       save: 'تعذر حفظ هذا العرض. حاول مرة أخرى.',
+    },
+  },
+  adminMaterials: {
+    title: 'مواد الدورة',
+    description: 'الموارد التعليمية المنشورة لهذه الدورة.',
+    back: 'رجوع',
+    loading: 'جارٍ تحميل المواد…',
+    empty: 'لم تتم إضافة أي مواد حتى الآن.',
+    newMaterial: 'مادة جديدة',
+    editMaterial: 'تعديل المادة',
+    fields: {
+      title: 'العنوان',
+      description: 'الوصف (اختياري)',
+      resourceUrl: 'رابط المورد',
+      materialType: 'النوع',
+      visibility: 'الظهور',
+      sortOrder: 'ترتيب العرض',
+    },
+    errors: {
+      load: 'تعذر تحميل مواد الدورة. حاول مرة أخرى.',
+      save: 'تعذر حفظ المادة. حاول مرة أخرى.',
     },
   },
   adminSessions: {

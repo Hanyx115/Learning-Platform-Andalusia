@@ -7,6 +7,9 @@ public interface ICourseMaterialRepository
 {
     Task<bool> CourseExistsAsync(Guid courseId, CancellationToken cancellationToken);
 
+    /// <summary>True if the user is assigned as instructor to at least one session within any offering of the course.</summary>
+    Task<bool> IsInstructorForCourseAsync(Guid userId, Guid courseId, CancellationToken cancellationToken);
+
     Task<bool> SessionBelongsToCourseAsync(
         Guid courseSessionId,
         Guid courseId,

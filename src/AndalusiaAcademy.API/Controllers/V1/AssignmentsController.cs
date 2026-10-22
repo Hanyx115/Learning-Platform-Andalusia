@@ -21,7 +21,7 @@ public sealed class AssignmentsController(
     IValidator<SubmitAssignmentRequest> submitValidator) : ControllerBase
 {
     [HttpPut]
-    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [Authorize(Policy = PolicyNames.RequireInstructorManagerOrAdmin)]
     [ProducesResponseType<AssignmentDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -29,7 +29,7 @@ public sealed class AssignmentsController(
         Guid id, UpdateAssignmentRequest request, CancellationToken cancellationToken)
     {
         await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
-        var outcome = await assignmentService.UpdateAsync(id, request, cancellationToken);
+        var outcome = await assignmentService.UpdateAsync(id, GetUserId(), IsPrivileged(), request, cancellationToken);
         return outcome.Succeeded ? Ok(outcome.Value) : ToFailureResult(outcome.FailureKind, outcome.Error);
     }
 

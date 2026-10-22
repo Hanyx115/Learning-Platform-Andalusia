@@ -80,6 +80,7 @@ public sealed class CatalogApiWebApplicationFactory : WebApplicationFactory<Prog
             {
                 ["Jwt:Key"] = ApiWebApplicationFactory.TestJwtKey,
                 ["CatalogSeed:Enabled"] = "false",
+                ["IdentitySeed:Enabled"] = "false",
                 ["Database:MigrateOnStartup"] = "false",
             }));
         builder.ConfigureServices(services =>

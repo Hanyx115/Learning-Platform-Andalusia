@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AndalusiaAcademy.Application.DTOs.Materials;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Services;
@@ -11,7 +12,7 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/course-materials")]
-[Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+[Authorize(Policy = PolicyNames.RequireInstructorManagerOrAdmin)]
 public sealed class CourseMaterialController(
     CourseMaterialService materialService,
     IValidator<UpdateCourseMaterialRequest> validator) : ControllerBase
@@ -26,7 +27,7 @@ public sealed class CourseMaterialController(
         CancellationToken cancellationToken)
     {
         await validator.ValidateAndThrowAsync(request, cancellationToken);
-        var outcome = await materialService.UpdateAsync(id, request, cancellationToken);
+        var outcome = await materialService.UpdateAsync(id, GetUserId(), IsPrivileged(), request, cancellationToken);
 
         if (outcome.Succeeded)
         {
@@ -40,4 +41,8 @@ public sealed class CourseMaterialController(
                 [nameof(request.CourseSessionId)] = [outcome.Error ?? "The material request is invalid."],
             }));
     }
+
+    private bool IsPrivileged() => User.IsInRole(RoleNames.Manager) || User.IsInRole(RoleNames.Admin);
+
+    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

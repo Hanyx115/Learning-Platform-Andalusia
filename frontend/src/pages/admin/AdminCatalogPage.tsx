@@ -290,6 +290,9 @@ function AdminCatalogPage() {
                   <Link className="button button--secondary" to={`/admin/courses/${course.id}/offerings`}>
                     {t('adminCatalog.manageOfferings')}
                   </Link>
+                  <Link className="button button--secondary" to={`/admin/courses/${course.id}/materials`}>
+                    {t('adminCatalog.manageMaterials')}
+                  </Link>
                 </div>
               </article>
             ))}

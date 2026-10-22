@@ -179,6 +179,7 @@ export const enTranslations = {
     studentCount: '{{count}} students',
     viewAssignments: 'View assignments',
     viewProgress: 'View progress',
+    manageMaterials: 'Manage materials',
     errors: {
       load: 'We could not load your offerings. Please try again.',
     },
@@ -192,8 +193,17 @@ export const enTranslations = {
     maxScore: 'Out of {{score}}',
     dueOn: 'Due {{date}}',
     viewSubmissions: 'View submissions',
+    newAssignment: 'New assignment',
+    editAssignment: 'Edit assignment',
+    fields: {
+      title: 'Title',
+      description: 'Description (optional)',
+      dueAt: 'Due date',
+      maxScore: 'Maximum score',
+    },
     errors: {
       load: 'We could not load the assignments. Please try again.',
+      save: 'We could not save the assignment. Please try again.',
     },
   },
   instructorSubmissions: {
@@ -262,6 +272,7 @@ export const enTranslations = {
     newProgram: 'New program',
     editProgram: 'Edit program',
     manageOfferings: 'Manage offerings',
+    manageMaterials: 'Manage materials',
     fields: {
       title: 'Title',
       category: 'Category',
@@ -306,6 +317,7 @@ export const enTranslations = {
     empty: 'No offerings have been created yet.',
     capacity: '{{capacity}} seats',
     manageSessions: 'Manage sessions',
+    manageAssignments: 'Manage assignments',
     newOffering: 'New offering',
     editOffering: 'Edit offering',
     fields: {
@@ -323,6 +335,27 @@ export const enTranslations = {
     errors: {
       load: 'We could not load offerings. Please try again.',
       save: 'We could not save this offering. Please try again.',
+    },
+  },
+  adminMaterials: {
+    title: 'Course materials',
+    description: 'Learning resources published for this course.',
+    back: 'Back',
+    loading: 'Loading materials…',
+    empty: 'No materials have been added yet.',
+    newMaterial: 'New material',
+    editMaterial: 'Edit material',
+    fields: {
+      title: 'Title',
+      description: 'Description (optional)',
+      resourceUrl: 'Resource URL',
+      materialType: 'Type',
+      visibility: 'Visibility',
+      sortOrder: 'Sort order',
+    },
+    errors: {
+      load: 'We could not load the course materials. Please try again.',
+      save: 'We could not save this material. Please try again.',
     },
   },
   adminSessions: {

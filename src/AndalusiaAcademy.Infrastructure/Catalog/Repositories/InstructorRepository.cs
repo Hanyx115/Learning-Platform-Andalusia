@@ -79,6 +79,7 @@ public sealed class InstructorRepository(ApplicationDbContext dbContext) : IInst
             .Select(offering => new InstructorOfferingDto(
                 offering.Id,
                 null,
+                offering.CourseId,
                 "Course",
                 offering.Course!.Title,
                 offering.StartsAtUtc,
@@ -94,6 +95,7 @@ public sealed class InstructorRepository(ApplicationDbContext dbContext) : IInst
             .Select(offering => new InstructorOfferingDto(
                 null,
                 offering.Id,
+                null,
                 "Program",
                 offering.Program!.Title,
                 offering.StartsAtUtc,

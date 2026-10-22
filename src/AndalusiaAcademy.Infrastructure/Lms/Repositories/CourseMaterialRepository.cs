@@ -29,6 +29,11 @@ public sealed class CourseMaterialRepository(ApplicationDbContext dbContext)
     public Task<bool> CourseExistsAsync(Guid courseId, CancellationToken cancellationToken)
         => dbContext.Courses.AnyAsync(course => course.Id == courseId, cancellationToken);
 
+    public Task<bool> IsInstructorForCourseAsync(Guid userId, Guid courseId, CancellationToken cancellationToken)
+        => dbContext.CourseSessions.AnyAsync(
+            session => session.InstructorUserId == userId && session.CourseOffering!.CourseId == courseId,
+            cancellationToken);
+
     public Task<bool> SessionBelongsToCourseAsync(
         Guid courseSessionId,
         Guid courseId,

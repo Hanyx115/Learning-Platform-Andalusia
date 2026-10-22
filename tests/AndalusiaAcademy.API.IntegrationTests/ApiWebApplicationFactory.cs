@@ -18,6 +18,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["Jwt:Key"] = TestJwtKey,
                 ["CatalogSeed:Enabled"] = "false",
+                ["IdentitySeed:Enabled"] = "false",
                 ["Database:MigrateOnStartup"] = "false",
             }));
         builder.ConfigureServices(services =>

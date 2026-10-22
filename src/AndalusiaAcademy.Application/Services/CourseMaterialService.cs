@@ -10,9 +10,16 @@ public sealed class CourseMaterialService(
 {
     public async Task<IReadOnlyList<CourseMaterialDto>?> GetForCourseManagementAsync(
         Guid courseId,
+        Guid callerUserId,
+        bool callerIsPrivileged,
         CancellationToken cancellationToken)
     {
         if (!await repository.CourseExistsAsync(courseId, cancellationToken))
+        {
+            return null;
+        }
+
+        if (!callerIsPrivileged && !await repository.IsInstructorForCourseAsync(callerUserId, courseId, cancellationToken))
         {
             return null;
         }
@@ -29,10 +36,18 @@ public sealed class CourseMaterialService(
     public async Task<CourseMaterialMutationOutcome> CreateAsync(
         Guid courseId,
         Guid createdByUserId,
+        bool callerIsPrivileged,
         CreateCourseMaterialRequest request,
         CancellationToken cancellationToken)
     {
         if (!await repository.CourseExistsAsync(courseId, cancellationToken))
+        {
+            return CourseMaterialMutationOutcome.Failure(
+                CourseMaterialFailureKind.NotFound,
+                "Course not found.");
+        }
+
+        if (!callerIsPrivileged && !await repository.IsInstructorForCourseAsync(createdByUserId, courseId, cancellationToken))
         {
             return CourseMaterialMutationOutcome.Failure(
                 CourseMaterialFailureKind.NotFound,
@@ -72,11 +87,20 @@ public sealed class CourseMaterialService(
 
     public async Task<CourseMaterialMutationOutcome> UpdateAsync(
         Guid id,
+        Guid callerUserId,
+        bool callerIsPrivileged,
         UpdateCourseMaterialRequest request,
         CancellationToken cancellationToken)
     {
         var material = await repository.GetForUpdateAsync(id, cancellationToken);
         if (material is null)
+        {
+            return CourseMaterialMutationOutcome.Failure(
+                CourseMaterialFailureKind.NotFound,
+                "Course material not found.");
+        }
+
+        if (!callerIsPrivileged && !await repository.IsInstructorForCourseAsync(callerUserId, material.CourseId, cancellationToken))
         {
             return CourseMaterialMutationOutcome.Failure(
                 CourseMaterialFailureKind.NotFound,

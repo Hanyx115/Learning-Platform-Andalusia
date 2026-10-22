@@ -31,7 +31,7 @@ async function readResponseBody(response: Response) {
   }
 
   const contentType = response.headers.get('content-type')
-  return contentType?.includes('application/json')
+  return contentType?.includes('json')
     ? response.json()
     : response.text()
 }

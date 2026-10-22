@@ -5,7 +5,10 @@ using AndalusiaAcademy.Application;
 using AndalusiaAcademy.Infrastructure;
 using AndalusiaAcademy.Infrastructure.Catalog.Seeding;
 using AndalusiaAcademy.Infrastructure.Data;
+using AndalusiaAcademy.Infrastructure.Identity.Models;
+using AndalusiaAcademy.Infrastructure.Identity.Seeding;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,8 +69,9 @@ if (app.Environment.IsDevelopment())
 {
     var migrateOnStartup = app.Configuration.GetValue<bool>("Database:MigrateOnStartup");
     var seedCatalog = app.Configuration.GetValue<bool>("CatalogSeed:Enabled");
+    var seedIdentity = app.Configuration.GetValue<bool>("IdentitySeed:Enabled");
 
-    if (migrateOnStartup || seedCatalog)
+    if (migrateOnStartup || seedCatalog || seedIdentity)
     {
         await using var scope = app.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -105,6 +109,31 @@ if (app.Environment.IsDevelopment())
                     app.Logger.LogInformation(
                         "Catalog demo data seeding completed. Added {AddedRows} missing rows.",
                         addedRows);
+                }
+            }
+
+            if (seedIdentity && !await dbContext.Database.CanConnectAsync())
+            {
+                app.Logger.LogWarning(
+                    "Identity demo account seeding skipped because the database is unavailable.");
+            }
+            else if (seedIdentity)
+            {
+                var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+
+                if (pendingMigrations.Any())
+                {
+                    app.Logger.LogWarning(
+                        "Identity demo account seeding skipped because database migrations are pending.");
+                }
+                else
+                {
+                    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var addedUsers = await IdentityDemoSeeder.SeedAsync(roleManager, userManager);
+                    app.Logger.LogInformation(
+                        "Identity demo account seeding completed. Added {AddedUsers} missing accounts.",
+                        addedUsers);
                 }
             }
         }

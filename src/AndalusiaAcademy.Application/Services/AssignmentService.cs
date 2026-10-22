@@ -11,10 +11,17 @@ public sealed class AssignmentService(IAssignmentRepository repository, TimeProv
         Guid? courseOfferingId,
         Guid? programOfferingId,
         Guid createdByUserId,
+        bool callerIsPrivileged,
         CreateAssignmentRequest request,
         CancellationToken cancellationToken)
     {
         if (!await repository.OfferingExistsAsync(courseOfferingId, programOfferingId, cancellationToken))
+        {
+            return Fail<AssignmentDto>(SchedulingFailureKind.NotFound, "Offering not found.");
+        }
+
+        if (!callerIsPrivileged && !await repository.IsInstructorForOfferingAsync(
+            createdByUserId, courseOfferingId, programOfferingId, cancellationToken))
         {
             return Fail<AssignmentDto>(SchedulingFailureKind.NotFound, "Offering not found.");
         }
@@ -40,10 +47,20 @@ public sealed class AssignmentService(IAssignmentRepository repository, TimeProv
     }
 
     public async Task<SchedulingMutationOutcome<AssignmentDto>> UpdateAsync(
-        Guid id, UpdateAssignmentRequest request, CancellationToken cancellationToken)
+        Guid id,
+        Guid callerUserId,
+        bool callerIsPrivileged,
+        UpdateAssignmentRequest request,
+        CancellationToken cancellationToken)
     {
         var assignment = await repository.GetForUpdateAsync(id, cancellationToken);
         if (assignment is null)
+        {
+            return Fail<AssignmentDto>(SchedulingFailureKind.NotFound, "Assignment not found.");
+        }
+
+        if (!callerIsPrivileged && !await repository.IsInstructorForOfferingAsync(
+            callerUserId, assignment.CourseOfferingId, assignment.ProgramOfferingId, cancellationToken))
         {
             return Fail<AssignmentDto>(SchedulingFailureKind.NotFound, "Assignment not found.");
         }
