@@ -30,7 +30,6 @@ public sealed class CourseOfferingAssignmentsController(
     }
 
     [HttpPost]
-    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
     [ProducesResponseType<AssignmentDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -38,7 +37,8 @@ public sealed class CourseOfferingAssignmentsController(
         Guid courseOfferingId, CreateAssignmentRequest request, CancellationToken cancellationToken)
     {
         await validator.ValidateAndThrowAsync(request, cancellationToken);
-        var outcome = await assignmentService.CreateAsync(courseOfferingId, null, GetUserId(), request, cancellationToken);
+        var outcome = await assignmentService.CreateAsync(
+            courseOfferingId, null, GetUserId(), IsPrivileged(), request, cancellationToken);
 
         if (outcome.Succeeded)
         {

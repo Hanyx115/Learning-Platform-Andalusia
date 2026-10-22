@@ -1,7 +1,10 @@
 import { apiRequest } from './client'
 import type { TrainingLocation } from './catalog'
+import type { Assignment } from './content'
 
 export type OfferingType = 'Course' | 'Program'
+
+export type { Assignment }
 
 export interface InstructorSession {
   sessionId: string
@@ -19,6 +22,7 @@ export interface InstructorSession {
 export interface InstructorOffering {
   courseOfferingId: string | null
   programOfferingId: string | null
+  courseId: string | null
   offeringType: OfferingType
   title: string
   startsAtUtc: string
@@ -51,18 +55,6 @@ export interface AttendanceEntry {
   userId: string
   status: string
   note: string | null
-}
-
-export interface Assignment {
-  id: string
-  courseOfferingId: string | null
-  programOfferingId: string | null
-  title: string
-  description: string | null
-  dueAtUtc: string
-  maxScore: number
-  createdAtUtc: string
-  updatedAtUtc: string | null
 }
 
 export interface SubmissionRecord {

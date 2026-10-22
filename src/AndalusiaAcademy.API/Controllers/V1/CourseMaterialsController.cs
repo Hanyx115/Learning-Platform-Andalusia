@@ -12,7 +12,7 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/courses/{courseId:guid}/materials")]
-[Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+[Authorize(Policy = PolicyNames.RequireInstructorManagerOrAdmin)]
 public sealed class CourseMaterialsController(
     CourseMaterialService materialService,
     IValidator<CreateCourseMaterialRequest> validator) : ControllerBase
@@ -24,7 +24,8 @@ public sealed class CourseMaterialsController(
         Guid courseId,
         CancellationToken cancellationToken)
     {
-        var materials = await materialService.GetForCourseManagementAsync(courseId, cancellationToken);
+        var materials = await materialService.GetForCourseManagementAsync(
+            courseId, GetUserId(), IsPrivileged(), cancellationToken);
 
         return materials is null
             ? NotFound(new ProblemDetails { Title = "Course not found." })
@@ -43,7 +44,8 @@ public sealed class CourseMaterialsController(
         await validator.ValidateAndThrowAsync(request, cancellationToken);
         var outcome = await materialService.CreateAsync(
             courseId,
-            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            GetUserId(),
+            IsPrivileged(),
             request,
             cancellationToken);
 
@@ -59,4 +61,8 @@ public sealed class CourseMaterialsController(
                 [nameof(request.CourseSessionId)] = [outcome.Error ?? "The material request is invalid."],
             }));
     }
+
+    private bool IsPrivileged() => User.IsInRole(RoleNames.Manager) || User.IsInRole(RoleNames.Admin);
+
+    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

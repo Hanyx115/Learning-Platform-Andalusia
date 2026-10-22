@@ -41,6 +41,7 @@ import AdminSessionsPage from './pages/admin/AdminSessionsPage'
 import AdminStudentsPage from './pages/admin/AdminStudentsPage'
 import AdminInstructorsPage from './pages/admin/AdminInstructorsPage'
 import AdminPaymentsPage from './pages/admin/AdminPaymentsPage'
+import AdminCourseMaterialsPage from './pages/admin/AdminCourseMaterialsPage'
 
 export const router = createBrowserRouter([
   {
@@ -169,6 +170,10 @@ export const router = createBrowserRouter([
                 element: <InstructorOfferingsPage />,
               },
               {
+                path: 'courses/:courseId/materials',
+                element: <AdminCourseMaterialsPage />,
+              },
+              {
                 path: 'offerings/:offeringId/assignments',
                 element: <InstructorOfferingAssignmentsPage />,
               },
@@ -207,6 +212,10 @@ export const router = createBrowserRouter([
                 element: <AdminOfferingsPage />,
               },
               {
+                path: 'courses/:courseId/materials',
+                element: <AdminCourseMaterialsPage />,
+              },
+              {
                 path: 'programs/:programId/offerings',
                 element: <AdminOfferingsPage />,
               },
@@ -217,6 +226,14 @@ export const router = createBrowserRouter([
               {
                 path: 'program-offerings/:programOfferingId/sessions',
                 element: <AdminSessionsPage />,
+              },
+              {
+                path: 'course-offerings/:offeringId/assignments',
+                element: <InstructorOfferingAssignmentsPage />,
+              },
+              {
+                path: 'program-offerings/:offeringId/assignments',
+                element: <InstructorOfferingAssignmentsPage />,
               },
               {
                 path: 'students',

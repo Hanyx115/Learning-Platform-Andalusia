@@ -92,6 +92,14 @@ function InstructorOfferingsPage() {
                   >
                     {t('instructorOfferings.viewProgress')}
                   </Link>
+                  {offering.courseId ? (
+                    <Link
+                      className="button button--secondary"
+                      to={`/instructor/courses/${offering.courseId}/materials`}
+                    >
+                      {t('instructorOfferings.manageMaterials')}
+                    </Link>
+                  ) : null}
                 </div>
               </article>
             )
