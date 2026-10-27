@@ -9,17 +9,29 @@ namespace AndalusiaAcademy.API.IntegrationTests;
 public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 {
     internal const string TestJwtKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    internal const string TestConnectionStringEnvironmentVariable =
+        "ANDALUSIA_TEST_CONNECTION_STRING";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        var testConnectionString = Environment.GetEnvironmentVariable(
+            TestConnectionStringEnvironmentVariable);
+        if (string.IsNullOrWhiteSpace(testConnectionString))
+        {
+            throw new InvalidOperationException(
+                $"Set {TestConnectionStringEnvironmentVariable} to an isolated SQL Server database before running API integration tests. " +
+                "Use scripts/run-sprint4-tests.ps1 for the supported Docker-based workflow.");
+        }
+
         builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration((_, configuration) =>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
+                ["ConnectionStrings:DefaultConnection"] = testConnectionString,
                 ["Jwt:Key"] = TestJwtKey,
                 ["CatalogSeed:Enabled"] = "false",
                 ["IdentitySeed:Enabled"] = "false",
-                ["Database:MigrateOnStartup"] = "false",
+                ["Database:MigrateOnStartup"] = "true",
             }));
         builder.ConfigureServices(services =>
         {
