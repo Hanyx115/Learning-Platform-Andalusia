@@ -50,8 +50,8 @@ public sealed class AssignmentsEndpointsTests(ApiWebApplicationFactory factory) 
         var assignmentId = await CreateAssignmentAsync(offeringId, adminToken);
 
         using var submitResponse = await SendAuthorizedAsync(
-            HttpMethod.Post, $"/api/v1/assignments/{assignmentId}/submit", learnerToken,
-            new { content = "https://example.com/my-essay.pdf" });
+            HttpMethod.Post, $"/api/v1/assignments/{assignmentId}/submit-link", learnerToken,
+            new { url = "https://example.com/my-essay.pdf" });
         submitResponse.EnsureSuccessStatusCode();
 
         using var submissionsResponse = await SendAuthorizedAsync(
@@ -61,6 +61,8 @@ public sealed class AssignmentsEndpointsTests(ApiWebApplicationFactory factory) 
         var submissionEntry = Assert.Single(submissionsDocument.RootElement.EnumerateArray());
         Assert.Equal(learnerId.ToString(), submissionEntry.GetProperty("userId").GetString());
         Assert.Equal("https://example.com/my-essay.pdf", submissionEntry.GetProperty("content").GetString());
+        Assert.Equal("Link", submissionEntry.GetProperty("submissionType").GetString());
+        Assert.Equal("https://example.com/my-essay.pdf", submissionEntry.GetProperty("linkUrl").GetString());
         Assert.Equal(JsonValueKind.Null, submissionEntry.GetProperty("score").ValueKind);
 
         using var gradeResponse = await SendAuthorizedAsync(
@@ -70,6 +72,61 @@ public sealed class AssignmentsEndpointsTests(ApiWebApplicationFactory factory) 
         using var gradeDocument = JsonDocument.Parse(await gradeResponse.Content.ReadAsStringAsync());
         Assert.Equal(85, gradeDocument.RootElement.GetProperty("score").GetDecimal());
         Assert.Equal("Well done.", gradeDocument.RootElement.GetProperty("feedback").GetString());
+    }
+
+    [Fact]
+    public async Task Learner_CanUploadDocument_AndLearnerAndInstructorCanDownloadIt()
+    {
+        var (offeringId, learnerId, learnerToken, instructorToken, adminToken) =
+            await SeedOfferingWithEnrolledLearnerAsync();
+        var assignmentId = await CreateAssignmentAsync(offeringId, adminToken);
+        var documentBytes = "%PDF-1.7 demo assignment"u8.ToArray();
+
+        using var submitRequest = new HttpRequestMessage(
+            HttpMethod.Post, $"/api/v1/assignments/{assignmentId}/submit-file");
+        submitRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", learnerToken);
+        using var multipart = new MultipartFormDataContent();
+        using var documentContent = new ByteArrayContent(documentBytes);
+        documentContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        multipart.Add(documentContent, "file", "reflection.pdf");
+        submitRequest.Content = multipart;
+
+        using var submitResponse = await _client.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+        using var submitDocument = JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
+        Assert.Equal("File", submitDocument.RootElement.GetProperty("submissionType").GetString());
+        Assert.Equal("reflection.pdf", submitDocument.RootElement.GetProperty("originalFileName").GetString());
+
+        using var learnerDownload = await SendAuthorizedAsync(
+            HttpMethod.Get, $"/api/v1/assignments/{assignmentId}/submission/file", learnerToken);
+        learnerDownload.EnsureSuccessStatusCode();
+        Assert.Equal(documentBytes, await learnerDownload.Content.ReadAsByteArrayAsync());
+        Assert.Equal("application/pdf", learnerDownload.Content.Headers.ContentType?.MediaType);
+
+        using var instructorDownload = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/assignments/{assignmentId}/submissions/{learnerId}/file",
+            instructorToken);
+        instructorDownload.EnsureSuccessStatusCode();
+        Assert.Equal(documentBytes, await instructorDownload.Content.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task Learner_CannotUploadExecutableAsAssignmentDocument()
+    {
+        var (offeringId, _, learnerToken, _, adminToken) = await SeedOfferingWithEnrolledLearnerAsync();
+        var assignmentId = await CreateAssignmentAsync(offeringId, adminToken);
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post, $"/api/v1/assignments/{assignmentId}/submit-file");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", learnerToken);
+        using var multipart = new MultipartFormDataContent();
+        multipart.Add(new ByteArrayContent("not safe"u8.ToArray()), "file", "homework.exe");
+        request.Content = multipart;
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

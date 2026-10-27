@@ -8,6 +8,11 @@ namespace AndalusiaAcademy.API.IntegrationTests;
 
 public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private readonly string _assignmentSubmissionStoragePath = Path.Combine(
+        Path.GetTempPath(),
+        "andalusia-assignment-submission-tests",
+        Guid.NewGuid().ToString("N"));
+
     internal const string TestJwtKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     internal const string TestConnectionStringEnvironmentVariable =
         "ANDALUSIA_TEST_CONNECTION_STRING";
@@ -32,6 +37,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 ["CatalogSeed:Enabled"] = "false",
                 ["IdentitySeed:Enabled"] = "false",
                 ["Database:MigrateOnStartup"] = "true",
+                ["AssignmentSubmissions:StoragePath"] = _assignmentSubmissionStoragePath,
             }));
         builder.ConfigureServices(services =>
         {
@@ -40,5 +46,15 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 .AddApplicationPart(typeof(ThrowingController).Assembly);
         });
         builder.ConfigureLogging(logging => logging.ClearProviders());
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        if (disposing && Directory.Exists(_assignmentSubmissionStoragePath))
+        {
+            Directory.Delete(_assignmentSubmissionStoragePath, recursive: true);
+        }
     }
 }

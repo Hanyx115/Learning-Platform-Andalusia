@@ -126,3 +126,25 @@ export async function apiRequest<T>(
 
   return await readResponseBody(response) as T
 }
+
+export async function apiDownload(path: string): Promise<Blob> {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  let response = await sendRequest(normalizedPath, {}, true)
+
+  if (response.status === 401 && authSession.getTokens()?.refreshToken) {
+    const refreshedTokens = await refreshSession()
+    if (refreshedTokens) {
+      response = await sendRequest(normalizedPath, {}, true)
+    }
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      authSession.clear()
+    }
+
+    throw new ApiError(response.status, await readResponseBody(response))
+  }
+
+  return response.blob()
+}

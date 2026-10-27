@@ -8,7 +8,9 @@ import {
   getMyEnrollments,
   getMyProgress,
   getMyUpcomingSessions,
-  submitAssignment,
+  downloadMyAssignmentFile,
+  submitAssignmentFile,
+  submitAssignmentLink,
   type CourseMaterial,
   type Enrollment,
   type LearnerAssignment,
@@ -16,6 +18,9 @@ import {
   type UpcomingSession,
 } from '../../api/enrollment'
 import Container from '../../components/Container'
+import { saveBlob } from '../../utils/download'
+
+type SubmissionMethod = 'link' | 'file'
 
 function CourseLearningPage() {
   const { t, i18n } = useTranslation()
@@ -31,8 +36,11 @@ function CourseLearningPage() {
   const [isForbidden, setIsForbidden] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
-  const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [submissionMethods, setSubmissionMethods] = useState<Record<string, SubmissionMethod>>({})
+  const [linkDrafts, setLinkDrafts] = useState<Record<string, string>>({})
+  const [fileDrafts, setFileDrafts] = useState<Record<string, File | null>>({})
   const [submittingId, setSubmittingId] = useState<string | null>(null)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [submitErrors, setSubmitErrors] = useState<Record<string, string>>({})
 
   const load = useCallback(() => {
@@ -89,10 +97,19 @@ function CourseLearningPage() {
     )
   }
 
-  async function handleSubmit(assignmentId: string) {
-    const content = drafts[assignmentId]?.trim()
-    if (!content) {
-      setSubmitErrors((previous) => ({ ...previous, [assignmentId]: t('courseLearning.errors.contentRequired') }))
+  async function handleSubmit(assignment: LearnerAssignment) {
+    const assignmentId = assignment.assignmentId
+    const method = submissionMethods[assignmentId] ?? (assignment.mySubmissionType === 'File' ? 'file' : 'link')
+    const link = (linkDrafts[assignmentId] ?? assignment.mySubmissionLinkUrl ?? '').trim()
+    const file = fileDrafts[assignmentId]
+
+    if (method === 'link' && !link) {
+      setSubmitErrors((previous) => ({ ...previous, [assignmentId]: t('courseLearning.errors.linkRequired') }))
+      return
+    }
+
+    if (method === 'file' && !file) {
+      setSubmitErrors((previous) => ({ ...previous, [assignmentId]: t('courseLearning.errors.fileRequired') }))
       return
     }
 
@@ -100,7 +117,12 @@ function CourseLearningPage() {
     setSubmitErrors((previous) => ({ ...previous, [assignmentId]: '' }))
 
     try {
-      await submitAssignment(assignmentId, content)
+      if (method === 'link') {
+        await submitAssignmentLink(assignmentId, link)
+      } else {
+        await submitAssignmentFile(assignmentId, file!)
+      }
+      setFileDrafts((previous) => ({ ...previous, [assignmentId]: null }))
       load()
     } catch (requestError) {
       setSubmitErrors((previous) => ({
@@ -109,6 +131,22 @@ function CourseLearningPage() {
       }))
     } finally {
       setSubmittingId(null)
+    }
+  }
+
+  async function handleDownload(assignmentId: string, fileName: string) {
+    setDownloadingId(assignmentId)
+    setSubmitErrors((previous) => ({ ...previous, [assignmentId]: '' }))
+
+    try {
+      saveBlob(await downloadMyAssignmentFile(assignmentId), fileName)
+    } catch (requestError) {
+      setSubmitErrors((previous) => ({
+        ...previous,
+        [assignmentId]: getApiErrorMessage(requestError, t('courseLearning.errors.download')),
+      }))
+    } finally {
+      setDownloadingId(null)
     }
   }
 
@@ -237,6 +275,10 @@ function CourseLearningPage() {
                   const isGraded = assignment.myScore !== null
                   const submitError = submitErrors[assignment.assignmentId]
                   const isBusy = submittingId === assignment.assignmentId
+                  const isDownloading = downloadingId === assignment.assignmentId
+                  const hasSubmission = assignment.mySubmittedAtUtc !== null
+                  const method = submissionMethods[assignment.assignmentId]
+                    ?? (assignment.mySubmissionType === 'File' ? 'file' : 'link')
 
                   return (
                     <article key={assignment.assignmentId} className="dashboard-card">
@@ -251,6 +293,40 @@ function CourseLearningPage() {
                         </span>
                       </div>
 
+                      {hasSubmission ? (
+                        <div className="submission-current-work">
+                          <strong>{t('courseLearning.currentWork')}</strong>
+                          {assignment.mySubmissionType === 'File' && assignment.mySubmissionFileName ? (
+                            <button
+                              className="submission-file-link"
+                              type="button"
+                              disabled={isDownloading}
+                              onClick={() => void handleDownload(
+                                assignment.assignmentId,
+                                assignment.mySubmissionFileName!,
+                              )}
+                            >
+                              {isDownloading
+                                ? t('courseLearning.downloading')
+                                : assignment.mySubmissionFileName}
+                            </button>
+                          ) : assignment.mySubmissionType === 'Link' && assignment.mySubmissionLinkUrl ? (
+                            <a href={assignment.mySubmissionLinkUrl} target="_blank" rel="noreferrer">
+                              {assignment.mySubmissionLinkUrl}
+                            </a>
+                          ) : assignment.mySubmissionContent ? (
+                            <p dir="auto">{assignment.mySubmissionContent}</p>
+                          ) : null}
+                          <span>
+                            {t('courseLearning.submittedOn', {
+                              date: new Date(assignment.mySubmittedAtUtc!).toLocaleString(i18n.language),
+                            })}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {submitError ? <p className="auth-message auth-message--error" role="alert">{submitError}</p> : null}
+
                       {isGraded ? (
                         <div className="dashboard-card__meta">
                           <span className="status-badge status-badge--positive">
@@ -260,27 +336,74 @@ function CourseLearningPage() {
                         </div>
                       ) : (
                         <>
-                          {submitError ? <p className="auth-message auth-message--error" role="alert">{submitError}</p> : null}
-                          <label>
-                            {t('courseLearning.submissionLabel')}
-                            <textarea
-                              rows={3}
-                              value={drafts[assignment.assignmentId] ?? assignment.mySubmissionContent ?? ''}
-                              onChange={(event) =>
-                                setDrafts((previous) => ({ ...previous, [assignment.assignmentId]: event.target.value }))
-                              }
-                            />
-                          </label>
+                          <div className="submission-composer">
+                            <strong>{hasSubmission
+                              ? t('courseLearning.replaceSubmission')
+                              : t('courseLearning.addWork')}</strong>
+                            <div className="submission-methods" role="group" aria-label={t('courseLearning.chooseMethod')}>
+                              <button
+                                className={`submission-method${method === 'link' ? ' submission-method--active' : ''}`}
+                                type="button"
+                                aria-pressed={method === 'link'}
+                                onClick={() => setSubmissionMethods((previous) => ({
+                                  ...previous,
+                                  [assignment.assignmentId]: 'link',
+                                }))}
+                              >
+                                {t('courseLearning.linkMethod')}
+                              </button>
+                              <button
+                                className={`submission-method${method === 'file' ? ' submission-method--active' : ''}`}
+                                type="button"
+                                aria-pressed={method === 'file'}
+                                onClick={() => setSubmissionMethods((previous) => ({
+                                  ...previous,
+                                  [assignment.assignmentId]: 'file',
+                                }))}
+                              >
+                                {t('courseLearning.fileMethod')}
+                              </button>
+                            </div>
+
+                            {method === 'link' ? (
+                              <label>
+                                {t('courseLearning.linkLabel')}
+                                <input
+                                  type="url"
+                                  inputMode="url"
+                                  placeholder="https://"
+                                  value={linkDrafts[assignment.assignmentId] ?? assignment.mySubmissionLinkUrl ?? ''}
+                                  onChange={(event) => setLinkDrafts((previous) => ({
+                                    ...previous,
+                                    [assignment.assignmentId]: event.target.value,
+                                  }))}
+                                />
+                              </label>
+                            ) : (
+                              <label className="submission-file-picker">
+                                <span>{t('courseLearning.fileLabel')}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt"
+                                  onChange={(event) => setFileDrafts((previous) => ({
+                                    ...previous,
+                                    [assignment.assignmentId]: event.target.files?.[0] ?? null,
+                                  }))}
+                                />
+                                <small>{t('courseLearning.fileHelp')}</small>
+                              </label>
+                            )}
+                          </div>
                           <div className="dashboard-card__actions">
                             <button
                               className="button button--primary"
                               type="button"
                               disabled={isBusy}
-                              onClick={() => void handleSubmit(assignment.assignmentId)}
+                              onClick={() => void handleSubmit(assignment)}
                             >
                               {isBusy
                                 ? t('courseLearning.submitting')
-                                : assignment.mySubmissionContent
+                                : hasSubmission
                                   ? t('courseLearning.updateSubmission')
                                   : t('courseLearning.submit')}
                             </button>

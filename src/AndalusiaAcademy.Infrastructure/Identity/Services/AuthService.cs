@@ -66,6 +66,11 @@ public sealed class AuthService(
             return LoginOutcome.Failure(LoginFailureReason.InvalidCredentials);
         }
 
+        if (!user.IsActive)
+        {
+            return LoginOutcome.Failure(LoginFailureReason.InvalidCredentials);
+        }
+
         var (tokens, _) = await IssueTokensAsync(user, ipAddress, cancellationToken);
         return LoginOutcome.Success(tokens);
     }
@@ -98,7 +103,7 @@ public sealed class AuthService(
 
         var user = await userManager.FindByIdAsync(stored.UserId.ToString());
 
-        if (user is null)
+        if (user is null || !user.IsActive)
         {
             return RefreshOutcome.Failure();
         }
@@ -126,7 +131,7 @@ public sealed class AuthService(
     {
         var user = await userManager.FindByEmailAsync(email);
 
-        if (user is null)
+        if (user is null || !user.IsActive)
         {
             return new ForgotPasswordOutcome(null);
         }

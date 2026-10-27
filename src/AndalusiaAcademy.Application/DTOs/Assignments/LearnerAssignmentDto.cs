@@ -11,6 +11,10 @@ public sealed record LearnerAssignmentDto(
     DateTimeOffset DueAtUtc,
     decimal MaxScore,
     string? MySubmissionContent,
+    string? MySubmissionType,
+    string? MySubmissionLinkUrl,
+    string? MySubmissionFileName,
+    long? MySubmissionFileSizeBytes,
     DateTimeOffset? MySubmittedAtUtc,
     decimal? MyScore,
     string? MyFeedback);

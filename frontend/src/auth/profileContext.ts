@@ -3,9 +3,10 @@ import type { Profile } from '../api/auth'
 
 export interface AuthProfileContextValue {
   profile: Profile | null
+  isLoading: boolean
 }
 
-export const AuthProfileContext = createContext<AuthProfileContextValue>({ profile: null })
+export const AuthProfileContext = createContext<AuthProfileContextValue>({ profile: null, isLoading: false })
 
 export function useAuthProfile() {
   return useContext(AuthProfileContext)

@@ -23,6 +23,7 @@ import ProfileLayout from './pages/profile/ProfileLayout'
 import ApplicationsPage from './pages/profile/ApplicationsPage'
 import EnrollmentsPage from './pages/profile/EnrollmentsPage'
 import SchedulePage from './pages/profile/SchedulePage'
+import AttendancePage from './pages/profile/AttendancePage'
 import CourseLearningPage from './pages/profile/CourseLearningPage'
 import StaffApplicationsPage from './pages/staff/StaffApplicationsPage'
 import InstructorLayout from './pages/instructor/InstructorLayout'
@@ -41,6 +42,7 @@ import AdminSessionsPage from './pages/admin/AdminSessionsPage'
 import AdminStudentsPage from './pages/admin/AdminStudentsPage'
 import AdminInstructorsPage from './pages/admin/AdminInstructorsPage'
 import AdminPaymentsPage from './pages/admin/AdminPaymentsPage'
+import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminCourseMaterialsPage from './pages/admin/AdminCourseMaterialsPage'
 
 export const router = createBrowserRouter([
@@ -128,124 +130,152 @@ export const router = createBrowserRouter([
                 element: <ProfilePage />,
               },
               {
-                path: 'applications',
-                element: <ApplicationsPage />,
-              },
-              {
-                path: 'enrollments',
-                element: <EnrollmentsPage />,
-              },
-              {
-                path: 'enrollments/:enrollmentId/learn',
-                element: <CourseLearningPage />,
-              },
-              {
-                path: 'schedule',
-                element: <SchedulePage />,
-              },
-            ],
-          },
-          {
-            path: 'staff/applications',
-            element: <StaffApplicationsPage />,
-          },
-          {
-            path: 'instructor',
-            element: <InstructorLayout />,
-            children: [
-              {
-                index: true,
-                element: <Navigate to="/instructor/sessions" replace />,
-              },
-              {
-                path: 'sessions',
-                element: <InstructorSessionsPage />,
-              },
-              {
-                path: 'sessions/:sessionId/attendance',
-                element: <InstructorSessionAttendancePage />,
-              },
-              {
-                path: 'offerings',
-                element: <InstructorOfferingsPage />,
-              },
-              {
-                path: 'courses/:courseId/materials',
-                element: <AdminCourseMaterialsPage />,
-              },
-              {
-                path: 'offerings/:offeringId/assignments',
-                element: <InstructorOfferingAssignmentsPage />,
-              },
-              {
-                path: 'offerings/:offeringId/progress',
-                element: <InstructorOfferingProgressPage />,
-              },
-              {
-                path: 'assignments/:assignmentId/submissions',
-                element: <InstructorAssignmentSubmissionsPage />,
-              },
-              {
-                path: 'students',
-                element: <InstructorStudentsPage />,
+                element: <ProtectedRoute allowedRoles={['Learner']} />,
+                children: [
+                  {
+                    path: 'applications',
+                    element: <ApplicationsPage />,
+                  },
+                  {
+                    path: 'enrollments',
+                    element: <EnrollmentsPage />,
+                  },
+                  {
+                    path: 'enrollments/:enrollmentId/learn',
+                    element: <CourseLearningPage />,
+                  },
+                  {
+                    path: 'schedule',
+                    element: <SchedulePage />,
+                  },
+                  {
+                    path: 'attendance',
+                    element: <AttendancePage />,
+                  },
+                ],
               },
             ],
           },
           {
-            path: 'admin',
-            element: <AdminLayout />,
+            element: <ProtectedRoute allowedRoles={['Manager', 'Admin']} />,
             children: [
               {
-                index: true,
-                element: <Navigate to="/admin/catalog" replace />,
+                path: 'staff/applications',
+                element: <StaffApplicationsPage />,
               },
+            ],
+          },
+          {
+            element: <ProtectedRoute allowedRoles={['Instructor']} />,
+            children: [
               {
-                path: 'catalog',
-                element: <AdminCatalogPage />,
+                path: 'instructor',
+                element: <InstructorLayout />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="/instructor/sessions" replace />,
+                  },
+                  {
+                    path: 'sessions',
+                    element: <InstructorSessionsPage />,
+                  },
+                  {
+                    path: 'sessions/:sessionId/attendance',
+                    element: <InstructorSessionAttendancePage />,
+                  },
+                  {
+                    path: 'offerings',
+                    element: <InstructorOfferingsPage />,
+                  },
+                  {
+                    path: 'courses/:courseId/materials',
+                    element: <AdminCourseMaterialsPage />,
+                  },
+                  {
+                    path: 'offerings/:offeringId/assignments',
+                    element: <InstructorOfferingAssignmentsPage />,
+                  },
+                  {
+                    path: 'offerings/:offeringId/progress',
+                    element: <InstructorOfferingProgressPage />,
+                  },
+                  {
+                    path: 'assignments/:assignmentId/submissions',
+                    element: <InstructorAssignmentSubmissionsPage />,
+                  },
+                  {
+                    path: 'students',
+                    element: <InstructorStudentsPage />,
+                  },
+                ],
               },
+            ],
+          },
+          {
+            element: <ProtectedRoute allowedRoles={['Admin']} />,
+            children: [
               {
-                path: 'locations',
-                element: <AdminLocationsPage />,
-              },
-              {
-                path: 'courses/:courseId/offerings',
-                element: <AdminOfferingsPage />,
-              },
-              {
-                path: 'courses/:courseId/materials',
-                element: <AdminCourseMaterialsPage />,
-              },
-              {
-                path: 'programs/:programId/offerings',
-                element: <AdminOfferingsPage />,
-              },
-              {
-                path: 'course-offerings/:courseOfferingId/sessions',
-                element: <AdminSessionsPage />,
-              },
-              {
-                path: 'program-offerings/:programOfferingId/sessions',
-                element: <AdminSessionsPage />,
-              },
-              {
-                path: 'course-offerings/:offeringId/assignments',
-                element: <InstructorOfferingAssignmentsPage />,
-              },
-              {
-                path: 'program-offerings/:offeringId/assignments',
-                element: <InstructorOfferingAssignmentsPage />,
-              },
-              {
-                path: 'students',
-                element: <AdminStudentsPage />,
-              },
-              {
-                path: 'instructors',
-                element: <AdminInstructorsPage />,
-              },
-              {
-                path: 'payments',
-                element: <AdminPaymentsPage />,
+                path: 'admin',
+                element: <AdminLayout />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="/admin/catalog" replace />,
+                  },
+                  {
+                    path: 'catalog',
+                    element: <AdminCatalogPage />,
+                  },
+                  {
+                    path: 'locations',
+                    element: <AdminLocationsPage />,
+                  },
+                  {
+                    path: 'courses/:courseId/offerings',
+                    element: <AdminOfferingsPage />,
+                  },
+                  {
+                    path: 'courses/:courseId/materials',
+                    element: <AdminCourseMaterialsPage />,
+                  },
+                  {
+                    path: 'programs/:programId/offerings',
+                    element: <AdminOfferingsPage />,
+                  },
+                  {
+                    path: 'course-offerings/:courseOfferingId/sessions',
+                    element: <AdminSessionsPage />,
+                  },
+                  {
+                    path: 'program-offerings/:programOfferingId/sessions',
+                    element: <AdminSessionsPage />,
+                  },
+                  {
+                    path: 'course-offerings/:offeringId/assignments',
+                    element: <InstructorOfferingAssignmentsPage />,
+                  },
+                  {
+                    path: 'program-offerings/:offeringId/assignments',
+                    element: <InstructorOfferingAssignmentsPage />,
+                  },
+                  {
+                    path: 'students',
+                    element: <AdminStudentsPage />,
+                  },
+                  {
+                    path: 'instructors',
+                    element: <AdminInstructorsPage />,
+                  },
+                  {
+                    path: 'payments',
+                    element: <AdminPaymentsPage />,
+                  },
+                  {
+                    path: 'users',
+                    element: <AdminUsersPage />,
+                  },
+                ],
               },
             ],
           },

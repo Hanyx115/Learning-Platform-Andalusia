@@ -28,7 +28,11 @@ public interface IAssignmentRepository
     Task<AssignmentSubmission?> GetSubmissionAsync(Guid assignmentId, Guid userId, CancellationToken cancellationToken);
 
     Task UpsertSubmissionAsync(
-        Guid assignmentId, Guid userId, string content, DateTimeOffset submittedAtUtc, CancellationToken cancellationToken);
+        Guid assignmentId,
+        Guid userId,
+        AssignmentSubmissionWriteModel submission,
+        DateTimeOffset submittedAtUtc,
+        CancellationToken cancellationToken);
 
     Task GradeSubmissionAsync(
         Guid assignmentId,

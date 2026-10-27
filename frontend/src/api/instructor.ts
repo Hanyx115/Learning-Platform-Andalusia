@@ -1,4 +1,4 @@
-import { apiRequest } from './client'
+import { apiDownload, apiRequest } from './client'
 import type { TrainingLocation } from './catalog'
 import type { Assignment } from './content'
 
@@ -62,6 +62,10 @@ export interface SubmissionRecord {
   learnerName: string
   email: string
   content: string | null
+  submissionType: 'Text' | 'Link' | 'File' | null
+  linkUrl: string | null
+  originalFileName: string | null
+  fileSizeBytes: number | null
   submittedAtUtc: string | null
   score: number | null
   feedback: string | null
@@ -125,6 +129,10 @@ export function gradeSubmission(assignmentId: string, userId: string, score: num
     headers: jsonHeaders,
     body: JSON.stringify({ score, feedback }),
   })
+}
+
+export function downloadLearnerAssignmentFile(assignmentId: string, userId: string) {
+  return apiDownload(`/api/v1/assignments/${assignmentId}/submissions/${userId}/file`)
 }
 
 export function getOfferingProgress(offeringId: string, offeringType: OfferingType) {

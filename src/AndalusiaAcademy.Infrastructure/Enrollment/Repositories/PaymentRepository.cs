@@ -13,6 +13,7 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
     : IPaymentRepository
 {
     private const string Source = "Simulated";
+    private const string AdminSource = "Admin";
 
     public async Task<PayForApplicationOutcome> PayForApplicationAsync(
         Guid applicationId,
@@ -215,10 +216,10 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
 
     public async Task<IReadOnlyList<AdminPaymentDto>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await dbContext.Payments
+        var payments = await dbContext.Payments
             .AsNoTracking()
             .OrderByDescending(payment => payment.CreatedAt)
-            .Select(payment => new AdminPaymentDto(
+            .Select(payment => new AdminPaymentRow(
                 payment.Id,
                 payment.UserId,
                 dbContext.Users.Where(user => user.Id == payment.UserId)
@@ -238,5 +239,126 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
                 payment.CreatedAt,
                 payment.CompletedAt))
             .ToListAsync(cancellationToken);
+
+        return await AddStatusHistoryAsync(payments, cancellationToken);
     }
+
+    public async Task<AdminPaymentActionOutcome> FailPendingAsync(
+        Guid paymentId,
+        Guid actingAdminUserId,
+        CancellationToken cancellationToken)
+    {
+        var payment = await dbContext.Payments
+            .FirstOrDefaultAsync(candidate => candidate.Id == paymentId, cancellationToken);
+
+        if (payment is null)
+        {
+            return AdminPaymentActionOutcome.Fail(AdminPaymentActionFailure.NotFound, "Payment not found.");
+        }
+
+        if (payment.Status != PaymentStatus.Pending)
+        {
+            return AdminPaymentActionOutcome.Fail(
+                AdminPaymentActionFailure.Conflict,
+                "Only a pending payment can be marked as failed.");
+        }
+
+        payment.Status = PaymentStatus.Failed;
+        dbContext.PaymentStatusHistories.Add(new PaymentStatusHistory
+        {
+            Id = Guid.NewGuid(),
+            PaymentId = payment.Id,
+            Status = PaymentStatus.Failed,
+            ChangedAt = DateTimeOffset.UtcNow,
+            Source = $"{AdminSource}:{actingAdminUserId}",
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var updated = (await GetAdminRowsAsync(payment.Id, cancellationToken)).Single();
+        return AdminPaymentActionOutcome.Success(updated);
+    }
+
+    private async Task<IReadOnlyList<AdminPaymentDto>> GetAdminRowsAsync(
+        Guid paymentId,
+        CancellationToken cancellationToken)
+    {
+        var payments = await dbContext.Payments
+            .AsNoTracking()
+            .Where(payment => payment.Id == paymentId)
+            .Select(payment => new AdminPaymentRow(
+                payment.Id,
+                payment.UserId,
+                dbContext.Users.Where(user => user.Id == payment.UserId)
+                    .Select(user => user.FirstName + " " + user.LastName).Single(),
+                dbContext.Users.Where(user => user.Id == payment.UserId)
+                    .Select(user => user.Email!).Single(),
+                payment.ApplicationId,
+                payment.Application != null && payment.Application.CourseOffering != null
+                    ? payment.Application.CourseOffering.Course!.Title
+                    : null,
+                payment.Application != null && payment.Application.ProgramOffering != null
+                    ? payment.Application.ProgramOffering.Program!.Title
+                    : null,
+                payment.Amount,
+                payment.Currency,
+                payment.Status,
+                payment.CreatedAt,
+                payment.CompletedAt))
+            .ToListAsync(cancellationToken);
+
+        return await AddStatusHistoryAsync(payments, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<AdminPaymentDto>> AddStatusHistoryAsync(
+        IReadOnlyList<AdminPaymentRow> payments,
+        CancellationToken cancellationToken)
+    {
+        var paymentIds = payments.Select(payment => payment.Id).ToArray();
+        var history = await dbContext.PaymentStatusHistories
+            .AsNoTracking()
+            .Where(entry => paymentIds.Contains(entry.PaymentId))
+            .OrderBy(entry => entry.ChangedAt)
+            .Select(entry => new
+            {
+                entry.PaymentId,
+                Dto = new PaymentStatusHistoryDto(entry.Id, entry.Status, entry.ChangedAt, entry.Source),
+            })
+            .ToListAsync(cancellationToken);
+
+        var historiesByPayment = history
+            .GroupBy(entry => entry.PaymentId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<PaymentStatusHistoryDto>)group.Select(entry => entry.Dto).ToArray());
+
+        return payments.Select(payment => new AdminPaymentDto(
+            payment.Id,
+            payment.UserId,
+            payment.LearnerName,
+            payment.Email,
+            payment.ApplicationId,
+            payment.CourseTitle,
+            payment.ProgramTitle,
+            payment.Amount,
+            payment.Currency,
+            payment.Status,
+            payment.CreatedAt,
+            payment.CompletedAt,
+            historiesByPayment.GetValueOrDefault(payment.Id) ?? [])).ToArray();
+    }
+
+    private sealed record AdminPaymentRow(
+        Guid Id,
+        Guid UserId,
+        string LearnerName,
+        string Email,
+        Guid ApplicationId,
+        string? CourseTitle,
+        string? ProgramTitle,
+        decimal Amount,
+        string Currency,
+        string Status,
+        DateTimeOffset CreatedAt,
+        DateTimeOffset? CompletedAt);
 }

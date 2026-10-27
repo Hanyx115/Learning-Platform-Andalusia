@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Infrastructure.Catalog.Repositories;
@@ -10,6 +11,7 @@ using AndalusiaAcademy.Infrastructure.Identity.Models;
 using AndalusiaAcademy.Infrastructure.Identity.Repositories;
 using AndalusiaAcademy.Infrastructure.Identity.Services;
 using AndalusiaAcademy.Infrastructure.Lms.Repositories;
+using AndalusiaAcademy.Infrastructure.Lms.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -96,6 +98,30 @@ public static class DependencyInjection
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = async context =>
+                    {
+                        var userIdValue = context.Principal?
+                            .FindFirst(ClaimTypes.NameIdentifier)?
+                            .Value;
+
+                        if (!Guid.TryParse(userIdValue, out var userId))
+                        {
+                            context.Fail("The authenticated user identifier is invalid.");
+                            return;
+                        }
+
+                        var userManager = context.HttpContext.RequestServices
+                            .GetRequiredService<UserManager<ApplicationUser>>();
+                        var user = await userManager.FindByIdAsync(userId.ToString());
+
+                        if (user is null || !user.IsActive)
+                        {
+                            context.Fail("This account is inactive.");
+                        }
+                    },
+                };
             });
 
         services.AddAuthorization(options =>
@@ -118,6 +144,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
 
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<ICourseCategoryRepository, CourseCategoryRepository>();
@@ -127,6 +154,7 @@ public static class DependencyInjection
         services.AddScoped<ISchedulingRepository, SchedulingRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<IAssignmentRepository, AssignmentRepository>();
+        services.AddSingleton<IAssignmentSubmissionFileStore, LocalAssignmentSubmissionFileStore>();
         services.AddScoped<IProgressRepository, ProgressRepository>();
         services.AddScoped<IInstructorRepository, InstructorRepository>();
         services.AddScoped<IApplicationRepository, ApplicationRepository>();
