@@ -31,11 +31,14 @@ services:
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in your .env file}
       Database__MigrateOnStartup: "true"
       HttpsRedirection__Enabled: "false"
+      AssignmentSubmissions__StoragePath: "/home/app/assignment-submissions"
     ports:
       - "${API_HTTP_PORT:-8080}:8080"
     volumes:
       - api-dataprotection-keys:/home/app/.aspnet/DataProtection-Keys
+      - assignment-submissions:/home/app/assignment-submissions
 
 volumes:
   sqlserver-data:
   api-dataprotection-keys:
+  assignment-submissions:

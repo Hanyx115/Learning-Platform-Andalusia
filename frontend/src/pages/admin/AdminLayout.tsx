@@ -25,6 +25,9 @@ function AdminLayout() {
           <NavLink to="/admin/payments" className="profile-dashboard__link">
             {t('adminNav.payments')}
           </NavLink>
+          <NavLink to="/admin/users" className="profile-dashboard__link">
+            {t('adminNav.users')}
+          </NavLink>
         </nav>
         <div className="profile-dashboard__content">
           <Outlet />

@@ -1,4 +1,4 @@
-import { apiRequest } from './client'
+import { apiDownload, apiRequest } from './client'
 import type { TrainingLocation } from './catalog'
 
 export interface Application {
@@ -174,6 +174,20 @@ export function getMyUpcomingSessions() {
   return apiRequest<UpcomingSession[]>('/api/v1/learner/upcoming-sessions')
 }
 
+export interface LearnerAttendance {
+  sessionId: string
+  sessionTitle: string
+  courseTitle: string | null
+  programTitle: string | null
+  startsAtUtc: string
+  status: string
+  note: string | null
+}
+
+export function getMyAttendance() {
+  return apiRequest<LearnerAttendance[]>('/api/v1/learner/attendance')
+}
+
 export function getEnrollmentMaterials(enrollmentId: string) {
   return apiRequest<CourseMaterial[]>(`/api/v1/learner/enrollments/${enrollmentId}/materials`)
 }
@@ -189,6 +203,10 @@ export interface LearnerAssignment {
   dueAtUtc: string
   maxScore: number
   mySubmissionContent: string | null
+  mySubmissionType: 'Text' | 'Link' | 'File' | null
+  mySubmissionLinkUrl: string | null
+  mySubmissionFileName: string | null
+  mySubmissionFileSizeBytes: number | null
   mySubmittedAtUtc: string | null
   myScore: number | null
   myFeedback: string | null
@@ -207,6 +225,44 @@ export function submitAssignment(assignmentId: string, content: string) {
       body: JSON.stringify({ content }),
     },
   )
+}
+
+export function submitAssignmentLink(assignmentId: string, url: string) {
+  return apiRequest<{
+    assignmentId: string
+    content: string
+    submissionType: string
+    linkUrl: string | null
+    originalFileName: string | null
+    fileSizeBytes: number | null
+    submittedAtUtc: string
+  }>(`/api/v1/assignments/${assignmentId}/submit-link`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ url }),
+  })
+}
+
+export function submitAssignmentFile(assignmentId: string, file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  return apiRequest<{
+    assignmentId: string
+    content: string
+    submissionType: string
+    linkUrl: string | null
+    originalFileName: string | null
+    fileSizeBytes: number | null
+    submittedAtUtc: string
+  }>(`/api/v1/assignments/${assignmentId}/submit-file`, {
+    method: 'POST',
+    body: formData,
+  })
+}
+
+export function downloadMyAssignmentFile(assignmentId: string) {
+  return apiDownload(`/api/v1/assignments/${assignmentId}/submission/file`)
 }
 
 export interface LearnerProgress {

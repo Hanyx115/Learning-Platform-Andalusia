@@ -5,7 +5,7 @@ import { useAuthSession } from './session'
 
 export function AuthProfileProvider({ children }: { children: ReactNode }) {
   const tokens = useAuthSession()
-  const [loadedProfile, setLoadedProfile] = useState<Profile | null>(null)
+  const [loaded, setLoaded] = useState<{ accessToken: string; profile: Profile | null } | null>(null)
 
   useEffect(() => {
     if (!tokens) {
@@ -13,16 +13,17 @@ export function AuthProfileProvider({ children }: { children: ReactNode }) {
     }
 
     let isCurrent = true
+    const accessToken = tokens.accessToken
 
     getProfile()
       .then((profile) => {
         if (isCurrent) {
-          setLoadedProfile(profile)
+          setLoaded({ accessToken, profile })
         }
       })
       .catch(() => {
         if (isCurrent) {
-          setLoadedProfile(null)
+          setLoaded({ accessToken, profile: null })
         }
       })
 
@@ -33,7 +34,11 @@ export function AuthProfileProvider({ children }: { children: ReactNode }) {
 
   // Derived at render time so signing out clears the profile immediately, without waiting on an
   // extra effect-driven render.
-  const value = { profile: tokens ? loadedProfile : null }
+  const hasLoadedCurrentSession = Boolean(tokens && loaded?.accessToken === tokens.accessToken)
+  const value = {
+    profile: hasLoadedCurrentSession ? loaded?.profile ?? null : null,
+    isLoading: Boolean(tokens) && !hasLoadedCurrentSession,
+  }
 
   return (
     <AuthProfileContext.Provider value={value}>

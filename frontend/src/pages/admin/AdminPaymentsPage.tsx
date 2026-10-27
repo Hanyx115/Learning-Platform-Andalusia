@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
-import { getAllPayments, type AdminPayment } from '../../api/admin'
+import { failPendingPayment, getAllPayments, type AdminPayment } from '../../api/admin'
 import Container from '../../components/Container'
 
 function statusBadgeClass(status: string) {
@@ -20,6 +20,21 @@ function AdminPaymentsPage() {
   const [payments, setPayments] = useState<AdminPayment[] | null>(null)
   const [loadError, setLoadError] = useState('')
   const [isForbidden, setIsForbidden] = useState(false)
+  const [actionPaymentId, setActionPaymentId] = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
+
+  async function markFailed(paymentId: string) {
+    setActionPaymentId(paymentId)
+    setActionError('')
+    try {
+      const updated = await failPendingPayment(paymentId)
+      setPayments((current) => current?.map((payment) => payment.id === paymentId ? updated : payment) ?? null)
+    } catch (requestError: unknown) {
+      setActionError(getApiErrorMessage(requestError, t('adminPayments.errors.update')))
+    } finally {
+      setActionPaymentId(null)
+    }
+  }
 
   useEffect(() => {
     let isCurrent = true
@@ -64,6 +79,7 @@ function AdminPaymentsPage() {
       </div>
 
       {loadError ? <p className="auth-message auth-message--error" role="alert">{loadError}</p> : null}
+      {actionError ? <p className="auth-message auth-message--error" role="alert">{actionError}</p> : null}
 
       {payments === null ? (
         <p role="status">{t('adminPayments.loading')}</p>
@@ -83,6 +99,30 @@ function AdminPaymentsPage() {
                 <span>{payment.amount} {payment.currency}</span>
                 <span>{new Date(payment.createdAt).toLocaleDateString()}</span>
               </div>
+              <div>
+                <strong>{t('adminPayments.history')}</strong>
+                <ul>
+                  {payment.statusHistory.map((entry) => (
+                    <li key={entry.id}>
+                      {entry.status} · {new Date(entry.changedAt).toLocaleString()} · {entry.source}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {payment.status === 'Pending' ? (
+                <div className="dashboard-card__actions">
+                  <button
+                    type="button"
+                    className="button button--secondary"
+                    disabled={actionPaymentId === payment.id}
+                    onClick={() => void markFailed(payment.id)}
+                  >
+                    {actionPaymentId === payment.id
+                      ? t('adminPayments.updating')
+                      : t('adminPayments.markFailed')}
+                  </button>
+                </div>
+              ) : null}
             </article>
           ))}
         </div>

@@ -1,4 +1,5 @@
 using AndalusiaAcademy.Application.DTOs.Payments;
+using AndalusiaAcademy.Application.Enrollment;
 
 namespace AndalusiaAcademy.Application.Repositories;
 
@@ -17,4 +18,9 @@ public interface IPaymentRepository
     Task<IReadOnlyList<PaymentDto>> GetForUserAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<AdminPaymentDto>> GetAllAsync(CancellationToken cancellationToken);
+
+    Task<AdminPaymentActionOutcome> FailPendingAsync(
+        Guid paymentId,
+        Guid actingAdminUserId,
+        CancellationToken cancellationToken);
 }

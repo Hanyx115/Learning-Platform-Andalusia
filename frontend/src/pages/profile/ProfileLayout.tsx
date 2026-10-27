@@ -27,6 +27,9 @@ function ProfileLayout() {
               <NavLink to="/profile/schedule" className="profile-dashboard__link">
                 {t('profileNav.schedule')}
               </NavLink>
+              <NavLink to="/profile/attendance" className="profile-dashboard__link">
+                {t('profileNav.attendance')}
+              </NavLink>
             </>
           ) : null}
         </nav>

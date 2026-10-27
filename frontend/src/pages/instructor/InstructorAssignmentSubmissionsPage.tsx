@@ -2,8 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
-import { getAssignmentSubmissions, gradeSubmission, type SubmissionRecord } from '../../api/instructor'
+import {
+  downloadLearnerAssignmentFile,
+  getAssignmentSubmissions,
+  gradeSubmission,
+  type SubmissionRecord,
+} from '../../api/instructor'
 import Container from '../../components/Container'
+import { saveBlob } from '../../utils/download'
 
 function InstructorAssignmentSubmissionsPage() {
   const { t } = useTranslation()
@@ -14,6 +20,7 @@ function InstructorAssignmentSubmissionsPage() {
   const [isForbidden, setIsForbidden] = useState(false)
   const [gradeDrafts, setGradeDrafts] = useState<Record<string, { score: string; feedback: string }>>({})
   const [gradingUserId, setGradingUserId] = useState<string | null>(null)
+  const [downloadingUserId, setDownloadingUserId] = useState<string | null>(null)
   const [gradeErrors, setGradeErrors] = useState<Record<string, string>>({})
 
   const applySubmissions = useCallback((loaded: SubmissionRecord[]) => {
@@ -98,6 +105,26 @@ function InstructorAssignmentSubmissionsPage() {
     }
   }
 
+  async function handleDownload(userId: string, fileName: string) {
+    if (!assignmentId) {
+      return
+    }
+
+    setDownloadingUserId(userId)
+    setGradeErrors((previous) => ({ ...previous, [userId]: '' }))
+
+    try {
+      saveBlob(await downloadLearnerAssignmentFile(assignmentId, userId), fileName)
+    } catch (requestError) {
+      setGradeErrors((previous) => ({
+        ...previous,
+        [userId]: getApiErrorMessage(requestError, t('instructorSubmissions.errors.download')),
+      }))
+    } finally {
+      setDownloadingUserId(null)
+    }
+  }
+
   return (
     <section className="dashboard-section">
       <div className="dashboard-section__heading">
@@ -121,7 +148,9 @@ function InstructorAssignmentSubmissionsPage() {
         <div className="dashboard-list">
           {submissions.map((submission) => {
             const isBusy = gradingUserId === submission.userId
+            const isDownloading = downloadingUserId === submission.userId
             const gradeError = gradeErrors[submission.userId]
+            const hasSubmission = submission.submittedAtUtc !== null
 
             return (
               <article key={submission.userId} className="dashboard-card">
@@ -130,7 +159,20 @@ function InstructorAssignmentSubmissionsPage() {
                   <span>{submission.email}</span>
                 </div>
 
-                {submission.content ? (
+                {submission.submissionType === 'File' && submission.originalFileName ? (
+                  <button
+                    className="submission-file-link"
+                    type="button"
+                    disabled={isDownloading}
+                    onClick={() => void handleDownload(submission.userId, submission.originalFileName!)}
+                  >
+                    {isDownloading ? t('instructorSubmissions.downloading') : submission.originalFileName}
+                  </button>
+                ) : submission.submissionType === 'Link' && submission.linkUrl ? (
+                  <a href={submission.linkUrl} target="_blank" rel="noreferrer">
+                    {submission.linkUrl}
+                  </a>
+                ) : submission.content ? (
                   <p dir="auto">{submission.content}</p>
                 ) : (
                   <p className="auth-message auth-message--error">{t('instructorSubmissions.notSubmitted')}</p>
@@ -144,7 +186,7 @@ function InstructorAssignmentSubmissionsPage() {
                     type="number"
                     min={0}
                     step="0.01"
-                    disabled={!submission.content}
+                    disabled={!hasSubmission}
                     value={gradeDrafts[submission.userId]?.score ?? ''}
                     onChange={(event) =>
                       setGradeDrafts((previous) => ({
@@ -158,7 +200,7 @@ function InstructorAssignmentSubmissionsPage() {
                   {t('instructorSubmissions.feedbackLabel')}
                   <textarea
                     rows={2}
-                    disabled={!submission.content}
+                    disabled={!hasSubmission}
                     value={gradeDrafts[submission.userId]?.feedback ?? ''}
                     onChange={(event) =>
                       setGradeDrafts((previous) => ({
@@ -173,7 +215,7 @@ function InstructorAssignmentSubmissionsPage() {
                   <button
                     className="button button--primary"
                     type="button"
-                    disabled={isBusy || !submission.content}
+                    disabled={isBusy || !hasSubmission}
                     onClick={() => void handleGrade(submission.userId)}
                   >
                     {isBusy ? t('instructorSubmissions.grading') : t('instructorSubmissions.grade')}

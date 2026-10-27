@@ -14,4 +14,5 @@ public sealed record AdminPaymentDto(
     string Currency,
     string Status,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? CompletedAt);
+    DateTimeOffset? CompletedAt,
+    IReadOnlyList<PaymentStatusHistoryDto> StatusHistory);

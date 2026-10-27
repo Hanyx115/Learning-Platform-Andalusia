@@ -43,6 +43,24 @@ export interface AdminPayment {
   status: string
   createdAt: string
   completedAt: string | null
+  statusHistory: PaymentStatusHistory[]
+}
+
+export interface PaymentStatusHistory {
+  id: string
+  status: string
+  changedAt: string
+  source: string
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  phoneNumber: string
+  isActive: boolean
+  roles: string[]
 }
 
 export interface ManageOfferingRequest {
@@ -270,6 +288,32 @@ export function getAllEnrollments() {
 
 export function getAllPayments() {
   return apiRequest<AdminPayment[]>('/api/v1/payments')
+}
+
+export function failPendingPayment(paymentId: string) {
+  return apiRequest<AdminPayment>(`/api/v1/payments/${paymentId}/fail`, {
+    method: 'POST',
+  })
+}
+
+export function getAdminUsers() {
+  return apiRequest<AdminUser[]>('/api/v1/admin/users')
+}
+
+export function updateAdminUserStatus(userId: string, isActive: boolean) {
+  return apiRequest<AdminUser>(`/api/v1/admin/users/${userId}/status`, {
+    method: 'PUT',
+    headers: jsonHeaders,
+    body: JSON.stringify({ isActive }),
+  })
+}
+
+export function updateAdminUserRoles(userId: string, roles: string[]) {
+  return apiRequest<AdminUser>(`/api/v1/admin/users/${userId}/roles`, {
+    method: 'PUT',
+    headers: jsonHeaders,
+    body: JSON.stringify({ roles }),
+  })
 }
 
 export function getUsersInRole(role: string) {

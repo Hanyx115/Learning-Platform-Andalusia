@@ -134,15 +134,41 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("FileContentType")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTimeOffset?>("GradedAtUtc")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("GradedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<decimal?>("Score")
                         .HasPrecision(6, 2)
                         .HasColumnType("decimal(6,2)");
+
+                    b.Property<string>("StoredFileName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SubmissionType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Text");
 
                     b.Property<DateTimeOffset>("SubmittedAtUtc")
                         .HasColumnType("datetimeoffset");
@@ -161,9 +187,13 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
 
                     b.ToTable("AssignmentSubmissions", null, t =>
                         {
+                            t.HasCheckConstraint("CK_AssignmentSubmissions_ContentShape", "([SubmissionType] = 'Text' AND [LinkUrl] IS NULL AND [StoredFileName] IS NULL) OR ([SubmissionType] = 'Link' AND [LinkUrl] IS NOT NULL AND [StoredFileName] IS NULL) OR ([SubmissionType] = 'File' AND [LinkUrl] IS NULL AND [OriginalFileName] IS NOT NULL AND [StoredFileName] IS NOT NULL AND [FileContentType] IS NOT NULL AND [FileSizeBytes] > 0)");
+
                             t.HasCheckConstraint("CK_AssignmentSubmissions_Grading", "([Score] IS NULL AND [GradedByUserId] IS NULL AND [GradedAtUtc] IS NULL) OR ([Score] IS NOT NULL AND [GradedByUserId] IS NOT NULL AND [GradedAtUtc] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_AssignmentSubmissions_ScoreNonNegative", "[Score] IS NULL OR [Score] >= 0");
+
+                            t.HasCheckConstraint("CK_AssignmentSubmissions_SubmissionType", "[SubmissionType] IN ('Text', 'Link', 'File')");
                         });
                 });
 

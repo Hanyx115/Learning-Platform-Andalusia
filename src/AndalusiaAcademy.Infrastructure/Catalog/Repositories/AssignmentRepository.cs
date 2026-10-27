@@ -114,7 +114,8 @@ public sealed class AssignmentRepository(ApplicationDbContext dbContext) : IAssi
                 submissions.TryGetValue(learner.UserId, out var submission);
                 return new SubmissionRecordDto(
                     learner.UserId, learner.LearnerName, learner.Email,
-                    submission?.Content, submission?.SubmittedAtUtc,
+                    submission?.Content, submission?.SubmissionType, submission?.LinkUrl,
+                    submission?.OriginalFileName, submission?.FileSizeBytes, submission?.SubmittedAtUtc,
                     submission?.Score, submission?.Feedback, submission?.GradedAtUtc);
             })
             .ToList();
@@ -125,14 +126,18 @@ public sealed class AssignmentRepository(ApplicationDbContext dbContext) : IAssi
             submission => submission.AssignmentId == assignmentId && submission.UserId == userId, cancellationToken);
 
     public async Task UpsertSubmissionAsync(
-        Guid assignmentId, Guid userId, string content, DateTimeOffset submittedAtUtc, CancellationToken cancellationToken)
+        Guid assignmentId,
+        Guid userId,
+        AssignmentSubmissionWriteModel submission,
+        DateTimeOffset submittedAtUtc,
+        CancellationToken cancellationToken)
     {
         var existing = await dbContext.AssignmentSubmissions.FirstOrDefaultAsync(
             submission => submission.AssignmentId == assignmentId && submission.UserId == userId, cancellationToken);
 
         if (existing is not null)
         {
-            existing.Content = content;
+            ApplySubmission(existing, submission);
             existing.SubmittedAtUtc = submittedAtUtc;
         }
         else
@@ -142,7 +147,13 @@ public sealed class AssignmentRepository(ApplicationDbContext dbContext) : IAssi
                 Id = Guid.NewGuid(),
                 AssignmentId = assignmentId,
                 UserId = userId,
-                Content = content,
+                Content = submission.Content,
+                SubmissionType = submission.SubmissionType,
+                LinkUrl = submission.LinkUrl,
+                OriginalFileName = submission.OriginalFileName,
+                StoredFileName = submission.StoredFileName,
+                FileContentType = submission.FileContentType,
+                FileSizeBytes = submission.FileSizeBytes,
                 SubmittedAtUtc = submittedAtUtc,
             });
         }
@@ -219,12 +230,27 @@ public sealed class AssignmentRepository(ApplicationDbContext dbContext) : IAssi
                     assignment.CourseOfferingId, assignment.CourseTitle,
                     assignment.ProgramOfferingId, assignment.ProgramTitle,
                     assignment.DueAtUtc, assignment.MaxScore,
-                    submission?.Content, submission?.SubmittedAtUtc, submission?.Score, submission?.Feedback);
+                    submission?.Content, submission?.SubmissionType, submission?.LinkUrl,
+                    submission?.OriginalFileName, submission?.FileSizeBytes,
+                    submission?.SubmittedAtUtc, submission?.Score, submission?.Feedback);
             })
             .ToList();
     }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
+
+    private static void ApplySubmission(
+        AssignmentSubmission target,
+        AssignmentSubmissionWriteModel submission)
+    {
+        target.Content = submission.Content;
+        target.SubmissionType = submission.SubmissionType;
+        target.LinkUrl = submission.LinkUrl;
+        target.OriginalFileName = submission.OriginalFileName;
+        target.StoredFileName = submission.StoredFileName;
+        target.FileContentType = submission.FileContentType;
+        target.FileSizeBytes = submission.FileSizeBytes;
+    }
 
     private static readonly Expression<Func<Assignment, AssignmentDto>> ToDto = assignment => new AssignmentDto(
         assignment.Id,
