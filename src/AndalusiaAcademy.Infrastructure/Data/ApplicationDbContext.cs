@@ -55,6 +55,16 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<LearnerEnrollment> Enrollments => Set<LearnerEnrollment>();
 
+    public DbSet<CmsContentItem> CmsContentItems => Set<CmsContentItem>();
+
+    public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
+
+    public DbSet<NotificationDelivery> NotificationDeliveries => Set<NotificationDelivery>();
+
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

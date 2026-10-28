@@ -21,4 +21,6 @@ public class Payment
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? CompletedAt { get; set; }
+
+    public ICollection<PaymentStatusHistory> StatusHistory { get; set; } = [];
 }

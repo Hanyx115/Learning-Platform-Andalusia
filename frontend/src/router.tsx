@@ -7,7 +7,6 @@ import ForbiddenPage from './pages/ForbiddenPage'
 import ForBusinessPage from './pages/ForBusinessPage'
 import HomePage from './pages/HomePage'
 import NotFoundPage from './pages/NotFoundPage'
-import PlaceholderPage from './pages/PlaceholderPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import LoginPage from './pages/auth/LoginPage'
 import ProfilePage from './pages/auth/ProfilePage'
@@ -44,6 +43,13 @@ import AdminInstructorsPage from './pages/admin/AdminInstructorsPage'
 import AdminPaymentsPage from './pages/admin/AdminPaymentsPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminCourseMaterialsPage from './pages/admin/AdminCourseMaterialsPage'
+import FaqPage from './pages/FaqPage'
+import InstructorsPage from './pages/InstructorsPage'
+import NotificationsPage from './pages/profile/NotificationsPage'
+import PaymentHistoryPage from './pages/profile/PaymentHistoryPage'
+import CmsLayout from './pages/cms/CmsLayout'
+import CmsContentPage from './pages/cms/CmsContentPage'
+import CmsNotificationsPage from './pages/cms/CmsNotificationsPage'
 
 export const router = createBrowserRouter([
   {
@@ -88,7 +94,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'faq',
-        element: <PlaceholderPage titleKey="faq.title" descriptionKey="faq.description" />,
+        element: <FaqPage />,
+      },
+      {
+        path: 'instructors',
+        element: <InstructorsPage />,
       },
       {
         path: 'contact',
@@ -130,6 +140,10 @@ export const router = createBrowserRouter([
                 element: <ProfilePage />,
               },
               {
+                path: 'notifications',
+                element: <NotificationsPage />,
+              },
+              {
                 element: <ProtectedRoute allowedRoles={['Learner']} />,
                 children: [
                   {
@@ -151,6 +165,33 @@ export const router = createBrowserRouter([
                   {
                     path: 'attendance',
                     element: <AttendancePage />,
+                  },
+                  {
+                    path: 'payments',
+                    element: <PaymentHistoryPage />,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            element: <ProtectedRoute allowedRoles={['ContentManager', 'Admin']} />,
+            children: [
+              {
+                path: 'cms',
+                element: <CmsLayout />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="/cms/content" replace />,
+                  },
+                  {
+                    path: 'content',
+                    element: <CmsContentPage />,
+                  },
+                  {
+                    path: 'notifications',
+                    element: <CmsNotificationsPage />,
                   },
                 ],
               },

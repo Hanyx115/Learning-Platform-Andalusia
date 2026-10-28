@@ -16,6 +16,7 @@ function FeaturedCoursesPrograms() {
 
   return (
     <Section
+      contentKey="featured"
       className="featured"
       eyebrowKey="home.featured.eyebrow"
       titleKey="home.featured.title"

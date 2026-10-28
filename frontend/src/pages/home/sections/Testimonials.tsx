@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import Card from '../../../components/Card'
 import Section from '../../../components/Section'
+import { localizeCmsItem, useCmsItems } from '../CmsHomepageContent'
 
 interface TestimonialItem {
   quote: string
@@ -9,11 +10,20 @@ interface TestimonialItem {
 }
 
 function Testimonials() {
-  const { t } = useTranslation()
-  const items = t('home.testimonials.items', { returnObjects: true }) as TestimonialItem[]
+  const { t, i18n } = useTranslation()
+  const managedItems = useCmsItems('Testimonial')
+  const fallbackItems = t('home.testimonials.items', { returnObjects: true }) as TestimonialItem[]
+  const items = managedItems.length > 0
+    ? managedItems.map((item) => {
+        const localized = localizeCmsItem(item, i18n.resolvedLanguage)
+        const [name, role = ''] = localized.title.split(' - ', 2)
+        return { quote: localized.body, name, role }
+      })
+    : fallbackItems
 
   return (
     <Section
+      contentKey="testimonials"
       className="testimonials"
       eyebrowKey="home.testimonials.eyebrow"
       titleKey="home.testimonials.title"

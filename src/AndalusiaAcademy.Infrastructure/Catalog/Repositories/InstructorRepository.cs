@@ -167,4 +167,30 @@ public sealed class InstructorRepository(ApplicationDbContext dbContext) : IInst
             .OrderBy(student => student.LearnerName)
             .ToList();
     }
+
+    public async Task<IReadOnlyList<Guid>> GetInstructorUserIdsForOfferingAsync(
+        Guid? courseOfferingId,
+        Guid? programOfferingId,
+        CancellationToken cancellationToken)
+    {
+        if (courseOfferingId.HasValue)
+        {
+            return await dbContext.CourseSessions.AsNoTracking()
+                .Where(session => session.CourseOfferingId == courseOfferingId.Value && session.InstructorUserId != null)
+                .Select(session => session.InstructorUserId!.Value)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
+        if (programOfferingId.HasValue)
+        {
+            return await dbContext.ProgramSessions.AsNoTracking()
+                .Where(session => session.ProgramOfferingId == programOfferingId.Value && session.InstructorUserId != null)
+                .Select(session => session.InstructorUserId!.Value)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
+        return [];
+    }
 }

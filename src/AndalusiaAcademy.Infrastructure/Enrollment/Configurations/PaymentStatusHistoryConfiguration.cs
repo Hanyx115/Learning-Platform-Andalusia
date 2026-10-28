@@ -22,7 +22,7 @@ public sealed class PaymentStatusHistoryConfiguration : IEntityTypeConfiguration
             .IsRequired();
 
         builder.HasOne(history => history.Payment)
-            .WithMany()
+            .WithMany(payment => payment.StatusHistory)
             .HasForeignKey(history => history.PaymentId)
             .OnDelete(DeleteBehavior.Cascade);
 

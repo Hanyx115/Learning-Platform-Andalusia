@@ -177,7 +177,11 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
 
         var paymentDto = new PaymentDto(
             payment.Id, payment.ApplicationId, payment.Amount, payment.Currency, payment.Status,
-            payment.CreatedAt, payment.CompletedAt);
+            payment.CreatedAt, payment.CompletedAt,
+            [
+                new PaymentStatusHistoryDto(Guid.Empty, PaymentStatus.Pending, payment.CreatedAt, Source),
+                new PaymentStatusHistoryDto(Guid.Empty, PaymentStatus.Succeeded, completedAt, Source),
+            ]);
 
         var enrollmentDto = new EnrollmentDto(
             enrollment.Id, enrollment.ApplicationId, enrollment.PaymentId,
@@ -210,7 +214,12 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             .OrderByDescending(payment => payment.CreatedAt)
             .Select(payment => new PaymentDto(
                 payment.Id, payment.ApplicationId, payment.Amount, payment.Currency, payment.Status,
-                payment.CreatedAt, payment.CompletedAt))
+                payment.CreatedAt, payment.CompletedAt,
+                payment.StatusHistory
+                    .OrderBy(history => history.ChangedAt)
+                    .Select(history => new PaymentStatusHistoryDto(
+                        history.Id, history.Status, history.ChangedAt, history.Source))
+                    .ToList()))
             .ToListAsync(cancellationToken);
     }
 

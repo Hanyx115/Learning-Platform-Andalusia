@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import Container from './Container'
 import './Section.css'
+import { useLocalizedCmsItem } from '../pages/home/CmsHomepageContent'
 
 interface SectionProps {
   id?: string
@@ -10,10 +11,12 @@ interface SectionProps {
   descriptionKey?: string
   className?: string
   children?: ReactNode
+  contentKey?: string
 }
 
-function Section({ id, eyebrowKey, titleKey, descriptionKey, className, children }: SectionProps) {
+function Section({ id, eyebrowKey, titleKey, descriptionKey, className, children, contentKey }: SectionProps) {
   const { t } = useTranslation()
+  const managed = useLocalizedCmsItem('HomepageSection', contentKey ?? '')
   const sectionClassName = className ? `home-section ${className}` : 'home-section'
 
   return (
@@ -21,8 +24,10 @@ function Section({ id, eyebrowKey, titleKey, descriptionKey, className, children
       <Container>
         <header className="home-section__header">
           {eyebrowKey ? <p className="home-section__eyebrow">{t(eyebrowKey)}</p> : null}
-          <h2 className="home-section__title">{t(titleKey)}</h2>
-          {descriptionKey ? <p className="home-section__description">{t(descriptionKey)}</p> : null}
+          <h2 className="home-section__title">{managed?.title ?? t(titleKey)}</h2>
+          {descriptionKey || managed?.body ? (
+            <p className="home-section__description">{managed?.body ?? t(descriptionKey!)}</p>
+          ) : null}
         </header>
         {children}
       </Container>

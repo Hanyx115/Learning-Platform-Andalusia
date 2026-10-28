@@ -143,6 +143,29 @@
   justify-self: start;
 }
 
+.faq-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.faq-item {
+  padding: 1rem 1.2rem;
+  border: 1px solid rgb(52 74 78 / 14%);
+  border-radius: 0.8rem;
+  background: var(--color-surface);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.faq-item p {
+  margin-block-end: 0;
+  line-height: 1.7;
+}
+
 @media (min-width: 48rem) {
   .about-grid,
   .contact-layout {

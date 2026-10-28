@@ -1,14 +1,18 @@
 using AndalusiaAcademy.Application.DTOs.Assignments;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Application.Notifications;
 using AndalusiaAcademy.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace AndalusiaAcademy.Application.Services;
 
 public sealed class AssignmentService(
     IAssignmentRepository repository,
     IAssignmentSubmissionFileStore fileStore,
-    TimeProvider timeProvider)
+    INotificationOutbox notificationOutbox,
+    TimeProvider timeProvider,
+    ILogger<AssignmentService> logger)
 {
     public const long MaximumSubmissionFileSizeBytes = 10 * 1024 * 1024;
 
@@ -182,6 +186,7 @@ public sealed class AssignmentService(
             submittedAtUtc,
             cancellationToken);
         await DeletePreviousFileAsync(previousStoredFileName, cancellationToken);
+        await QueueSubmissionNotificationAsync(validation.Assignment!, learnerUserId, submittedAtUtc, cancellationToken);
 
         return SchedulingMutationOutcome<SubmissionConfirmationDto>.Success(
             new SubmissionConfirmationDto(
@@ -218,6 +223,7 @@ public sealed class AssignmentService(
             submittedAtUtc,
             cancellationToken);
         await DeletePreviousFileAsync(previousStoredFileName, cancellationToken);
+        await QueueSubmissionNotificationAsync(validation.Assignment!, learnerUserId, submittedAtUtc, cancellationToken);
 
         return SchedulingMutationOutcome<SubmissionConfirmationDto>.Success(
             new SubmissionConfirmationDto(
@@ -299,6 +305,8 @@ public sealed class AssignmentService(
             await DeletePreviousFileAsync(previousStoredFileName, cancellationToken);
         }
 
+        await QueueSubmissionNotificationAsync(validation.Assignment!, learnerUserId, submittedAtUtc, cancellationToken);
+
         return SchedulingMutationOutcome<SubmissionConfirmationDto>.Success(
             new SubmissionConfirmationDto(
                 assignmentId,
@@ -365,7 +373,7 @@ public sealed class AssignmentService(
                 SchedulingFailureKind.Conflict, "This assignment has already been graded and can no longer be resubmitted.");
         }
 
-        return SubmissionValidation.Success(existing);
+        return SubmissionValidation.Success(assignment, existing);
     }
 
     private async Task<SchedulingMutationOutcome<AssignmentSubmissionFileDto>> OpenSubmissionFileAsync(
@@ -399,16 +407,44 @@ public sealed class AssignmentService(
     private static string? NormalizeOptional(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
+    private async Task QueueSubmissionNotificationAsync(
+        Assignment assignment,
+        Guid learnerUserId,
+        DateTimeOffset submittedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await notificationOutbox.EnqueueAsync(
+                new NotificationEventRequest(
+                    $"assignment-submitted:{assignment.Id:N}:{learnerUserId:N}:{submittedAtUtc.UtcTicks}",
+                    NotificationTemplateCodes.AssignmentSubmitted,
+                    [assignment.CreatedByUserId],
+                    new Dictionary<string, string>
+                    {
+                        ["learnerName"] = "Learner",
+                        ["assignmentTitle"] = assignment.Title,
+                    },
+                    $"/instructor/assignments/{assignment.Id}/submissions"),
+                cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(exception, "Could not queue assignment notification for {AssignmentId}.", assignment.Id);
+        }
+    }
+
     private sealed record SubmissionValidation(
         bool Succeeded,
+        Assignment? Assignment,
         AssignmentSubmission? ExistingSubmission,
         SchedulingFailureKind? FailureKind,
         string? Error)
     {
-        public static SubmissionValidation Success(AssignmentSubmission? existingSubmission)
-            => new(true, existingSubmission, null, null);
+        public static SubmissionValidation Success(Assignment assignment, AssignmentSubmission? existingSubmission)
+            => new(true, assignment, existingSubmission, null, null);
 
         public static SubmissionValidation Failure(SchedulingFailureKind kind, string error)
-            => new(false, null, kind, error);
+            => new(false, null, null, kind, error);
     }
 }

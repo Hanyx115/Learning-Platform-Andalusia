@@ -19,6 +19,7 @@ function Header() {
   const { profile } = useAuthProfile()
   const canReviewApplications = profile?.roles.includes('Manager') || profile?.roles.includes('Admin')
   const isInstructor = profile?.roles.includes('Instructor') ?? false
+  const canManageContent = profile?.roles.includes('ContentManager') || profile?.roles.includes('Admin')
   const [isNavOpen, setIsNavOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const navToggleRef = useRef<HTMLButtonElement>(null)
@@ -84,6 +85,18 @@ function Header() {
                       {t('nav.profile')}
                     </NavLink>
                   </li>
+                  <li className="site-nav__auth-item">
+                    <NavLink className="site-nav__link" to="/profile/notifications" onClick={() => setIsNavOpen(false)}>
+                      {t('nav.notifications')}
+                    </NavLink>
+                  </li>
+                  {canManageContent ? (
+                    <li className="site-nav__auth-item">
+                      <NavLink className="site-nav__link" to="/cms" onClick={() => setIsNavOpen(false)}>
+                        {t('nav.cmsDashboard')}
+                      </NavLink>
+                    </li>
+                  ) : null}
                   {canReviewApplications ? (
                     <li className="site-nav__auth-item">
                       <NavLink className="site-nav__link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
@@ -141,6 +154,14 @@ function Header() {
                 <NavLink className="site-header__auth-link" to="/profile" onClick={() => setIsNavOpen(false)}>
                   {t('nav.profile')}
                 </NavLink>
+                <NavLink className="site-header__auth-link" to="/profile/notifications" onClick={() => setIsNavOpen(false)}>
+                  {t('nav.notifications')}
+                </NavLink>
+                {canManageContent ? (
+                  <NavLink className="site-header__auth-link" to="/cms" onClick={() => setIsNavOpen(false)}>
+                    {t('nav.cmsDashboard')}
+                  </NavLink>
+                ) : null}
                 {canReviewApplications ? (
                   <NavLink className="site-header__auth-link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
                     {t('nav.reviewApplications')}

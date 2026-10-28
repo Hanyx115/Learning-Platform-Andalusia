@@ -260,6 +260,10 @@
   grid-column: 1 / -1;
 }
 
+.notification-card--unread {
+  border-inline-start: 0.35rem solid var(--color-brand);
+}
+
 @media (max-width: 56rem) {
   .profile-dashboard__layout {
     grid-template-columns: 1fr;

@@ -13,6 +13,7 @@ function ComingSoon() {
 
   return (
     <Section
+      contentKey="coming-soon"
       className="coming-soon"
       eyebrowKey="home.comingSoon.eyebrow"
       titleKey="home.comingSoon.title"

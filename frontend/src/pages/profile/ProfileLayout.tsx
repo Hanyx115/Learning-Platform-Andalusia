@@ -16,6 +16,9 @@ function ProfileLayout() {
           <NavLink to="/profile" end className="profile-dashboard__link">
             {t('profileNav.profile')}
           </NavLink>
+          <NavLink to="/profile/notifications" className="profile-dashboard__link">
+            {t('profileNav.notifications')}
+          </NavLink>
           {isLearner ? (
             <>
               <NavLink to="/profile/applications" className="profile-dashboard__link">
@@ -29,6 +32,9 @@ function ProfileLayout() {
               </NavLink>
               <NavLink to="/profile/attendance" className="profile-dashboard__link">
                 {t('profileNav.attendance')}
+              </NavLink>
+              <NavLink to="/profile/payments" className="profile-dashboard__link">
+                {t('profileNav.payments')}
               </NavLink>
             </>
           ) : null}
