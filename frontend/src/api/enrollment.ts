@@ -66,6 +66,14 @@ export interface Payment {
   status: string
   createdAt: string
   completedAt: string | null
+  statusHistory?: PaymentStatusHistory[]
+}
+
+export interface PaymentStatusHistory {
+  id: string
+  status: string
+  changedAt: string
+  source: string
 }
 
 export interface Enrollment {

@@ -1,0 +1,18 @@
+.cms-page { max-width: 70rem; }
+.cms-form { gap: 1rem; }
+.cms-form h2 { margin: 0; color: var(--color-primary-dark); }
+.cms-form__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.cms-form label, .cms-filter { display: grid; gap: 0.4rem; font-weight: 700; }
+.cms-form input, .cms-form select, .cms-form textarea, .cms-filter select {
+  width: 100%; padding: 0.7rem 0.8rem; border: 1px solid rgb(52 74 78 / 28%); border-radius: 0.55rem;
+  background: var(--color-surface); color: var(--color-text); font: inherit;
+}
+.cms-form textarea { resize: vertical; }
+.cms-form__wide { grid-column: 1 / -1; }
+.cms-checkbox { display: flex !important; flex-direction: row; align-items: center; }
+.cms-checkbox input { width: auto; }
+.cms-field__hint { color: var(--color-text-secondary); font-size: 0.8rem; font-weight: 400; line-height: 1.4; }
+.cms-filter { max-width: 24rem; }
+.form-error { color: #7a1f1f; font-weight: 700; }
+.form-success { color: #215d3b; font-weight: 700; }
+@media (max-width: 44rem) { .cms-form__grid { grid-template-columns: 1fr; } .cms-form__wide { grid-column: auto; } }

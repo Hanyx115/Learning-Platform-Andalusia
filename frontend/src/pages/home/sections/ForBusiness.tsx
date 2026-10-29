@@ -9,6 +9,7 @@ function ForBusiness() {
 
   return (
     <Section
+      contentKey="for-business"
       className="for-business"
       eyebrowKey="home.forBusiness.eyebrow"
       titleKey="home.forBusiness.title"

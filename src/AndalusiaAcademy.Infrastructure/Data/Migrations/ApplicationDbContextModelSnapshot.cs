@@ -266,6 +266,437 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.ToTable("CareerPathPrograms");
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CmsContentItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BodyAr")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("BodyEn")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("RelatedUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TitleAr")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("TitleEn")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RelatedUserId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.HasIndex("ContentType", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("ContentType", "IsPublished", "DisplayOrder");
+
+                    b.ToTable("CmsContentItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CmsContentItems_DisplayOrder", "[DisplayOrder] >= 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000001"),
+                            BodyAr = "استكشف دورات وبرامج ومسارات مهنية يقودها خبراء ومصممة حول احتياجات سوق العمل.",
+                            BodyEn = "Explore expert-led courses, programs, and career paths designed around real work.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 10,
+                            IsPublished = true,
+                            Key = "hero",
+                            TitleAr = "طوّر مهارات عملية لخطوتك المهنية القادمة",
+                            TitleEn = "Build practical skills for your next professional step",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000002"),
+                            BodyAr = "تعرّف على المهارات والدورات والبرامج التي تساعدك على التقدم.",
+                            BodyEn = "See the skills, courses, and programs that can move you forward.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 20,
+                            IsPublished = true,
+                            Key = "career-paths",
+                            TitleAr = "اختر مسارك المهني بثقة",
+                            TitleEn = "Choose a career path with confidence",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000003"),
+                            BodyAr = "ابدأ باستكشاف المجالات الأكثر اختياراً من المتعلمين.",
+                            BodyEn = "Start exploring the subjects learners are choosing most.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 30,
+                            IsPublished = true,
+                            Key = "categories",
+                            TitleAr = "تصفح حسب التصنيف",
+                            TitleEn = "Browse by category",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000004"),
+                            BodyAr = "اكتشف أحدث الدورات والبرامج المنشورة.",
+                            BodyEn = "Discover recently published courses and programs.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 40,
+                            IsPublished = true,
+                            Key = "featured",
+                            TitleAr = "فرص تعلم مميزة",
+                            TitleEn = "Featured learning opportunities",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000005"),
+                            BodyAr = "المزيد من تجارب التعلم العملية في الطريق.",
+                            BodyEn = "More practical learning experiences are on the way.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 50,
+                            IsPublished = true,
+                            Key = "coming-soon",
+                            TitleAr = "قريباً",
+                            TitleEn = "Coming soon",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000006"),
+                            BodyAr = "ابنِ برامج تطوير مهارات موجهة لفرقك.",
+                            BodyEn = "Build targeted capability programs for your teams.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 60,
+                            IsPublished = true,
+                            Key = "for-business",
+                            TitleAr = "حلول تعلم للمؤسسات",
+                            TitleEn = "Learning solutions for organizations",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000007"),
+                            BodyAr = "مجموعة توضيحية من المؤسسات ضمن تجربة المرحلة الأولى.",
+                            BodyEn = "A demonstration set of organizations represented for the Phase 1 experience.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 70,
+                            IsPublished = true,
+                            Key = "partners",
+                            TitleAr = "موثوق بنا من مؤسسات طموحة",
+                            TitleEn = "Trusted by ambitious organizations",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000008"),
+                            BodyAr = "قصص متعلمين يطورون قدراتهم العملية.",
+                            BodyEn = "Stories from learners building practical capability.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 80,
+                            IsPublished = true,
+                            Key = "testimonials",
+                            TitleAr = "ماذا يقول المتعلمون",
+                            TitleEn = "What learners say",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000009"),
+                            BodyAr = "أنشئ حسابك واستكشف الخطوة المناسبة التالية.",
+                            BodyEn = "Create your account and explore the right next step.",
+                            ContentType = "HomepageSection",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 90,
+                            IsPublished = true,
+                            Key = "cta",
+                            TitleAr = "هل أنت مستعد لبدء التعلم؟",
+                            TitleEn = "Ready to start learning?",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b2000000-0000-0000-0000-000000000001"),
+                            BodyAr = "نربط التعلم العملي بالنمو المهني الهادف.",
+                            BodyEn = "We connect practical learning with meaningful professional growth.",
+                            ContentType = "PublicPage",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 10,
+                            IsPublished = true,
+                            Key = "about",
+                            TitleAr = "عن أكاديمية أندلسية",
+                            TitleEn = "About Andalusia Academy",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b2000000-0000-0000-0000-000000000002"),
+                            BodyAr = "فريقنا جاهز لمساعدتك في اختيار والوصول إلى فرصة التعلم المناسبة.",
+                            BodyEn = "Our team is ready to help you choose and access the right learning opportunity.",
+                            ContentType = "PublicPage",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 20,
+                            IsPublished = true,
+                            Key = "contact",
+                            TitleAr = "التواصل والدعم",
+                            TitleEn = "Contact and support",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b2000000-0000-0000-0000-000000000003"),
+                            BodyAr = "أنشئ تجارب تعلم مركزة للفرق والمؤسسات.",
+                            BodyEn = "Create focused learning experiences for teams and organizations.",
+                            ContentType = "PublicPage",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 30,
+                            IsPublished = true,
+                            Key = "for-business",
+                            TitleAr = "تعلم للقوى العاملة يواكب أعمالك",
+                            TitleEn = "Workforce learning that moves with your business",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b3000000-0000-0000-0000-000000000001"),
+                            BodyAr = "اختر إنشاء حساب، وأكمل نموذج التسجيل، ثم سجّل الدخول بالبريد الإلكتروني وكلمة المرور.",
+                            BodyEn = "Choose Create account, complete the registration form, and sign in with your email and password.",
+                            ContentType = "Faq",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 10,
+                            IsPublished = true,
+                            Key = "create-account",
+                            TitleAr = "كيف أنشئ حساباً؟",
+                            TitleEn = "How do I create an account?",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b3000000-0000-0000-0000-000000000002"),
+                            BodyAr = "افتح دورة منشورة، واختر دفعة متاحة، ثم قدم طلبك بعد تسجيل الدخول كمتعلم.",
+                            BodyEn = "Open a published course, select an available intake, and submit your application while signed in as a learner.",
+                            ContentType = "Faq",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 20,
+                            IsPublished = true,
+                            Key = "apply",
+                            TitleAr = "كيف أقدم على دورة؟",
+                            TitleEn = "How do I apply for a course?",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b3000000-0000-0000-0000-000000000003"),
+                            BodyAr = "يتاح الدفع بعد قبول طلبك.",
+                            BodyEn = "Payment becomes available after your application is accepted.",
+                            ContentType = "Faq",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 30,
+                            IsPublished = true,
+                            Key = "payment",
+                            TitleAr = "متى يمكنني الدفع؟",
+                            TitleEn = "When can I make a payment?",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b3000000-0000-0000-0000-000000000004"),
+                            BodyAr = "يتم إنشاء وصولك للتعلم بعد نجاح الدفع وتفعيل التسجيل.",
+                            BodyEn = "Your learning access is created after a successful payment and active enrollment.",
+                            ContentType = "Faq",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 40,
+                            IsPublished = true,
+                            Key = "learning-access",
+                            TitleAr = "متى أحصل على الوصول إلى الدورة؟",
+                            TitleEn = "When do I receive course access?",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b3000000-0000-0000-0000-000000000005"),
+                            BodyAr = "استخدم صفحة التواصل للوصول إلى فريق دعم الأكاديمية.",
+                            BodyEn = "Use the Contact page to reach the academy support team.",
+                            ContentType = "Faq",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 50,
+                            IsPublished = true,
+                            Key = "support",
+                            TitleAr = "كيف يمكنني الحصول على الدعم؟",
+                            TitleEn = "How can I get support?",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b4000000-0000-0000-0000-000000000001"),
+                            BodyAr = "شريك تقني",
+                            BodyEn = "Technology partner",
+                            ContentType = "Partner",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 10,
+                            IsPublished = true,
+                            Key = "google",
+                            TitleAr = "Google",
+                            TitleEn = "Google",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b4000000-0000-0000-0000-000000000002"),
+                            BodyAr = "شريك تقني",
+                            BodyEn = "Technology partner",
+                            ContentType = "Partner",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 20,
+                            IsPublished = true,
+                            Key = "amazon",
+                            TitleAr = "Amazon",
+                            TitleEn = "Amazon",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b4000000-0000-0000-0000-000000000003"),
+                            BodyAr = "شريك تقني",
+                            BodyEn = "Technology partner",
+                            ContentType = "Partner",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 30,
+                            IsPublished = true,
+                            Key = "apple",
+                            TitleAr = "Apple",
+                            TitleEn = "Apple",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b4000000-0000-0000-0000-000000000004"),
+                            BodyAr = "شريك تقني",
+                            BodyEn = "Technology partner",
+                            ContentType = "Partner",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 40,
+                            IsPublished = true,
+                            Key = "netflix",
+                            TitleAr = "Netflix",
+                            TitleEn = "Netflix",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b4000000-0000-0000-0000-000000000005"),
+                            BodyAr = "شريك تقني",
+                            BodyEn = "Technology partner",
+                            ContentType = "Partner",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 50,
+                            IsPublished = true,
+                            Key = "meta",
+                            TitleAr = "Meta",
+                            TitleEn = "Meta",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b4000000-0000-0000-0000-000000000006"),
+                            BodyAr = "شريك أعمال",
+                            BodyEn = "Business partner",
+                            ContentType = "Partner",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 60,
+                            IsPublished = true,
+                            Key = "mango",
+                            TitleAr = "MANGO",
+                            TitleEn = "MANGO",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b5000000-0000-0000-0000-000000000001"),
+                            BodyAr = "ساعدتني الجلسات العملية على تحويل المعرفة النظرية إلى عمل يمكنني عرضه.",
+                            BodyEn = "The practical sessions helped me turn theory into work I could demonstrate.",
+                            ContentType = "Testimonial",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 10,
+                            IsPublished = true,
+                            Key = "learner-one",
+                            TitleAr = "أحمد - متعلم برمجيات",
+                            TitleEn = "Ahmed - Software learner",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b5000000-0000-0000-0000-000000000002"),
+                            BodyAr = "جعل هيكل البرنامج كل خطوة تالية واضحة وقابلة للتحقيق.",
+                            BodyEn = "The program structure made every next step clear and achievable.",
+                            ContentType = "Testimonial",
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayOrder = 20,
+                            IsPublished = true,
+                            Key = "learner-two",
+                            TitleAr = "مريم - متعلمة أعمال",
+                            TitleEn = "Mariam - Business learner",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Course", b =>
                 {
                     b.Property<Guid>("Id")
@@ -725,6 +1156,333 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.ToTable("Enrollments", t =>
                         {
                             t.HasCheckConstraint("CK_Enrollments_ExactlyOneOffering", "([CourseOfferingId] IS NOT NULL AND [ProgramOfferingId] IS NULL) OR ([CourseOfferingId] IS NULL AND [ProgramOfferingId] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MessageAr")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("MessageEn")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset?>("ReadAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("SourceEventKey")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<Guid?>("TemplateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TitleAr")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("TitleEn")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("UserId", "SourceEventKey")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ReadAtUtc", "CreatedAtUtc");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.NotificationDelivery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTimeOffset?>("DeliveredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("NotificationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotificationId", "Channel")
+                        .IsUnique();
+
+                    b.ToTable("NotificationDeliveries", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_NotificationDeliveries_AttemptCount", "[AttemptCount] >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.NotificationTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MessageAr")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("MessageEn")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("TitleAr")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("TitleEn")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("NotificationTemplates", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000001"),
+                            Code = "AccountCreated",
+                            IsActive = true,
+                            MessageAr = "حسابك كمتعلم جاهز الآن.",
+                            MessageEn = "Your learner account is ready.",
+                            TitleAr = "مرحباً بك في أكاديمية أندلسية",
+                            TitleEn = "Welcome to Andalusia Academy",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000002"),
+                            Code = "ApplicationSubmitted",
+                            IsActive = true,
+                            MessageAr = "تم تقديم طلبك للالتحاق بـ {{offering}} بنجاح.",
+                            MessageEn = "Your application for {{offering}} was submitted successfully.",
+                            TitleAr = "تم استلام طلبك",
+                            TitleEn = "Application received",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000003"),
+                            Code = "ApplicationStatusUpdated",
+                            IsActive = true,
+                            MessageAr = "أصبحت حالة طلبك الآن {{status}}.",
+                            MessageEn = "Your application status is now {{status}}.",
+                            TitleAr = "تم تحديث حالة الطلب",
+                            TitleEn = "Application status updated",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000004"),
+                            Code = "PaymentConfirmed",
+                            IsActive = true,
+                            MessageAr = "تم استلام دفعتك بقيمة {{amount}} {{currency}}.",
+                            MessageEn = "We received your payment of {{amount}} {{currency}}.",
+                            TitleAr = "تم تأكيد الدفع",
+                            TitleEn = "Payment confirmed",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000005"),
+                            Code = "EnrollmentConfirmed",
+                            IsActive = true,
+                            MessageAr = "تم تسجيلك الآن في {{offering}}.",
+                            MessageEn = "You are now enrolled in {{offering}}.",
+                            TitleAr = "تم تأكيد التسجيل",
+                            TitleEn = "Enrollment confirmed",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000006"),
+                            Code = "SessionReminder",
+                            IsActive = true,
+                            MessageAr = "تبدأ جلسة {{sessionTitle}} في {{startsAt}}.",
+                            MessageEn = "{{sessionTitle}} starts at {{startsAt}}.",
+                            TitleAr = "جلسة قادمة",
+                            TitleEn = "Upcoming session",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000007"),
+                            Code = "CourseAnnouncement",
+                            IsActive = true,
+                            MessageAr = "يتوفر إعلان جديد للدورة.",
+                            MessageEn = "A new course announcement is available.",
+                            TitleAr = "إعلان الدورة",
+                            TitleEn = "Course announcement",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000008"),
+                            Code = "InstructorAssigned",
+                            IsActive = true,
+                            MessageAr = "تم إسناد جلسة {{sessionTitle}} إليك في {{startsAt}}.",
+                            MessageEn = "You were assigned to {{sessionTitle}} at {{startsAt}}.",
+                            TitleAr = "تم إسناد جلسة",
+                            TitleEn = "Session assigned",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000009"),
+                            Code = "NewLearnerEnrollment",
+                            IsActive = true,
+                            MessageAr = "تم تسجيل {{learnerName}} في {{offering}}.",
+                            MessageEn = "{{learnerName}} enrolled in {{offering}}.",
+                            TitleAr = "تسجيل متعلم جديد",
+                            TitleEn = "New learner enrollment",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000010"),
+                            Code = "AssignmentSubmitted",
+                            IsActive = true,
+                            MessageAr = "قام {{learnerName}} بتسليم {{assignmentTitle}}.",
+                            MessageEn = "{{learnerName}} submitted {{assignmentTitle}}.",
+                            TitleAr = "تم تسليم التكليف",
+                            TitleEn = "Assignment submitted",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000011"),
+                            Code = "Operational",
+                            IsActive = true,
+                            MessageAr = "{{message}}",
+                            MessageEn = "{{message}}",
+                            TitleAr = "تحديث تشغيلي",
+                            TitleEn = "Operational update",
+                            UpdatedAtUtc = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EventKey")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset?>("NextAttemptAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("ProcessedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventKey")
+                        .IsUnique();
+
+                    b.HasIndex("ProcessedAtUtc", "NextAttemptAtUtc", "OccurredAtUtc");
+
+                    b.ToTable("OutboxMessages", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OutboxMessages_AttemptCount", "[AttemptCount] >= 0");
                         });
                 });
 
@@ -1398,6 +2156,19 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Navigation("Program");
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.CmsContentItem", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("RelatedUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Course", b =>
                 {
                     b.HasOne("AndalusiaAcademy.Domain.Models.CourseCategory", "Category")
@@ -1558,6 +2329,41 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.Navigation("ProgramOffering");
                 });
 
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Notification", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.NotificationTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.NotificationDelivery", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Domain.Models.Notification", "Notification")
+                        .WithMany("Deliveries")
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.NotificationTemplate", b =>
+                {
+                    b.HasOne("AndalusiaAcademy.Infrastructure.Identity.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+                });
+
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Payment", b =>
                 {
                     b.HasOne("AndalusiaAcademy.Domain.Models.LearnerApplication", "Application")
@@ -1710,6 +2516,11 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
             modelBuilder.Entity("AndalusiaAcademy.Domain.Models.LearnerApplication", b =>
                 {
                     b.Navigation("StatusHistory");
+                });
+
+            modelBuilder.Entity("AndalusiaAcademy.Domain.Models.Notification", b =>
+                {
+                    b.Navigation("Deliveries");
                 });
 #pragma warning restore 612, 618
         }

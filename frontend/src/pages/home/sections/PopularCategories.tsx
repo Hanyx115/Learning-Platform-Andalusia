@@ -19,6 +19,7 @@ function PopularCategories() {
 
   return (
     <Section
+      contentKey="categories"
       className="categories"
       eyebrowKey="home.categories.eyebrow"
       titleKey="home.categories.title"

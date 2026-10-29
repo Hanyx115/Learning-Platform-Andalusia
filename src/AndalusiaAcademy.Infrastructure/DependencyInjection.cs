@@ -12,6 +12,10 @@ using AndalusiaAcademy.Infrastructure.Identity.Repositories;
 using AndalusiaAcademy.Infrastructure.Identity.Services;
 using AndalusiaAcademy.Infrastructure.Lms.Repositories;
 using AndalusiaAcademy.Infrastructure.Lms.Storage;
+using AndalusiaAcademy.Infrastructure.Content.Repositories;
+using AndalusiaAcademy.Infrastructure.Notifications;
+using AndalusiaAcademy.Infrastructure.Notifications.Repositories;
+using AndalusiaAcademy.Application.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -138,6 +142,12 @@ public static class DependencyInjection
             options.AddPolicy(
                 PolicyNames.RequireContentManager,
                 policy => policy.RequireRole(RoleNames.ContentManager));
+            options.AddPolicy(
+                PolicyNames.RequireContentManagerOrAdmin,
+                policy => policy.RequireRole(RoleNames.ContentManager, RoleNames.Admin));
+            options.AddPolicy(
+                PolicyNames.RequireContentManagerManagerOrAdmin,
+                policy => policy.RequireRole(RoleNames.ContentManager, RoleNames.Manager, RoleNames.Admin));
         });
 
         services.AddSingleton<ITokenService, JwtTokenService>();
@@ -162,6 +172,11 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<ICourseMaterialRepository, CourseMaterialRepository>();
+        services.AddScoped<ICmsRepository, CmsRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationOutbox, NotificationOutbox>();
+        services.AddSingleton<NotificationOutboxProcessor>();
+        services.AddHostedService(provider => provider.GetRequiredService<NotificationOutboxProcessor>());
 
         return services;
     }

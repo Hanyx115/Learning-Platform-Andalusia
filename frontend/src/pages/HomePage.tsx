@@ -8,10 +8,11 @@ import Hero from './home/sections/Hero'
 import PartnersTrust from './home/sections/PartnersTrust'
 import PopularCategories from './home/sections/PopularCategories'
 import Testimonials from './home/sections/Testimonials'
+import { CmsHomepageProvider } from './home/CmsHomepageContext'
 
 function HomePage() {
   return (
-    <>
+    <CmsHomepageProvider>
       <Hero />
       <CareerPathDiscovery />
       <PopularCategories />
@@ -21,7 +22,7 @@ function HomePage() {
       <PartnersTrust />
       <Testimonials />
       <CallToAction />
-    </>
+    </CmsHomepageProvider>
   )
 }
 

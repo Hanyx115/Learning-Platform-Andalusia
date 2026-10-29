@@ -8,4 +8,6 @@ public static class PolicyNames
     public const string RequireInstructor = "RequireInstructor";
     public const string RequireInstructorManagerOrAdmin = "RequireInstructorManagerOrAdmin";
     public const string RequireContentManager = "RequireContentManager";
+    public const string RequireContentManagerOrAdmin = "RequireContentManagerOrAdmin";
+    public const string RequireContentManagerManagerOrAdmin = "RequireContentManagerManagerOrAdmin";
 }

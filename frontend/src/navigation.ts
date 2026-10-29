@@ -10,6 +10,7 @@ export const primaryNavItems: NavItem[] = [
   { path: '/programs', labelKey: 'nav.programs' },
   { path: '/career-paths', labelKey: 'nav.careerPaths' },
   { path: '/for-business', labelKey: 'nav.forBusiness' },
+  { path: '/instructors', labelKey: 'nav.instructors' },
   { path: '/faq', labelKey: 'nav.faq' },
   { path: '/contact', labelKey: 'nav.contact' },
 ]

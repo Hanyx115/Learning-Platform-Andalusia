@@ -1,8 +1,11 @@
 using AndalusiaAcademy.Application.DTOs.Auth;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Application.Notifications;
+using AndalusiaAcademy.Domain.Models;
 using AndalusiaAcademy.Infrastructure.Identity.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace AndalusiaAcademy.Infrastructure.Identity.Services;
 
@@ -10,7 +13,9 @@ public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
     ITokenService tokenService,
-    IRefreshTokenRepository refreshTokenRepository) : IAuthService
+    IRefreshTokenRepository refreshTokenRepository,
+    INotificationOutbox notificationOutbox,
+    ILogger<AuthService> logger) : IAuthService
 {
     public async Task<RegisterOutcome> RegisterAsync(
         RegisterRequest request,
@@ -37,6 +42,15 @@ public sealed class AuthService(
         }
 
         await userManager.AddToRoleAsync(user, RoleNames.Learner);
+
+        await TryQueueNotificationAsync(
+            new NotificationEventRequest(
+                $"account-created:{user.Id:N}",
+                NotificationTemplateCodes.AccountCreated,
+                [user.Id],
+                new Dictionary<string, string>(),
+                "/profile"),
+            cancellationToken);
 
         var (tokens, _) = await IssueTokensAsync(user, ipAddress, cancellationToken);
         return RegisterOutcome.Success(tokens);
@@ -188,5 +202,19 @@ public sealed class AuthService(
             refreshToken.ExpiresAtUtc);
 
         return (tokens, refreshToken.Hash);
+    }
+
+    private async Task TryQueueNotificationAsync(
+        NotificationEventRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await notificationOutbox.EnqueueAsync(request, cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(exception, "Could not queue account notification {EventKey}.", request.EventKey);
+        }
     }
 }

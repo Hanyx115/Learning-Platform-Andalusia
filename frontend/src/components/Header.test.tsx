@@ -3,6 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import Header from './Header'
 import { primaryNavItems } from '../navigation'
+import { authSession } from '../auth/session'
+
+afterEach(() => {
+  authSession.clear()
+})
 
 function renderHeader(initialEntries: string[] = ['/']) {
   return render(
@@ -66,5 +71,48 @@ describe('Header', () => {
     await user.click(screen.getByRole('link', { name: 'About' }))
 
     expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('moves authenticated actions into an account drawer', async () => {
+    const user = userEvent.setup()
+    authSession.setTokens({
+      accessToken: 'access-token',
+      accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
+      refreshToken: 'refresh-token',
+      refreshTokenExpiresAtUtc: '2099-01-02T00:00:00Z',
+    })
+    renderHeader()
+
+    const accountToggle = screen.getByRole('button', { name: 'Account' })
+    expect(accountToggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    await user.click(accountToggle)
+
+    expect(accountToggle).toHaveAttribute('aria-expanded', 'true')
+    const drawer = screen.getByRole('dialog', { name: 'Andalusia Academy' })
+    const accountNavigation = within(drawer).getByRole('navigation', { name: 'Account navigation' })
+    expect(within(accountNavigation).getByRole('link', { name: 'My profile' })).toHaveAttribute('href', '/profile')
+    expect(within(accountNavigation).getByRole('link', { name: 'Notifications' })).toHaveAttribute('href', '/profile/notifications')
+    expect(within(drawer).getByRole('button', { name: 'Sign out' })).toBeInTheDocument()
+  })
+
+  it('closes the account drawer on Escape and restores focus', async () => {
+    const user = userEvent.setup()
+    authSession.setTokens({
+      accessToken: 'access-token',
+      accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
+      refreshToken: 'refresh-token',
+      refreshTokenExpiresAtUtc: '2099-01-02T00:00:00Z',
+    })
+    renderHeader()
+
+    const accountToggle = screen.getByRole('button', { name: 'Account' })
+    await user.click(accountToggle)
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(accountToggle).toHaveAttribute('aria-expanded', 'false')
+    expect(accountToggle).toHaveFocus()
   })
 })

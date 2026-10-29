@@ -12,6 +12,7 @@ function CareerPathDiscovery() {
 
   return (
     <Section
+      contentKey="career-paths"
       className="career-paths"
       eyebrowKey="home.careerPaths.eyebrow"
       titleKey="home.careerPaths.title"

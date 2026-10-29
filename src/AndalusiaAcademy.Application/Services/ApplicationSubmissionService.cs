@@ -2,6 +2,9 @@ using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.DTOs.Applications;
 using AndalusiaAcademy.Application.Enrollment;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Application.Notifications;
+using AndalusiaAcademy.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace AndalusiaAcademy.Application.Services;
 
@@ -9,7 +12,9 @@ namespace AndalusiaAcademy.Application.Services;
 public sealed class ApplicationSubmissionService(
     IApplicationRepository applicationRepository,
     IOfferingRepository offeringRepository,
-    TimeProvider timeProvider)
+    INotificationOutbox notificationOutbox,
+    TimeProvider timeProvider,
+    ILogger<ApplicationSubmissionService> logger)
 {
     public async Task<CreateApplicationOutcome> SubmitAsync(
         Guid userId,
@@ -42,6 +47,15 @@ public sealed class ApplicationSubmissionService(
         var application = await applicationRepository.AddAsync(
             userId, request.CourseOfferingId, request.ProgramOfferingId, cancellationToken);
 
+        await TryQueueNotificationAsync(
+            new NotificationEventRequest(
+                $"application-submitted:{application.Id:N}",
+                NotificationTemplateCodes.ApplicationSubmitted,
+                [userId],
+                new Dictionary<string, string> { ["offering"] = offering.Title },
+                "/profile/applications"),
+            cancellationToken);
+
         return CreateApplicationOutcome.Success(application);
     }
 
@@ -61,9 +75,13 @@ public sealed class ApplicationSubmissionService(
         var updated = await applicationRepository.UpdateStatusIfPendingAsync(
             applicationId, ApplicationStatus.Accepted, reviewedByUserId, rejectionReason: null, cancellationToken);
 
-        return updated is null
-            ? ReviewApplicationOutcome.Failure("Application not found or is no longer pending.")
-            : ReviewApplicationOutcome.Success(updated);
+        if (updated is null)
+        {
+            return ReviewApplicationOutcome.Failure("Application not found or is no longer pending.");
+        }
+
+        await QueueStatusNotificationAsync(updated, cancellationToken);
+        return ReviewApplicationOutcome.Success(updated);
     }
 
     public async Task<ReviewApplicationOutcome> RejectAsync(
@@ -75,8 +93,36 @@ public sealed class ApplicationSubmissionService(
         var updated = await applicationRepository.UpdateStatusIfPendingAsync(
             applicationId, ApplicationStatus.Rejected, reviewedByUserId, reason, cancellationToken);
 
-        return updated is null
-            ? ReviewApplicationOutcome.Failure("Application not found or is no longer pending.")
-            : ReviewApplicationOutcome.Success(updated);
+        if (updated is null)
+        {
+            return ReviewApplicationOutcome.Failure("Application not found or is no longer pending.");
+        }
+
+        await QueueStatusNotificationAsync(updated, cancellationToken);
+        return ReviewApplicationOutcome.Success(updated);
+    }
+
+    private Task QueueStatusNotificationAsync(ApplicationDto application, CancellationToken cancellationToken)
+        => TryQueueNotificationAsync(
+            new NotificationEventRequest(
+                $"application-status:{application.Id:N}:{application.Status}",
+                NotificationTemplateCodes.ApplicationStatusUpdated,
+                [application.UserId],
+                new Dictionary<string, string> { ["status"] = application.Status },
+                "/profile/applications"),
+            cancellationToken);
+
+    private async Task TryQueueNotificationAsync(
+        NotificationEventRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await notificationOutbox.EnqueueAsync(request, cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(exception, "Could not queue application notification {EventKey}.", request.EventKey);
+        }
     }
 }

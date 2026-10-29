@@ -37,6 +37,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 ["CatalogSeed:Enabled"] = "false",
                 ["IdentitySeed:Enabled"] = "false",
                 ["Database:MigrateOnStartup"] = "true",
+                ["Notifications:ProcessingEnabled"] = "false",
                 ["AssignmentSubmissions:StoragePath"] = _assignmentSubmissionStoragePath,
             }));
         builder.ConfigureServices(services =>

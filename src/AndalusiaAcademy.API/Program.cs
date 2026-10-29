@@ -4,6 +4,7 @@ using AndalusiaAcademy.API.OpenApi;
 using AndalusiaAcademy.Application;
 using AndalusiaAcademy.Infrastructure;
 using AndalusiaAcademy.Infrastructure.Catalog.Seeding;
+using AndalusiaAcademy.Infrastructure.Content.Seeding;
 using AndalusiaAcademy.Infrastructure.Data;
 using AndalusiaAcademy.Infrastructure.Identity.Models;
 using AndalusiaAcademy.Infrastructure.Identity.Seeding;
@@ -131,9 +132,11 @@ if (app.Environment.IsDevelopment())
                     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
                     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                     var addedUsers = await IdentityDemoSeeder.SeedAsync(roleManager, userManager);
+                    var addedInstructorProfiles = await CmsDemoSeeder.SeedInstructorProfileAsync(dbContext, userManager);
                     app.Logger.LogInformation(
-                        "Identity demo account seeding completed. Added {AddedUsers} missing accounts.",
-                        addedUsers);
+                        "Identity and team demo seeding completed. Added {AddedUsers} missing accounts and {AddedInstructorProfiles} instructor profiles.",
+                        addedUsers,
+                        addedInstructorProfiles);
                 }
             }
         }

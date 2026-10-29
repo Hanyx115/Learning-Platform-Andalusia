@@ -11,6 +11,7 @@ import Logo from './Logo'
 import { primaryNavItems } from '../navigation'
 
 const NAV_ID = 'primary-navigation'
+const ACCOUNT_DRAWER_ID = 'account-drawer'
 
 function Header() {
   const { t } = useTranslation()
@@ -19,27 +20,62 @@ function Header() {
   const { profile } = useAuthProfile()
   const canReviewApplications = profile?.roles.includes('Manager') || profile?.roles.includes('Admin')
   const isInstructor = profile?.roles.includes('Instructor') ?? false
+  const canManageContent = profile?.roles.includes('ContentManager') || profile?.roles.includes('Admin')
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const navToggleRef = useRef<HTMLButtonElement>(null)
+  const accountToggleRef = useRef<HTMLButtonElement>(null)
+  const accountCloseRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    if (!isNavOpen) {
+    if (!isNavOpen && !isAccountOpen) {
       return
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setIsNavOpen(false)
-        navToggleRef.current?.focus()
+        if (isAccountOpen) {
+          setIsAccountOpen(false)
+          accountToggleRef.current?.focus()
+        } else {
+          setIsNavOpen(false)
+          navToggleRef.current?.focus()
+        }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isNavOpen])
+  }, [isAccountOpen, isNavOpen])
+
+  useEffect(() => {
+    if (!isAccountOpen) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    accountCloseRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isAccountOpen])
 
   const navClassName = isNavOpen ? 'site-nav site-nav--open' : 'site-nav'
+
+  function closeAccountDrawer({ restoreFocus = false } = {}) {
+    setIsAccountOpen(false)
+    if (restoreFocus) {
+      accountToggleRef.current?.focus()
+    }
+  }
+
+  function handleAccountNavigation() {
+    closeAccountDrawer()
+    setIsNavOpen(false)
+  }
 
   async function handleLogout() {
     setIsLoggingOut(true)
@@ -51,6 +87,7 @@ function Header() {
     } finally {
       setIsLoggingOut(false)
       setIsNavOpen(false)
+      setIsAccountOpen(false)
       navigate('/login', { replace: true })
     }
   }
@@ -77,46 +114,7 @@ function Header() {
                   </NavLink>
                 </li>
               ))}
-              {tokens ? (
-                <>
-                  <li className="site-nav__auth-item">
-                    <NavLink className="site-nav__link" to="/profile" onClick={() => setIsNavOpen(false)}>
-                      {t('nav.profile')}
-                    </NavLink>
-                  </li>
-                  {canReviewApplications ? (
-                    <li className="site-nav__auth-item">
-                      <NavLink className="site-nav__link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
-                        {t('nav.reviewApplications')}
-                      </NavLink>
-                    </li>
-                  ) : null}
-                  {canReviewApplications ? (
-                    <li className="site-nav__auth-item">
-                      <NavLink className="site-nav__link" to="/admin/catalog" onClick={() => setIsNavOpen(false)}>
-                        {t('nav.adminDashboard')}
-                      </NavLink>
-                    </li>
-                  ) : null}
-                  {isInstructor ? (
-                    <li className="site-nav__auth-item">
-                      <NavLink className="site-nav__link" to="/instructor" onClick={() => setIsNavOpen(false)}>
-                        {t('nav.instructorDashboard')}
-                      </NavLink>
-                    </li>
-                  ) : null}
-                  <li className="site-nav__auth-item">
-                    <button
-                      className="site-nav__link site-nav__button"
-                      type="button"
-                      disabled={isLoggingOut}
-                      onClick={handleLogout}
-                    >
-                      {isLoggingOut ? t('auth.actions.signingOut') : t('nav.logout')}
-                    </button>
-                  </li>
-                </>
-              ) : (
+              {!tokens ? (
                 <>
                   <li className="site-nav__auth-item">
                     <NavLink className="site-nav__link" to="/login" onClick={() => setIsNavOpen(false)}>
@@ -129,42 +127,31 @@ function Header() {
                     </NavLink>
                   </li>
                 </>
-              )}
+              ) : null}
             </ul>
           </nav>
 
           <LanguageSwitcher />
 
-          <div className="site-header__auth">
+          <div className={`site-header__auth${tokens ? ' site-header__auth--session' : ''}`}>
             {tokens ? (
-              <>
-                <NavLink className="site-header__auth-link" to="/profile" onClick={() => setIsNavOpen(false)}>
-                  {t('nav.profile')}
-                </NavLink>
-                {canReviewApplications ? (
-                  <NavLink className="site-header__auth-link" to="/staff/applications" onClick={() => setIsNavOpen(false)}>
-                    {t('nav.reviewApplications')}
-                  </NavLink>
-                ) : null}
-                {canReviewApplications ? (
-                  <NavLink className="site-header__auth-link" to="/admin/catalog" onClick={() => setIsNavOpen(false)}>
-                    {t('nav.adminDashboard')}
-                  </NavLink>
-                ) : null}
-                {isInstructor ? (
-                  <NavLink className="site-header__auth-link" to="/instructor" onClick={() => setIsNavOpen(false)}>
-                    {t('nav.instructorDashboard')}
-                  </NavLink>
-                ) : null}
-                <button
-                  className="site-header__logout"
-                  type="button"
-                  disabled={isLoggingOut}
-                  onClick={handleLogout}
-                >
-                  {isLoggingOut ? t('auth.actions.signingOut') : t('nav.logout')}
-                </button>
-              </>
+              <button
+                ref={accountToggleRef}
+                className="account-toggle"
+                type="button"
+                aria-expanded={isAccountOpen}
+                aria-controls={ACCOUNT_DRAWER_ID}
+                onClick={() => {
+                  setIsNavOpen(false)
+                  setIsAccountOpen((open) => !open)
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4.5 20c.7-4 3.2-6 7.5-6s6.8 2 7.5 6" strokeLinecap="round" />
+                </svg>
+                <span>{t('nav.account')}</span>
+              </button>
             ) : (
               <>
                 <NavLink className="site-header__auth-link" to="/login" onClick={() => setIsNavOpen(false)}>
@@ -188,7 +175,10 @@ function Header() {
             aria-expanded={isNavOpen}
             aria-controls={NAV_ID}
             aria-label={t(isNavOpen ? 'nav.close' : 'nav.open')}
-            onClick={() => setIsNavOpen((open) => !open)}
+            onClick={() => {
+              setIsAccountOpen(false)
+              setIsNavOpen((open) => !open)
+            }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               {isNavOpen ? (
@@ -200,6 +190,71 @@ function Header() {
           </button>
         </div>
       </Container>
+
+      {tokens && isAccountOpen ? (
+        <div className="account-drawer-layer">
+          <button
+            type="button"
+            className="account-drawer__backdrop"
+            aria-label={t('nav.closeAccount')}
+            onClick={() => closeAccountDrawer({ restoreFocus: true })}
+          />
+          <aside
+            id={ACCOUNT_DRAWER_ID}
+            className="account-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="account-drawer-title"
+          >
+            <div className="account-drawer__header">
+              <div>
+                <p className="account-drawer__eyebrow">{t('nav.account')}</p>
+                <h2 id="account-drawer-title" dir="auto">
+                  {profile ? `${profile.firstName} ${profile.lastName}` : t('app.name')}
+                </h2>
+                {profile ? <p className="account-drawer__email" dir="ltr">{profile.email}</p> : null}
+              </div>
+              <button
+                type="button"
+                ref={accountCloseRef}
+                className="account-drawer__close"
+                aria-label={t('nav.closeAccount')}
+                onClick={() => closeAccountDrawer({ restoreFocus: true })}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <nav className="account-drawer__nav" aria-label={t('nav.accountNavigation')}>
+              <NavLink to="/profile" onClick={handleAccountNavigation}>{t('nav.profile')}</NavLink>
+              <NavLink to="/profile/notifications" onClick={handleAccountNavigation}>{t('nav.notifications')}</NavLink>
+              {canManageContent ? (
+                <NavLink to="/cms" onClick={handleAccountNavigation}>{t('nav.cmsDashboard')}</NavLink>
+              ) : null}
+              {canReviewApplications ? (
+                <NavLink to="/staff/applications" onClick={handleAccountNavigation}>{t('nav.reviewApplications')}</NavLink>
+              ) : null}
+              {canReviewApplications ? (
+                <NavLink to="/admin/catalog" onClick={handleAccountNavigation}>{t('nav.adminDashboard')}</NavLink>
+              ) : null}
+              {isInstructor ? (
+                <NavLink to="/instructor" onClick={handleAccountNavigation}>{t('nav.instructorDashboard')}</NavLink>
+              ) : null}
+            </nav>
+
+            <button
+              className="account-drawer__logout"
+              type="button"
+              disabled={isLoggingOut}
+              onClick={handleLogout}
+            >
+              {isLoggingOut ? t('auth.actions.signingOut') : t('nav.logout')}
+            </button>
+          </aside>
+        </div>
+      ) : null}
     </header>
   )
 }

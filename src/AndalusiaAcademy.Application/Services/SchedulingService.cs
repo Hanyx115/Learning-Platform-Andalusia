@@ -1,11 +1,17 @@
 using AndalusiaAcademy.Application.DTOs.Applications;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Application.Notifications;
 using AndalusiaAcademy.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace AndalusiaAcademy.Application.Services;
 
-public sealed class SchedulingService(ISchedulingRepository repository, TimeProvider timeProvider)
+public sealed class SchedulingService(
+    ISchedulingRepository repository,
+    INotificationOutbox notificationOutbox,
+    TimeProvider timeProvider,
+    ILogger<SchedulingService> logger)
 {
     public Task<IReadOnlyList<TrainingLocationDto>> GetLocationsAsync(bool includeInactive, CancellationToken cancellationToken)
         => repository.GetLocationsAsync(includeInactive, cancellationToken);
@@ -296,6 +302,8 @@ public sealed class SchedulingService(ISchedulingRepository repository, TimeProv
         };
         repository.AddSession(session);
         await repository.SaveChangesAsync(cancellationToken);
+        await QueueInstructorAssignmentAsync(
+            session.Id, session.InstructorUserId, session.Title, session.StartsAtUtc, cancellationToken);
         var created = (await repository.GetSessionsForOfferingAsync(offeringId, true, cancellationToken))
             .Single(item => item.Id == session.Id);
         return SchedulingMutationOutcome<CourseSessionDto>.Success(created);
@@ -338,6 +346,8 @@ public sealed class SchedulingService(ISchedulingRepository repository, TimeProv
         };
         repository.AddProgramSession(session);
         await repository.SaveChangesAsync(cancellationToken);
+        await QueueInstructorAssignmentAsync(
+            session.Id, session.InstructorUserId, session.Title, session.StartsAtUtc, cancellationToken);
         var created = (await repository.GetSessionsForProgramOfferingAsync(offeringId, true, cancellationToken))
             .Single(item => item.Id == session.Id);
         return SchedulingMutationOutcome<ProgramSessionDto>.Success(created);
@@ -629,4 +639,37 @@ public sealed class SchedulingService(ISchedulingRepository repository, TimeProv
 
     private static string? NormalizeOptional(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private async Task QueueInstructorAssignmentAsync(
+        Guid sessionId,
+        Guid? instructorUserId,
+        string title,
+        DateTimeOffset startsAtUtc,
+        CancellationToken cancellationToken)
+    {
+        if (!instructorUserId.HasValue)
+        {
+            return;
+        }
+
+        try
+        {
+            await notificationOutbox.EnqueueAsync(
+                new NotificationEventRequest(
+                    $"instructor-assigned:{sessionId:N}:{instructorUserId.Value:N}",
+                    NotificationTemplateCodes.InstructorAssigned,
+                    [instructorUserId.Value],
+                    new Dictionary<string, string>
+                    {
+                        ["sessionTitle"] = title,
+                        ["startsAt"] = startsAtUtc.ToString("u"),
+                    },
+                    "/instructor/sessions"),
+                cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(exception, "Could not queue instructor assignment notification for session {SessionId}.", sessionId);
+        }
+    }
 }
