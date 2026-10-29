@@ -28,7 +28,7 @@ export const arTranslations = {
     programs: 'البرامج',
     careerPaths: 'المسارات المهنية',
     forBusiness: 'للشركات',
-    instructors: 'المدربون',
+    instructors: 'فريقنا',
     faq: 'الأسئلة الشائعة',
     contact: 'تواصل معنا',
     login: 'تسجيل الدخول',
@@ -39,6 +39,9 @@ export const arTranslations = {
     reviewApplications: 'مراجعة الطلبات',
     instructorDashboard: 'لوحة المدرب',
     adminDashboard: 'لوحة الإدارة',
+    account: 'حسابي',
+    accountNavigation: 'التنقل في الحساب',
+    closeAccount: 'إغلاق لوحة الحساب',
     logout: 'تسجيل الخروج',
   },
   auth: {
@@ -712,10 +715,14 @@ export const arTranslations = {
     empty: 'لم تُنشر أسئلة شائعة بعد.',
   },
   instructors: {
-    eyebrow: 'تعرّف على الفريق',
-    title: 'مدربونا',
-    description: 'تعلّم على أيدي ممارسين ذوي خبرة في مجالاتهم.',
-    empty: 'لم تُنشر ملفات المدربين بعد.',
+    eyebrow: 'صُنّاع تجربة التعلّم',
+    title: 'تعرّف على فريقنا',
+    description: 'تعرّف على المدربين الذين يجمعون بين الخبرة المهنية والإرشاد العملي ودعم المتعلمين في أكاديمية أندلسية.',
+    empty: 'يجري إعداد ملفات الفريق. تفضل بزيارتنا قريباً.',
+    role: 'مدرب',
+    linkedin: 'الملف على LinkedIn',
+    professionalProfile: 'الملف المهني',
+    photoAlt: 'صورة {{name}}',
   },
   payments: {
     title: 'مدفوعاتي',
@@ -754,7 +761,8 @@ export const arTranslations = {
     fields: {
       type: 'نوع المحتوى', key: 'مفتاح المحتوى', order: 'ترتيب العرض', relatedUser: 'معرّف المستخدم المرتبط (اختياري)',
       titleEn: 'العنوان الإنجليزي', titleAr: 'العنوان العربي', bodyEn: 'المحتوى الإنجليزي', bodyAr: 'المحتوى العربي',
-      imageUrl: 'رابط الصورة (اختياري)', linkUrl: 'الرابط (اختياري)', published: 'منشور',
+      imageUrl: 'رابط الصورة (اختياري)', linkUrl: 'الرابط (اختياري)',
+      instructorLinkHint: 'لملفات الفريق، أضف رابط LinkedIn للمدرب أو موقعه المهني.', published: 'منشور',
     },
     types: {
       HomepageSection: 'قسم الصفحة الرئيسية', PublicPage: 'صفحة عامة', Faq: 'سؤال شائع', Partner: 'شريك',

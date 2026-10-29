@@ -28,7 +28,7 @@ export const enTranslations = {
     programs: 'Programs',
     careerPaths: 'Career Paths',
     forBusiness: 'For Business',
-    instructors: 'Instructors',
+    instructors: 'Our Team',
     faq: 'FAQ',
     contact: 'Contact',
     login: 'Sign in',
@@ -39,6 +39,9 @@ export const enTranslations = {
     reviewApplications: 'Review applications',
     instructorDashboard: 'Instructor dashboard',
     adminDashboard: 'Admin dashboard',
+    account: 'Account',
+    accountNavigation: 'Account navigation',
+    closeAccount: 'Close account panel',
     logout: 'Sign out',
   },
   auth: {
@@ -713,10 +716,14 @@ export const enTranslations = {
     empty: 'No frequently asked questions have been published yet.',
   },
   instructors: {
-    eyebrow: 'Meet the team',
-    title: 'Our instructors',
-    description: 'Learn from practitioners with experience in their subject areas.',
-    empty: 'No instructor profiles have been published yet.',
+    eyebrow: 'People behind the learning',
+    title: 'Meet our team',
+    description: 'Meet the instructors who bring professional experience, practical guidance, and learner-focused support to Andalusia Academy.',
+    empty: 'Team profiles are being prepared. Please check back soon.',
+    role: 'Instructor',
+    linkedin: 'LinkedIn profile',
+    professionalProfile: 'Professional profile',
+    photoAlt: 'Portrait of {{name}}',
   },
   payments: {
     title: 'My payments',
@@ -755,7 +762,8 @@ export const enTranslations = {
     fields: {
       type: 'Content type', key: 'Content key', order: 'Display order', relatedUser: 'Related user ID (optional)',
       titleEn: 'English title', titleAr: 'Arabic title', bodyEn: 'English content', bodyAr: 'Arabic content',
-      imageUrl: 'Image URL (optional)', linkUrl: 'Link URL (optional)', published: 'Published',
+      imageUrl: 'Image URL (optional)', linkUrl: 'Link URL (optional)',
+      instructorLinkHint: 'For team profiles, add the instructor’s LinkedIn or professional website.', published: 'Published',
     },
     types: {
       HomepageSection: 'Homepage section', PublicPage: 'Public page', Faq: 'FAQ', Partner: 'Partner',

@@ -158,6 +158,7 @@ function CmsContentPage() {
           </label>
           <label>{t('cms.fields.linkUrl')}
             <input type="url" value={form.linkUrl ?? ''} onChange={(event) => setForm({ ...form, linkUrl: event.target.value })} />
+            {form.contentType === 'InstructorProfile' ? <span className="cms-field__hint">{t('cms.fields.instructorLinkHint')}</span> : null}
           </label>
           <label className="cms-checkbox"><input type="checkbox" checked={form.isPublished} onChange={(event) => setForm({ ...form, isPublished: event.target.checked })} /> {t('cms.fields.published')}</label>
         </div>

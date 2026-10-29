@@ -11,6 +11,7 @@
 .cms-form__wide { grid-column: 1 / -1; }
 .cms-checkbox { display: flex !important; flex-direction: row; align-items: center; }
 .cms-checkbox input { width: auto; }
+.cms-field__hint { color: var(--color-text-secondary); font-size: 0.8rem; font-weight: 400; line-height: 1.4; }
 .cms-filter { max-width: 24rem; }
 .form-error { color: #7a1f1f; font-weight: 700; }
 .form-success { color: #215d3b; font-weight: 700; }
