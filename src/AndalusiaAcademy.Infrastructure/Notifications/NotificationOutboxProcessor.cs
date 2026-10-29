@@ -54,6 +54,8 @@ public sealed class NotificationOutboxProcessor(
             .OrderBy(message => message.OccurredAtUtc)
             .Take(50)
             .ToListAsync(cancellationToken);
+        var processedCount = 0;
+        var retryCount = 0;
 
         foreach (var message in messages)
         {
@@ -113,6 +115,7 @@ public sealed class NotificationOutboxProcessor(
                 message.LastError = null;
                 message.NextAttemptAtUtc = null;
                 await dbContext.SaveChangesAsync(cancellationToken);
+                processedCount++;
             }
             catch (Exception exception)
             {
@@ -120,8 +123,18 @@ public sealed class NotificationOutboxProcessor(
                 message.LastError = exception.Message[..Math.Min(exception.Message.Length, 2000)];
                 message.NextAttemptAtUtc = now.AddMinutes(Math.Min(60, Math.Pow(2, message.AttemptCount)));
                 await dbContext.SaveChangesAsync(cancellationToken);
+                retryCount++;
                 logger.LogWarning(exception, "Notification outbox message {MessageId} will be retried.", message.Id);
             }
+        }
+
+        if (messages.Count > 0)
+        {
+            logger.LogInformation(
+                "Notification outbox batch completed. Selected {SelectedCount}, processed {ProcessedCount}, scheduled retries {RetryCount}.",
+                messages.Count,
+                processedCount,
+                retryCount);
         }
 
         return messages.Count;

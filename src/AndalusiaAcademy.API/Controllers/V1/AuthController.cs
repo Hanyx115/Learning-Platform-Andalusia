@@ -116,11 +116,14 @@ public sealed class AuthController(
         var outcome = await authService.ForgotPasswordAsync(request.Email, cancellationToken);
 
         // Never reveal whether the account exists. The reset token is only ever exposed here in
-        // Development, since no email provider exists yet to deliver it (tracked for a later sprint).
+        // Development and isolated integration tests, since no email provider exists yet to deliver it.
+        var exposeResetToken = hostEnvironment.IsDevelopment()
+            || hostEnvironment.IsEnvironment("Testing");
+
         return Ok(new
         {
             message = "If that email is registered, a password reset link has been sent.",
-            resetToken = hostEnvironment.IsDevelopment() ? outcome.ResetToken : null,
+            resetToken = exposeResetToken ? outcome.ResetToken : null,
         });
     }
 

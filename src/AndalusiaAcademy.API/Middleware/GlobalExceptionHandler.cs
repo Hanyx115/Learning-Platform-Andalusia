@@ -35,10 +35,11 @@ public sealed class GlobalExceptionHandler(
 
         logger.LogError(
             exception,
-            "Unhandled exception {ExceptionType} while processing {Method} {Path}",
+            "Unhandled exception {ExceptionType} while processing {Method} {Path}. CorrelationId: {CorrelationId}",
             exception.GetType().Name,
             httpContext.Request.Method,
-            httpContext.Request.Path);
+            httpContext.Request.Path,
+            httpContext.TraceIdentifier);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 

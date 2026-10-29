@@ -1,6 +1,7 @@
 using AndalusiaAcademy.API.HealthChecks;
 using AndalusiaAcademy.API.Middleware;
 using AndalusiaAcademy.API.OpenApi;
+using AndalusiaAcademy.API.Configuration;
 using AndalusiaAcademy.Application;
 using AndalusiaAcademy.Infrastructure;
 using AndalusiaAcademy.Infrastructure.Catalog.Seeding;
@@ -11,8 +12,22 @@ using AndalusiaAcademy.Infrastructure.Identity.Seeding;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
+
+ProductionConfigurationValidator.Validate(builder.Configuration, builder.Environment.EnvironmentName);
+
+if (builder.Environment.IsProduction())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddJsonConsole(options =>
+    {
+        options.TimestampFormat = "O";
+        options.UseUtcTimestamp = true;
+        options.IncludeScopes = true;
+    });
+}
 
 // Add services to the container.
 
@@ -37,7 +52,9 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddHealthChecks()
-    .AddCheck<SelfHealthCheck>("self");
+    .AddCheck<SelfHealthCheck>("self", tags: ["live"])
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"])
+    .AddCheck<NotificationOutboxHealthCheck>("notification-outbox", tags: ["ready"]);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(options =>
 {
@@ -66,11 +83,11 @@ builder.Services.AddApiVersioning(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     var migrateOnStartup = app.Configuration.GetValue<bool>("Database:MigrateOnStartup");
-    var seedCatalog = app.Configuration.GetValue<bool>("CatalogSeed:Enabled");
-    var seedIdentity = app.Configuration.GetValue<bool>("IdentitySeed:Enabled");
+    var seedCatalog = app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("CatalogSeed:Enabled");
+    var seedIdentity = app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("IdentitySeed:Enabled");
 
     if (migrateOnStartup || seedCatalog || seedIdentity)
     {
@@ -151,6 +168,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
@@ -166,6 +184,16 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("live"),
+    ResponseWriter = HealthCheckResponseWriter.WriteJsonAsync,
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready"),
+    ResponseWriter = HealthCheckResponseWriter.WriteJsonAsync,
+});
 
 var publicUrls = app.Configuration["PUBLIC_URLS"]?.Split(
     ';',

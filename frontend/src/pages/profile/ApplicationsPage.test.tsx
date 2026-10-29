@@ -56,6 +56,10 @@ describe('ApplicationsPage', () => {
     expect(screen.getByRole('heading', { name: 'Status history' })).toBeInTheDocument()
     expect(screen.getAllByText('Pending review')).toHaveLength(1)
     expect(screen.getAllByText('Accepted')).toHaveLength(2)
+    expect(screen.getByRole('link', { name: 'Pay now' })).toHaveAttribute(
+      'href',
+      '/profile/applications/application-1/payment',
+    )
   })
 
   it('restores successful payment state after the page is reloaded', async () => {
@@ -78,6 +82,6 @@ describe('ApplicationsPage', () => {
 
     expect(await screen.findByText('Payment successful — you are now enrolled.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View my enrollments' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Pay now' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Pay now' })).not.toBeInTheDocument()
   })
 })
