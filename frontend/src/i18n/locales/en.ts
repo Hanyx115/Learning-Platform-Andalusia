@@ -512,6 +512,52 @@ export const enTranslations = {
       pay: 'We could not process your payment. Please try again.',
     },
   },
+  paymentCheckout: {
+    eyebrow: 'Secure demo checkout',
+    title: 'Choose how to pay',
+    description: 'Review your intake and complete a simulated Visa, Mastercard, or Fawry payment.',
+    loading: 'Loading checkout…',
+    back: 'Back to my applications',
+    processing: 'Processing demo payment…',
+    submit: 'Pay {{amount}} {{currency}}',
+    demo: {
+      title: 'Demonstration only',
+      description: 'Use the sample details shown below. No card or phone information is sent to or stored by Andalusia Academy.',
+    },
+    method: {
+      legend: 'Payment method',
+      card: 'Credit or debit card',
+      fawry: 'Pay using a Fawry reference',
+    },
+    card: {
+      name: 'Name on card',
+      number: 'Card number',
+      expiry: 'Expiry date',
+      securityCode: 'Security code',
+    },
+    fawry: {
+      title: 'Fawry demo payment',
+      description: 'A demo reference will be generated after confirmation. No real Fawry transaction is created.',
+      phone: 'Mobile number',
+    },
+    summary: {
+      title: 'Order summary',
+      intake: 'Intake dates',
+      total: 'Total',
+    },
+    success: {
+      title: 'Payment successful',
+      description: 'Your demo payment was confirmed and your enrollment is now active.',
+      reference: 'Demo reference: {{reference}}',
+      history: 'View payment history',
+    },
+    errors: {
+      load: 'We could not load the checkout. Please try again.',
+      notFound: 'This application could not be found.',
+      notAccepted: 'Only an accepted application can be paid for.',
+      pay: 'We could not process the demo payment. Please try again.',
+    },
+  },
   enrollments: {
     title: 'My enrollments',
     description: 'Courses and programs you are currently enrolled in.',

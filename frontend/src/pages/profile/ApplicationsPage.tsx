@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
-import { getMyApplications, getMyPayments, payForApplication, type Application } from '../../api/enrollment'
+import { getMyApplications, getMyPayments, type Application } from '../../api/enrollment'
 import { Link } from 'react-router-dom'
 import Container from '../../components/Container'
 
@@ -21,8 +21,6 @@ function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[] | null>(null)
   const [loadError, setLoadError] = useState('')
   const [isForbidden, setIsForbidden] = useState(false)
-  const [payingId, setPayingId] = useState<string | null>(null)
-  const [payErrors, setPayErrors] = useState<Record<string, string>>({})
   const [paidIds, setPaidIds] = useState<Set<string>>(new Set())
 
   const loadApplications = useCallback(() => {
@@ -47,30 +45,6 @@ function ApplicationsPage() {
   useEffect(() => {
     loadApplications()
   }, [loadApplications])
-
-  async function handlePay(applicationId: string) {
-    setPayingId(applicationId)
-    setPayErrors((previous) => ({ ...previous, [applicationId]: '' }))
-
-    try {
-      const result = await payForApplication(applicationId)
-      if (result.succeeded) {
-        setPaidIds((previous) => new Set(previous).add(applicationId))
-      } else {
-        setPayErrors((previous) => ({
-          ...previous,
-          [applicationId]: result.error ?? t('applications.errors.pay'),
-        }))
-      }
-    } catch (requestError) {
-      setPayErrors((previous) => ({
-        ...previous,
-        [applicationId]: getApiErrorMessage(requestError, t('applications.errors.pay')),
-      }))
-    } finally {
-      setPayingId(null)
-    }
-  }
 
   if (isForbidden) {
     return (
@@ -99,8 +73,6 @@ function ApplicationsPage() {
           {applications.map((application) => {
             const title = application.courseTitle ?? application.programTitle ?? ''
             const isPaid = paidIds.has(application.id)
-            const payError = payErrors[application.id]
-
             return (
               <article key={application.id} className="dashboard-card">
                 <div className="dashboard-card__heading">
@@ -145,18 +117,11 @@ function ApplicationsPage() {
                   </ol>
                 </div>
 
-                {payError ? <p className="auth-message auth-message--error" role="alert">{payError}</p> : null}
-
                 {application.status === 'Accepted' && !isPaid ? (
                   <div className="dashboard-card__actions">
-                    <button
-                      className="button button--primary"
-                      type="button"
-                      disabled={payingId === application.id}
-                      onClick={() => void handlePay(application.id)}
-                    >
-                      {payingId === application.id ? t('applications.paying') : t('applications.pay')}
-                    </button>
+                    <Link className="button button--primary" to={`/profile/applications/${application.id}/payment`}>
+                      {t('applications.pay')}
+                    </Link>
                   </div>
                 ) : null}
 

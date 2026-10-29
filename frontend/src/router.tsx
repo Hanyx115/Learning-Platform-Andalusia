@@ -47,6 +47,7 @@ import FaqPage from './pages/FaqPage'
 import InstructorsPage from './pages/InstructorsPage'
 import NotificationsPage from './pages/profile/NotificationsPage'
 import PaymentHistoryPage from './pages/profile/PaymentHistoryPage'
+import PaymentCheckoutPage from './pages/profile/PaymentCheckoutPage'
 import CmsLayout from './pages/cms/CmsLayout'
 import CmsContentPage from './pages/cms/CmsContentPage'
 import CmsNotificationsPage from './pages/cms/CmsNotificationsPage'
@@ -149,6 +150,10 @@ export const router = createBrowserRouter([
                   {
                     path: 'applications',
                     element: <ApplicationsPage />,
+                  },
+                  {
+                    path: 'applications/:applicationId/payment',
+                    element: <PaymentCheckoutPage />,
                   },
                   {
                     path: 'enrollments',

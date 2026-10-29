@@ -28,7 +28,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 "Use scripts/run-sprint4-tests.ps1 for the supported Docker-based workflow.");
         }
 
-        builder.UseEnvironment("Development");
+        builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, configuration) =>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
