@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router-dom'
 import Container from '../../components/Container'
+import WorkspaceNavigation from '../../components/WorkspaceNavigation'
 import { useAuthProfile } from '../../auth/profileContext'
 import '../profile/profile-dashboard.css'
 
@@ -12,6 +13,7 @@ function CmsLayout() {
     <div className="profile-dashboard">
       <Container className="profile-dashboard__layout">
         <nav className="profile-dashboard__sidebar" aria-label={t('cmsNav.label')}>
+          <WorkspaceNavigation title={t('cmsNav.label')} />
           <NavLink to="/cms/catalog" className="profile-dashboard__link">{t('cmsNav.catalog')}</NavLink>
           {canManageWebsiteContent ? (
             <>

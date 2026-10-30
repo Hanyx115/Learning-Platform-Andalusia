@@ -8,7 +8,7 @@ import Container from './Container'
 import './Header.css'
 import LanguageSwitcher from './LanguageSwitcher'
 import Logo from './Logo'
-import { primaryNavItems } from '../navigation'
+import { getWorkspaceNavGroups, primaryNavItems } from '../navigation'
 
 const NAV_ID = 'primary-navigation'
 const ACCOUNT_DRAWER_ID = 'account-drawer'
@@ -18,11 +18,7 @@ function Header() {
   const navigate = useNavigate()
   const tokens = useAuthSession()
   const { profile } = useAuthProfile()
-  const canReviewApplications = profile?.roles.includes('Manager') || profile?.roles.includes('Admin')
-  const isInstructor = profile?.roles.includes('Instructor') ?? false
-  const canOpenCms = profile?.roles.some((role) => (
-    role === 'ContentManager' || role === 'Manager' || role === 'Admin'
-  ))
+  const workspaceNavigationGroups = getWorkspaceNavGroups(profile?.roles ?? [])
   const [isNavOpen, setIsNavOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -230,20 +226,21 @@ function Header() {
             </div>
 
             <nav className="account-drawer__nav" aria-label={t('nav.accountNavigation')}>
-              <NavLink to="/profile" onClick={handleAccountNavigation}>{t('nav.profile')}</NavLink>
-              <NavLink to="/profile/notifications" onClick={handleAccountNavigation}>{t('nav.notifications')}</NavLink>
-              {canOpenCms ? (
-                <NavLink to="/cms" onClick={handleAccountNavigation}>{t('nav.cmsDashboard')}</NavLink>
-              ) : null}
-              {canReviewApplications ? (
-                <NavLink to="/staff/applications" onClick={handleAccountNavigation}>{t('nav.reviewApplications')}</NavLink>
-              ) : null}
-              {canReviewApplications ? (
-                <NavLink to="/admin/catalog" onClick={handleAccountNavigation}>{t('nav.adminDashboard')}</NavLink>
-              ) : null}
-              {isInstructor ? (
-                <NavLink to="/instructor" onClick={handleAccountNavigation}>{t('nav.instructorDashboard')}</NavLink>
-              ) : null}
+              {workspaceNavigationGroups.map((group) => (
+                <div className="account-drawer__nav-group" key={group.labelKey}>
+                  <p className="account-drawer__nav-heading">{t(group.labelKey)}</p>
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      end={item.end}
+                      onClick={handleAccountNavigation}
+                    >
+                      {t(item.labelKey)}
+                    </NavLink>
+                  ))}
+                </div>
+              ))}
             </nav>
 
             <button

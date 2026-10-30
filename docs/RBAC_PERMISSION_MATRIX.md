@@ -27,6 +27,7 @@ This document is the Phase 1 authorization contract. API authorization is author
 - Course/program offering, scheduling, and training-location endpoints remain protected by `RequireManagerOrAdmin`.
 - CMS website-content and notification-template endpoints remain protected by `RequireContentManagerOrAdmin`.
 - User and role administration remains protected by `RequireAdmin`.
+- Admins can assign or remove Learner, Instructor, Content Manager, and Manager roles; the Admin role itself remains protected from role-management requests.
 - Public course, program, and career-path queries return `Published` records only. Non-public records are available through authenticated `/manage` endpoints.
 - Instructor services verify assignment ownership in the application/repository layer before exposing rosters, attendance, assignments, materials, submissions, or progress.
 

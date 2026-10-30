@@ -29,11 +29,12 @@ public sealed class AdminUserManagementEndpointsTests(ApiWebApplicationFactory f
             HttpMethod.Put,
             $"/api/v1/admin/users/{learner.UserId}/roles",
             admin.Token,
-            new { roles = new[] { RoleNames.Instructor } });
+            new { roles = new[] { RoleNames.Instructor, RoleNames.Manager } });
         rolesResponse.EnsureSuccessStatusCode();
         using var rolesDocument = JsonDocument.Parse(await rolesResponse.Content.ReadAsStringAsync());
         var roles = rolesDocument.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()).ToArray();
         Assert.Contains(RoleNames.Instructor, roles);
+        Assert.Contains(RoleNames.Manager, roles);
         Assert.DoesNotContain(RoleNames.Learner, roles);
 
         using var statusResponse = await SendAuthorizedAsync(

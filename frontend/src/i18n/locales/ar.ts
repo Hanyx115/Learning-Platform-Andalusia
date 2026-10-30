@@ -126,6 +126,9 @@ export const arTranslations = {
     description: 'لا يملك حسابك صلاحية فتح هذه الصفحة.',
     returnHome: 'العودة إلى الصفحة الرئيسية',
   },
+  workspace: {
+    navigation: 'مساحة العمل',
+  },
   profileNav: {
     label: 'تنقل الملف الشخصي',
     profile: 'ملفي الشخصي',

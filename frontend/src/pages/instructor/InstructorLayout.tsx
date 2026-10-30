@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router-dom'
 import Container from '../../components/Container'
+import WorkspaceNavigation from '../../components/WorkspaceNavigation'
 import '../profile/profile-dashboard.css'
 
 function InstructorLayout() {
@@ -10,6 +11,7 @@ function InstructorLayout() {
     <div className="profile-dashboard">
       <Container className="profile-dashboard__layout">
         <nav className="profile-dashboard__sidebar" aria-label={t('instructorNav.label')}>
+          <WorkspaceNavigation title={t('instructorNav.label')} />
           <NavLink to="/instructor/sessions" className="profile-dashboard__link">
             {t('instructorNav.sessions')}
           </NavLink>

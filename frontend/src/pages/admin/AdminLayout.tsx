@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router-dom'
 import Container from '../../components/Container'
+import WorkspaceNavigation from '../../components/WorkspaceNavigation'
 import { useAuthProfile } from '../../auth/profileContext'
 import '../profile/profile-dashboard.css'
 
@@ -13,6 +14,7 @@ function AdminLayout() {
     <div className="profile-dashboard">
       <Container className="profile-dashboard__layout">
         <nav className="profile-dashboard__sidebar" aria-label={t('adminNav.label')}>
+          <WorkspaceNavigation title={t('adminNav.label')} />
           <NavLink to="/admin/catalog" className="profile-dashboard__link">
             {t('adminNav.catalog')}
           </NavLink>

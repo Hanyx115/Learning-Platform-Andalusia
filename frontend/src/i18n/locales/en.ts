@@ -126,6 +126,9 @@ export const enTranslations = {
     description: 'Your account does not have permission to open this page.',
     returnHome: 'Return to the home page',
   },
+  workspace: {
+    navigation: 'Workspace',
+  },
   profileNav: {
     label: 'Profile navigation',
     profile: 'My profile',
