@@ -7,6 +7,7 @@ public interface IProgramRepository
 {
     Task<PaginatedResult<ProgramSummaryDto>> GetPageAsync(
         CatalogListQuery query,
+        bool includeNonPublic,
         CancellationToken cancellationToken);
 
     Task<ProgramDetailDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken);

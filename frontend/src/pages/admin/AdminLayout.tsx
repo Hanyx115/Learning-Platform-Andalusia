@@ -1,10 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router-dom'
 import Container from '../../components/Container'
+import { useAuthProfile } from '../../auth/profileContext'
 import '../profile/profile-dashboard.css'
 
 function AdminLayout() {
   const { t } = useTranslation()
+  const { profile } = useAuthProfile()
+  const isAdmin = profile?.roles.includes('Admin') ?? false
 
   return (
     <div className="profile-dashboard">
@@ -25,9 +28,11 @@ function AdminLayout() {
           <NavLink to="/admin/payments" className="profile-dashboard__link">
             {t('adminNav.payments')}
           </NavLink>
-          <NavLink to="/admin/users" className="profile-dashboard__link">
-            {t('adminNav.users')}
-          </NavLink>
+          {isAdmin ? (
+            <NavLink to="/admin/users" className="profile-dashboard__link">
+              {t('adminNav.users')}
+            </NavLink>
+          ) : null}
         </nav>
         <div className="profile-dashboard__content">
           <Outlet />

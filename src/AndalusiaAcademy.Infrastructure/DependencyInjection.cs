@@ -148,6 +148,9 @@ public static class DependencyInjection
             options.AddPolicy(
                 PolicyNames.RequireContentManagerManagerOrAdmin,
                 policy => policy.RequireRole(RoleNames.ContentManager, RoleNames.Manager, RoleNames.Admin));
+            options.AddPolicy(
+                PolicyNames.CatalogEditor,
+                policy => policy.RequireRole(RoleNames.ContentManager, RoleNames.Manager, RoleNames.Admin));
         });
 
         services.AddSingleton<ITokenService, JwtTokenService>();

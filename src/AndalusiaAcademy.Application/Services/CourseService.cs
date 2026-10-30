@@ -10,7 +10,12 @@ public sealed class CourseService(ICourseRepository courseRepository, TimeProvid
     public Task<PaginatedResult<CourseDto>> GetCoursesAsync(
         CourseCatalogQuery query,
         CancellationToken cancellationToken)
-        => courseRepository.GetPageAsync(query, cancellationToken);
+        => courseRepository.GetPageAsync(query, includeNonPublic: false, cancellationToken);
+
+    public Task<PaginatedResult<CourseDto>> GetCoursesForManagementAsync(
+        CourseCatalogQuery query,
+        CancellationToken cancellationToken)
+        => courseRepository.GetPageAsync(query, includeNonPublic: true, cancellationToken);
 
     public Task<CourseDto?> GetCourseBySlugAsync(string slug, CancellationToken cancellationToken)
         => courseRepository.GetBySlugAsync(slug, cancellationToken);
@@ -83,6 +88,51 @@ public sealed class CourseService(ICourseRepository courseRepository, TimeProvid
 
         await courseRepository.SaveChangesAsync(cancellationToken);
 
+        return SchedulingMutationOutcome<CourseDto>.Success(
+            (await courseRepository.GetByIdAsync(id, cancellationToken))!);
+    }
+
+    public Task<SchedulingMutationOutcome<CourseDto>> CreateContentAsync(
+        CourseContentRequest request, CancellationToken cancellationToken)
+        => CreateAsync(
+            new CreateCourseRequest(
+                request.Title,
+                request.CategoryId,
+                request.Description,
+                request.Status,
+                request.Type,
+                Price: null),
+            cancellationToken);
+
+    public async Task<SchedulingMutationOutcome<CourseDto>> UpdateContentAsync(
+        Guid id, CourseContentRequest request, CancellationToken cancellationToken)
+    {
+        var course = await courseRepository.GetForUpdateAsync(id, cancellationToken);
+        if (course is null)
+        {
+            return Fail(SchedulingFailureKind.NotFound, "Course not found.");
+        }
+
+        if (!await courseRepository.CategoryExistsAsync(request.CategoryId, cancellationToken))
+        {
+            return Fail(SchedulingFailureKind.Validation, "Select a valid category.");
+        }
+
+        var title = request.Title.Trim();
+        var slug = SlugGenerator.Generate(title);
+        if (await courseRepository.SlugExistsAsync(slug, excludedId: id, cancellationToken))
+        {
+            return Fail(SchedulingFailureKind.Conflict, "A course with a matching title already exists.");
+        }
+
+        course.CategoryId = request.CategoryId;
+        course.Title = title;
+        course.Slug = slug;
+        course.Description = request.Description.Trim();
+        course.Status = request.Status;
+        course.Type = request.Type;
+
+        await courseRepository.SaveChangesAsync(cancellationToken);
         return SchedulingMutationOutcome<CourseDto>.Success(
             (await courseRepository.GetByIdAsync(id, cancellationToken))!);
     }

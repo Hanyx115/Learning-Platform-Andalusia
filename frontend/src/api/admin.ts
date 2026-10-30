@@ -1,6 +1,16 @@
 import { apiRequest } from './client'
 import type { Profile } from './auth'
-import type { Course, CourseSession, Offering, ProgramSession, ProgramSummary, TrainingLocation } from './catalog'
+import type {
+  CareerPathDetail,
+  CareerPathSummary,
+  Course,
+  CourseSession,
+  Offering,
+  PaginatedResult,
+  ProgramSession,
+  ProgramSummary,
+  TrainingLocation,
+} from './catalog'
 
 export interface CourseCategory {
   id: string
@@ -89,6 +99,10 @@ export interface RescheduleSessionRequest extends ScheduleSessionRequest {
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
+function managementQuery(status: string, pageSize = 100) {
+  return `?status=${encodeURIComponent(status)}&pageSize=${pageSize}`
+}
+
 // Course categories
 export function getCourseCategories() {
   return apiRequest<CourseCategory[]>('/api/v1/course-categories')
@@ -136,6 +150,28 @@ export function updateCourse(id: string, request: CreateCourseRequest) {
   })
 }
 
+export type CourseContentRequest = Omit<CreateCourseRequest, 'price'>
+
+export function getCoursesForManagement(status: string) {
+  return apiRequest<PaginatedResult<Course>>(`/api/v1/courses/manage${managementQuery(status)}`)
+}
+
+export function createCourseContent(request: CourseContentRequest) {
+  return apiRequest<Course>('/api/v1/courses/content', {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify(request),
+  })
+}
+
+export function updateCourseContent(id: string, request: CourseContentRequest) {
+  return apiRequest<Course>(`/api/v1/courses/${id}/content`, {
+    method: 'PUT',
+    headers: jsonHeaders,
+    body: JSON.stringify(request),
+  })
+}
+
 // Programs
 export interface CreateProgramRequest {
   title: string
@@ -158,6 +194,66 @@ export function updateProgram(id: string, request: CreateProgramRequest) {
     headers: jsonHeaders,
     body: JSON.stringify(request),
   })
+}
+
+export type ProgramContentRequest = Omit<CreateProgramRequest, 'price'>
+
+export function getProgramsForManagement(status: string) {
+  return apiRequest<PaginatedResult<ProgramSummary>>(`/api/v1/programs/manage${managementQuery(status)}`)
+}
+
+export function createProgramContent(request: ProgramContentRequest) {
+  return apiRequest<ProgramSummary>('/api/v1/programs/content', {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify(request),
+  })
+}
+
+export function updateProgramContent(id: string, request: ProgramContentRequest) {
+  return apiRequest<ProgramSummary>(`/api/v1/programs/${id}/content`, {
+    method: 'PUT',
+    headers: jsonHeaders,
+    body: JSON.stringify(request),
+  })
+}
+
+// Career paths
+export interface CareerPathRequest {
+  title: string
+  description: string
+  recommendedSkills: string
+  status: string
+  recommendedProgramIds: string[]
+  recommendedCourseIds: string[]
+}
+
+export function getCareerPathsForManagement(status: string) {
+  return apiRequest<PaginatedResult<CareerPathSummary>>(`/api/v1/career-paths/manage${managementQuery(status)}`)
+}
+
+export function getCareerPathForManagement(id: string) {
+  return apiRequest<CareerPathDetail>(`/api/v1/career-paths/manage/${id}`)
+}
+
+export function createCareerPath(request: CareerPathRequest) {
+  return apiRequest<CareerPathDetail>('/api/v1/career-paths', {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify(request),
+  })
+}
+
+export function updateCareerPath(id: string, request: CareerPathRequest) {
+  return apiRequest<CareerPathDetail>(`/api/v1/career-paths/${id}`, {
+    method: 'PUT',
+    headers: jsonHeaders,
+    body: JSON.stringify(request),
+  })
+}
+
+export function deleteCareerPath(id: string) {
+  return apiRequest<void>(`/api/v1/career-paths/${id}`, { method: 'DELETE' })
 }
 
 // Training locations

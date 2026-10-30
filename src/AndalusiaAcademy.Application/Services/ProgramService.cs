@@ -10,7 +10,12 @@ public sealed class ProgramService(IProgramRepository programRepository, TimePro
     public Task<PaginatedResult<ProgramSummaryDto>> GetProgramsAsync(
         CatalogListQuery query,
         CancellationToken cancellationToken)
-        => programRepository.GetPageAsync(query, cancellationToken);
+        => programRepository.GetPageAsync(query, includeNonPublic: false, cancellationToken);
+
+    public Task<PaginatedResult<ProgramSummaryDto>> GetProgramsForManagementAsync(
+        CatalogListQuery query,
+        CancellationToken cancellationToken)
+        => programRepository.GetPageAsync(query, includeNonPublic: true, cancellationToken);
 
     public Task<ProgramDetailDto?> GetProgramBySlugAsync(string slug, CancellationToken cancellationToken)
         => programRepository.GetBySlugAsync(slug, cancellationToken);
@@ -70,6 +75,39 @@ public sealed class ProgramService(IProgramRepository programRepository, TimePro
 
         await programRepository.SaveChangesAsync(cancellationToken);
 
+        return SchedulingMutationOutcome<ProgramSummaryDto>.Success(
+            (await programRepository.GetSummaryByIdAsync(id, cancellationToken))!);
+    }
+
+    public Task<SchedulingMutationOutcome<ProgramSummaryDto>> CreateContentAsync(
+        ProgramContentRequest request, CancellationToken cancellationToken)
+        => CreateAsync(
+            new CreateProgramRequest(request.Title, request.Description, request.Status, Price: null),
+            cancellationToken);
+
+    public async Task<SchedulingMutationOutcome<ProgramSummaryDto>> UpdateContentAsync(
+        Guid id, ProgramContentRequest request, CancellationToken cancellationToken)
+    {
+        var program = await programRepository.GetForUpdateAsync(id, cancellationToken);
+        if (program is null)
+        {
+            return SchedulingMutationOutcome<ProgramSummaryDto>.Failure(
+                SchedulingFailureKind.NotFound, "Program not found.");
+        }
+
+        var title = request.Title.Trim();
+        var slug = SlugGenerator.Generate(title);
+        if (await programRepository.SlugExistsAsync(slug, excludedId: id, cancellationToken))
+        {
+            return Fail("A program with a matching title already exists.");
+        }
+
+        program.Title = title;
+        program.Slug = slug;
+        program.Description = request.Description.Trim();
+        program.Status = request.Status;
+
+        await programRepository.SaveChangesAsync(cancellationToken);
         return SchedulingMutationOutcome<ProgramSummaryDto>.Success(
             (await programRepository.GetSummaryByIdAsync(id, cancellationToken))!);
     }

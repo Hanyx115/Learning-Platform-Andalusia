@@ -10,6 +10,7 @@ public sealed class CourseRepository(ApplicationDbContext dbContext) : ICourseRe
 {
     public async Task<PaginatedResult<CourseDto>> GetPageAsync(
         CourseCatalogQuery query,
+        bool includeNonPublic,
         CancellationToken cancellationToken)
     {
         var courses = dbContext.Courses.AsNoTracking();
@@ -29,11 +30,11 @@ public sealed class CourseRepository(ApplicationDbContext dbContext) : ICourseRe
             courses = courses.Where(course => course.Category!.Slug == category);
         }
 
-        // Defaults to Published only, so a Draft/Archived course never leaks into public browsing
-        // unless a caller explicitly asks for another status (staff management views).
-        courses = string.IsNullOrWhiteSpace(query.Status)
-            ? courses.Where(course => course.Status == CatalogStatuses.Published)
-            : courses.Where(course => course.Status == query.Status.Trim());
+        // Public callers are always restricted to Published. Authenticated management endpoints
+        // opt in to non-public statuses through includeNonPublic.
+        courses = includeNonPublic && !string.IsNullOrWhiteSpace(query.Status)
+            ? courses.Where(course => course.Status == query.Status.Trim())
+            : courses.Where(course => course.Status == CatalogStatuses.Published);
 
         if (!string.IsNullOrWhiteSpace(query.Type))
         {

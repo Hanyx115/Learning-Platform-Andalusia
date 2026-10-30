@@ -10,6 +10,7 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
 {
     public async Task<PaginatedResult<ProgramSummaryDto>> GetPageAsync(
         CatalogListQuery query,
+        bool includeNonPublic,
         CancellationToken cancellationToken)
     {
         var programsQuery = dbContext.Programs.AsNoTracking();
@@ -22,11 +23,11 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 program.Description.Contains(search));
         }
 
-        // Defaults to Published only, so a Draft/Archived program never leaks into public browsing
-        // unless a caller explicitly asks for another status (staff management views).
-        programsQuery = string.IsNullOrWhiteSpace(query.Status)
-            ? programsQuery.Where(program => program.Status == CatalogStatuses.Published)
-            : programsQuery.Where(program => program.Status == query.Status.Trim());
+        // Public callers are always restricted to Published. Authenticated management endpoints
+        // opt in to non-public statuses through includeNonPublic.
+        programsQuery = includeNonPublic && !string.IsNullOrWhiteSpace(query.Status)
+            ? programsQuery.Where(program => program.Status == query.Status.Trim())
+            : programsQuery.Where(program => program.Status == CatalogStatuses.Published);
 
         var totalCount = await programsQuery.CountAsync(cancellationToken);
         var offset = (long)(query.Page - 1) * query.PageSize;

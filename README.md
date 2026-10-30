@@ -537,39 +537,9 @@ erDiagram
     APPLICATION_USER ||--o{ AUDIT_LOG : performs
 ```
 
-## 10. Proposed roles and permission matrix
+## 10. Roles and permission matrix
 
-This is a starting matrix, not stakeholder-approved authorization.
-
-| Capability | Learner | Instructor | Manager | Admin | Content Manager |
-|---|---:|---:|---:|---:|---:|
-| View public catalog | Yes | Yes | Yes | Yes | Yes |
-| Manage own profile | Own | Own | Own | Own | Own |
-| Apply, pay, enroll | Own | — | Assisted view | Full oversight | — |
-| View learner courses/LMS | Own | Assigned learners | View/manage | Full | — |
-| Manage attendance | View own | Assigned courses | Yes | Yes | — |
-| Manage assignments | Submit | Assigned courses | Oversight | Yes | — |
-| View instructor earnings | — | Own | With permission | With permission | — |
-| Manage courses/programs | — | Assigned operational access | Yes | Yes | Content fields |
-| Publish catalog content | — | — | Optional permission | Yes | Yes |
-| Manage students/instructors | — | View assigned learners | Yes | Yes | — |
-| Review applications | — | — | With permission | Yes | — |
-| Manage payments/enrollments | Own view | — | With permission | Yes | — |
-| View KPIs/reports | — | Own dashboard | Yes | Yes | Limited content metrics |
-| Manage compensation | — | Own view | Separate permission | Separate permission | — |
-| Manage roles/permissions | — | — | Normally no | Yes | — |
-| Manage notifications | Own preferences/read | Assigned announcements | Operational | Full | Template/content permission |
-
-> ⚠ **BUSINESS RULE TO CONFIRM:**
->
-> - Exact Manager versus Admin boundaries
-> - Whether Managers can assign roles
-> - Who reviews applications
-> - Who may correct attendance
-> - Who may approve compensation and payouts
-> - Whether Content Managers may change prices, schedules, or enrollment status
-
-Authorization will be permission-policy based. Roles merely receive permission collections.
+The implemented Phase 1 authorization contract is documented in [docs/RBAC_PERMISSION_MATRIX.md](docs/RBAC_PERMISSION_MATRIX.md). The API uses named policies as the authoritative boundary. In particular, Content Managers can edit catalog content and publication state but cannot change prices, offerings, capacity, schedules, locations, applications, payments, users, or roles.
 
 ## 11. API plan
 

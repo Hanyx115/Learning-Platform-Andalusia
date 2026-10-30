@@ -20,7 +20,9 @@ function Header() {
   const { profile } = useAuthProfile()
   const canReviewApplications = profile?.roles.includes('Manager') || profile?.roles.includes('Admin')
   const isInstructor = profile?.roles.includes('Instructor') ?? false
-  const canManageContent = profile?.roles.includes('ContentManager') || profile?.roles.includes('Admin')
+  const canOpenCms = profile?.roles.some((role) => (
+    role === 'ContentManager' || role === 'Manager' || role === 'Admin'
+  ))
   const [isNavOpen, setIsNavOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -230,7 +232,7 @@ function Header() {
             <nav className="account-drawer__nav" aria-label={t('nav.accountNavigation')}>
               <NavLink to="/profile" onClick={handleAccountNavigation}>{t('nav.profile')}</NavLink>
               <NavLink to="/profile/notifications" onClick={handleAccountNavigation}>{t('nav.notifications')}</NavLink>
-              {canManageContent ? (
+              {canOpenCms ? (
                 <NavLink to="/cms" onClick={handleAccountNavigation}>{t('nav.cmsDashboard')}</NavLink>
               ) : null}
               {canReviewApplications ? (

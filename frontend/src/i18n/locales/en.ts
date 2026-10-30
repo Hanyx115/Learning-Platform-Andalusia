@@ -138,6 +138,7 @@ export const enTranslations = {
   },
   cmsNav: {
     label: 'Content dashboard navigation',
+    catalog: 'Catalog content',
     content: 'Website content',
     notifications: 'Notifications',
   },
@@ -304,11 +305,12 @@ export const enTranslations = {
   },
   adminCatalog: {
     title: 'Catalog management',
-    description: 'Create and edit course categories, courses, and programs.',
+    description: 'Create and edit categories, courses, programs, and career paths according to your role.',
     loading: 'Loading catalog data…',
     categoriesTitle: 'Categories',
     coursesTitle: 'Courses',
     programsTitle: 'Programs',
+    careerPathsTitle: 'Career paths',
     newCategoryPlaceholder: 'New category name',
     addCategory: 'Add category',
     edit: 'Edit',
@@ -319,6 +321,9 @@ export const enTranslations = {
     editCourse: 'Edit course',
     newProgram: 'New program',
     editProgram: 'Edit program',
+    newCareerPath: 'New career path',
+    editCareerPath: 'Edit career path',
+    delete: 'Delete',
     manageOfferings: 'Manage offerings',
     manageMaterials: 'Manage materials',
     fields: {
@@ -329,6 +334,10 @@ export const enTranslations = {
       status: 'Status',
       type: 'Type',
       price: 'Price (EGP)',
+        recommendedSkills: 'Recommended skills',
+        recommendedPrograms: 'Recommended programs',
+        recommendedCourses: 'Recommended courses',
+        multiSelectHint: 'Hold Ctrl (Windows) or Command (macOS) to select more than one item.',
     },
     errors: {
       load: 'We could not load the catalog. Please try again.',

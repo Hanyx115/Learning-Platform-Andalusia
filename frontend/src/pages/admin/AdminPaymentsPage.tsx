@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
 import { failPendingPayment, getAllPayments, type AdminPayment } from '../../api/admin'
 import Container from '../../components/Container'
+import { useAuthProfile } from '../../auth/profileContext'
 
 function statusBadgeClass(status: string) {
   switch (status) {
@@ -17,6 +18,8 @@ function statusBadgeClass(status: string) {
 
 function AdminPaymentsPage() {
   const { t } = useTranslation()
+  const { profile } = useAuthProfile()
+  const isAdmin = profile?.roles.includes('Admin') ?? false
   const [payments, setPayments] = useState<AdminPayment[] | null>(null)
   const [loadError, setLoadError] = useState('')
   const [isForbidden, setIsForbidden] = useState(false)
@@ -109,7 +112,7 @@ function AdminPaymentsPage() {
                   ))}
                 </ul>
               </div>
-              {payment.status === 'Pending' ? (
+              {isAdmin && payment.status === 'Pending' ? (
                 <div className="dashboard-card__actions">
                   <button
                     type="button"
