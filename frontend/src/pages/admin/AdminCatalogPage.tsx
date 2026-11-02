@@ -3,16 +3,28 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
 import {
+  createCareerPath,
   createCourse,
+  createCourseContent,
   createCourseCategory,
   createProgram,
+  createProgramContent,
+  deleteCareerPath,
+  getCareerPathForManagement,
+  getCareerPathsForManagement,
   getCourseCategories,
+  getCoursesForManagement,
+  getProgramsForManagement,
+  updateCareerPath,
   updateCourse,
+  updateCourseContent,
   updateCourseCategory,
   updateProgram,
+  updateProgramContent,
   type CourseCategory,
 } from '../../api/admin'
-import { getCourses, getPrograms, type Course, type ProgramSummary } from '../../api/catalog'
+import type { CareerPathSummary, Course, ProgramSummary } from '../../api/catalog'
+import { useAuthProfile } from '../../auth/profileContext'
 import Container from '../../components/Container'
 
 const STATUSES = ['Draft', 'Published', 'Archived']
@@ -34,6 +46,15 @@ interface ProgramDraft {
   price: string
 }
 
+interface CareerPathDraft {
+  title: string
+  description: string
+  recommendedSkills: string
+  status: string
+  recommendedProgramIds: string[]
+  recommendedCourseIds: string[]
+}
+
 const emptyCourseDraft: CourseDraft = {
   title: '',
   categoryId: '',
@@ -44,6 +65,14 @@ const emptyCourseDraft: CourseDraft = {
 }
 
 const emptyProgramDraft: ProgramDraft = { title: '', description: '', status: 'Published', price: '' }
+const emptyCareerPathDraft: CareerPathDraft = {
+  title: '',
+  description: '',
+  recommendedSkills: '',
+  status: 'Draft',
+  recommendedProgramIds: [],
+  recommendedCourseIds: [],
+}
 
 async function fetchAllStatuses<T>(fetchByStatus: (status: string) => Promise<{ items: T[] }>) {
   const pages = await Promise.all(STATUSES.map((status) => fetchByStatus(status)))
@@ -52,9 +81,13 @@ async function fetchAllStatuses<T>(fetchByStatus: (status: string) => Promise<{ 
 
 function AdminCatalogPage() {
   const { t } = useTranslation()
+  const { profile } = useAuthProfile()
+  const isContentManagerOnly = profile?.roles.includes('ContentManager')
+    && !profile.roles.some((role) => role === 'Manager' || role === 'Admin')
   const [categories, setCategories] = useState<CourseCategory[] | null>(null)
   const [courses, setCourses] = useState<Course[] | null>(null)
   const [programs, setPrograms] = useState<ProgramSummary[] | null>(null)
+  const [careerPaths, setCareerPaths] = useState<CareerPathSummary[] | null>(null)
   const [loadError, setLoadError] = useState('')
   const [isForbidden, setIsForbidden] = useState(false)
 
@@ -70,17 +103,22 @@ function AdminCatalogPage() {
   const [programDraft, setProgramDraft] = useState<ProgramDraft>(emptyProgramDraft)
   const [programError, setProgramError] = useState('')
   const [editingProgramId, setEditingProgramId] = useState<string | null>(null)
+  const [careerPathDraft, setCareerPathDraft] = useState<CareerPathDraft>(emptyCareerPathDraft)
+  const [careerPathError, setCareerPathError] = useState('')
+  const [editingCareerPathId, setEditingCareerPathId] = useState<string | null>(null)
 
   const loadAll = useCallback(() => {
     Promise.all([
       getCourseCategories(),
-      fetchAllStatuses((status) => getCourses({ status, pageSize: 100 })),
-      fetchAllStatuses((status) => getPrograms({ status, pageSize: 100 })),
+      fetchAllStatuses((status) => getCoursesForManagement(status)),
+      fetchAllStatuses((status) => getProgramsForManagement(status)),
+      fetchAllStatuses((status) => getCareerPathsForManagement(status)),
     ])
-      .then(([loadedCategories, loadedCourses, loadedPrograms]) => {
+      .then(([loadedCategories, loadedCourses, loadedPrograms, loadedCareerPaths]) => {
         setCategories(loadedCategories)
         setCourses(loadedCourses)
         setPrograms(loadedPrograms)
+        setCareerPaths(loadedCareerPaths)
       })
       .catch((requestError: unknown) => {
         if (getApiErrorStatus(requestError) === 403) {
@@ -141,7 +179,20 @@ function AdminCatalogPage() {
     }
 
     try {
-      if (editingCourseId) {
+      if (isContentManagerOnly) {
+        const contentRequest = {
+          title: request.title,
+          categoryId: request.categoryId,
+          description: request.description,
+          status: request.status,
+          type: request.type,
+        }
+        if (editingCourseId) {
+          await updateCourseContent(editingCourseId, contentRequest)
+        } else {
+          await createCourseContent(contentRequest)
+        }
+      } else if (editingCourseId) {
         await updateCourse(editingCourseId, request)
       } else {
         await createCourse(request)
@@ -176,7 +227,18 @@ function AdminCatalogPage() {
     }
 
     try {
-      if (editingProgramId) {
+      if (isContentManagerOnly) {
+        const contentRequest = {
+          title: request.title,
+          description: request.description,
+          status: request.status,
+        }
+        if (editingProgramId) {
+          await updateProgramContent(editingProgramId, contentRequest)
+        } else {
+          await createProgramContent(contentRequest)
+        }
+      } else if (editingProgramId) {
         await updateProgram(editingProgramId, request)
       } else {
         await createProgram(request)
@@ -197,6 +259,54 @@ function AdminCatalogPage() {
       status: program.status,
       price: program.price?.toString() ?? '',
     })
+  }
+
+  async function startEditCareerPath(careerPath: CareerPathSummary) {
+    setCareerPathError('')
+    try {
+      const detail = await getCareerPathForManagement(careerPath.id)
+      setEditingCareerPathId(careerPath.id)
+      setCareerPathDraft({
+        title: detail.title,
+        description: detail.description,
+        recommendedSkills: detail.recommendedSkills,
+        status: detail.status,
+        recommendedProgramIds: detail.recommendedPrograms.map((program) => program.programId),
+        recommendedCourseIds: detail.recommendedCourses.map((course) => course.courseId),
+      })
+    } catch (requestError) {
+      setCareerPathError(getApiErrorMessage(requestError, t('adminCatalog.errors.load')))
+    }
+  }
+
+  async function handleSaveCareerPath() {
+    setCareerPathError('')
+    try {
+      if (editingCareerPathId) {
+        await updateCareerPath(editingCareerPathId, careerPathDraft)
+      } else {
+        await createCareerPath(careerPathDraft)
+      }
+      setCareerPathDraft(emptyCareerPathDraft)
+      setEditingCareerPathId(null)
+      loadAll()
+    } catch (requestError) {
+      setCareerPathError(getApiErrorMessage(requestError, t('adminCatalog.errors.save')))
+    }
+  }
+
+  async function handleDeleteCareerPath(id: string) {
+    setCareerPathError('')
+    try {
+      await deleteCareerPath(id)
+      if (editingCareerPathId === id) {
+        setEditingCareerPathId(null)
+        setCareerPathDraft(emptyCareerPathDraft)
+      }
+      loadAll()
+    } catch (requestError) {
+      setCareerPathError(getApiErrorMessage(requestError, t('adminCatalog.errors.save')))
+    }
   }
 
   return (
@@ -281,18 +391,22 @@ function AdminCatalogPage() {
                 <div className="dashboard-card__meta">
                   <span>{course.categoryName}</span>
                   <span>{course.type}</span>
-                  {course.price !== null ? <span>{course.price} EGP</span> : null}
+                  {!isContentManagerOnly && course.price !== null ? <span>{course.price} EGP</span> : null}
                 </div>
                 <div className="dashboard-card__actions">
                   <button className="button button--secondary" type="button" onClick={() => startEditCourse(course)}>
                     {t('adminCatalog.edit')}
                   </button>
-                  <Link className="button button--secondary" to={`/admin/courses/${course.id}/offerings`}>
-                    {t('adminCatalog.manageOfferings')}
-                  </Link>
-                  <Link className="button button--secondary" to={`/admin/courses/${course.id}/materials`}>
-                    {t('adminCatalog.manageMaterials')}
-                  </Link>
+                  {!isContentManagerOnly ? (
+                    <>
+                      <Link className="button button--secondary" to={`/admin/courses/${course.id}/offerings`}>
+                        {t('adminCatalog.manageOfferings')}
+                      </Link>
+                      <Link className="button button--secondary" to={`/admin/courses/${course.id}/materials`}>
+                        {t('adminCatalog.manageMaterials')}
+                      </Link>
+                    </>
+                  ) : null}
                 </div>
               </article>
             ))}
@@ -366,16 +480,18 @@ function AdminCatalogPage() {
               ))}
             </select>
           </label>
-          <label>
-            {t('adminCatalog.fields.price')}
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={courseDraft.price}
-              onChange={(event) => setCourseDraft((previous) => ({ ...previous, price: event.target.value }))}
-            />
-          </label>
+          {!isContentManagerOnly ? (
+            <label>
+              {t('adminCatalog.fields.price')}
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={courseDraft.price}
+                onChange={(event) => setCourseDraft((previous) => ({ ...previous, price: event.target.value }))}
+              />
+            </label>
+          ) : null}
           <div className="dashboard-card__actions">
             <button className="button button--primary" type="submit">
               {editingCourseId ? t('adminCatalog.save') : t('adminCatalog.create')}
@@ -411,15 +527,17 @@ function AdminCatalogPage() {
                   <span className="status-badge status-badge--neutral">{program.status}</span>
                 </div>
                 <div className="dashboard-card__meta">
-                  {program.price !== null ? <span>{program.price} EGP</span> : null}
+                  {!isContentManagerOnly && program.price !== null ? <span>{program.price} EGP</span> : null}
                 </div>
                 <div className="dashboard-card__actions">
                   <button className="button button--secondary" type="button" onClick={() => startEditProgram(program)}>
                     {t('adminCatalog.edit')}
                   </button>
-                  <Link className="button button--secondary" to={`/admin/programs/${program.id}/offerings`}>
-                    {t('adminCatalog.manageOfferings')}
-                  </Link>
+                  {!isContentManagerOnly ? (
+                    <Link className="button button--secondary" to={`/admin/programs/${program.id}/offerings`}>
+                      {t('adminCatalog.manageOfferings')}
+                    </Link>
+                  ) : null}
                 </div>
               </article>
             ))}
@@ -465,16 +583,18 @@ function AdminCatalogPage() {
               ))}
             </select>
           </label>
-          <label>
-            {t('adminCatalog.fields.price')}
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={programDraft.price}
-              onChange={(event) => setProgramDraft((previous) => ({ ...previous, price: event.target.value }))}
-            />
-          </label>
+          {!isContentManagerOnly ? (
+            <label>
+              {t('adminCatalog.fields.price')}
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={programDraft.price}
+                onChange={(event) => setProgramDraft((previous) => ({ ...previous, price: event.target.value }))}
+              />
+            </label>
+          ) : null}
           <div className="dashboard-card__actions">
             <button className="button button--primary" type="submit">
               {editingProgramId ? t('adminCatalog.save') : t('adminCatalog.create')}
@@ -486,6 +606,125 @@ function AdminCatalogPage() {
                 onClick={() => {
                   setEditingProgramId(null)
                   setProgramDraft(emptyProgramDraft)
+                }}
+              >
+                {t('adminCatalog.cancel')}
+              </button>
+            ) : null}
+          </div>
+        </form>
+      </section>
+
+      {/* Career paths */}
+      <section className="dashboard-section">
+        <h2>{t('adminCatalog.careerPathsTitle')}</h2>
+        {careerPathError ? <p className="auth-message auth-message--error" role="alert">{careerPathError}</p> : null}
+        {careerPaths === null ? (
+          <p role="status">{t('adminCatalog.loading')}</p>
+        ) : (
+          <div className="dashboard-list">
+            {careerPaths.map((careerPath) => (
+              <article key={careerPath.id} className="dashboard-card">
+                <div className="dashboard-card__heading">
+                  <h3 dir="auto">{careerPath.title}</h3>
+                  <span className="status-badge status-badge--neutral">{careerPath.status}</span>
+                </div>
+                <p dir="auto">{careerPath.description}</p>
+                <div className="dashboard-card__actions">
+                  <button className="button button--secondary" type="button" onClick={() => void startEditCareerPath(careerPath)}>
+                    {t('adminCatalog.edit')}
+                  </button>
+                  <button className="button button--secondary" type="button" onClick={() => void handleDeleteCareerPath(careerPath.id)}>
+                    {t('adminCatalog.delete')}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <form
+          className="dashboard-card"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleSaveCareerPath()
+          }}
+        >
+          <h3>{editingCareerPathId ? t('adminCatalog.editCareerPath') : t('adminCatalog.newCareerPath')}</h3>
+          <label>
+            {t('adminCatalog.fields.title')}
+            <input
+              type="text"
+              required
+              value={careerPathDraft.title}
+              onChange={(event) => setCareerPathDraft((previous) => ({ ...previous, title: event.target.value }))}
+            />
+          </label>
+          <label>
+            {t('adminCatalog.fields.description')}
+            <textarea
+              rows={3}
+              required
+              value={careerPathDraft.description}
+              onChange={(event) => setCareerPathDraft((previous) => ({ ...previous, description: event.target.value }))}
+            />
+          </label>
+          <label>
+            {t('adminCatalog.fields.recommendedSkills')}
+            <textarea
+              rows={2}
+              required
+              value={careerPathDraft.recommendedSkills}
+              onChange={(event) => setCareerPathDraft((previous) => ({ ...previous, recommendedSkills: event.target.value }))}
+            />
+          </label>
+          <label>
+            {t('adminCatalog.fields.status')}
+            <select
+              value={careerPathDraft.status}
+              onChange={(event) => setCareerPathDraft((previous) => ({ ...previous, status: event.target.value }))}
+            >
+              {STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </label>
+          <label>
+            {t('adminCatalog.fields.recommendedPrograms')}
+            <select
+              multiple
+              value={careerPathDraft.recommendedProgramIds}
+              onChange={(event) => setCareerPathDraft((previous) => ({
+                ...previous,
+                recommendedProgramIds: Array.from(event.currentTarget.selectedOptions, (option) => option.value),
+              }))}
+            >
+              {programs?.map((program) => <option key={program.id} value={program.id}>{program.title}</option>)}
+            </select>
+          </label>
+          <label>
+            {t('adminCatalog.fields.recommendedCourses')}
+            <select
+              multiple
+              value={careerPathDraft.recommendedCourseIds}
+              onChange={(event) => setCareerPathDraft((previous) => ({
+                ...previous,
+                recommendedCourseIds: Array.from(event.currentTarget.selectedOptions, (option) => option.value),
+              }))}
+            >
+              {courses?.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+            </select>
+          </label>
+          <p className="cms-field__hint">{t('adminCatalog.fields.multiSelectHint')}</p>
+          <div className="dashboard-card__actions">
+            <button className="button button--primary" type="submit">
+              {editingCareerPathId ? t('adminCatalog.save') : t('adminCatalog.create')}
+            </button>
+            {editingCareerPathId ? (
+              <button
+                className="button button--secondary"
+                type="button"
+                onClick={() => {
+                  setEditingCareerPathId(null)
+                  setCareerPathDraft(emptyCareerPathDraft)
                 }}
               >
                 {t('adminCatalog.cancel')}

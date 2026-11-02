@@ -180,7 +180,7 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            element: <ProtectedRoute allowedRoles={['ContentManager', 'Admin']} />,
+            element: <ProtectedRoute allowedRoles={['ContentManager', 'Manager', 'Admin']} />,
             children: [
               {
                 path: 'cms',
@@ -188,15 +188,24 @@ export const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="/cms/content" replace />,
+                    element: <Navigate to="/cms/catalog" replace />,
                   },
                   {
-                    path: 'content',
-                    element: <CmsContentPage />,
+                    path: 'catalog',
+                    element: <AdminCatalogPage />,
                   },
                   {
-                    path: 'notifications',
-                    element: <CmsNotificationsPage />,
+                    element: <ProtectedRoute allowedRoles={['ContentManager', 'Admin']} />,
+                    children: [
+                      {
+                        path: 'content',
+                        element: <CmsContentPage />,
+                      },
+                      {
+                        path: 'notifications',
+                        element: <CmsNotificationsPage />,
+                      },
+                    ],
                   },
                 ],
               },
@@ -259,7 +268,7 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            element: <ProtectedRoute allowedRoles={['Admin']} />,
+            element: <ProtectedRoute allowedRoles={['Manager', 'Admin']} />,
             children: [
               {
                 path: 'admin',
@@ -318,8 +327,13 @@ export const router = createBrowserRouter([
                     element: <AdminPaymentsPage />,
                   },
                   {
-                    path: 'users',
-                    element: <AdminUsersPage />,
+                    element: <ProtectedRoute allowedRoles={['Admin']} />,
+                    children: [
+                      {
+                        path: 'users',
+                        element: <AdminUsersPage />,
+                      },
+                    ],
                   },
                 ],
               },

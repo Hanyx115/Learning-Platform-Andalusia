@@ -30,7 +30,10 @@ public sealed class CourseRepositoryTests
             _ => throw new ArgumentOutOfRangeException(nameof(filter)),
         };
 
-        var result = await repository.GetPageAsync(query, CancellationToken.None);
+        var result = await repository.GetPageAsync(
+            query,
+            includeNonPublic: filter == "status",
+            CancellationToken.None);
 
         Assert.Equal(expectedTitle, Assert.Single(result.Items).Title);
     }
@@ -52,7 +55,7 @@ public sealed class CourseRepositoryTests
             PageSize = 10,
         };
 
-        var result = await repository.GetPageAsync(query, CancellationToken.None);
+        var result = await repository.GetPageAsync(query, includeNonPublic: false, CancellationToken.None);
 
         Assert.Equal(
             ["Advanced Patient Care", "Patient Care Basics"],
@@ -75,7 +78,7 @@ public sealed class CourseRepositoryTests
             PageSize = 2,
         };
 
-        var result = await repository.GetPageAsync(query, CancellationToken.None);
+        var result = await repository.GetPageAsync(query, includeNonPublic: false, CancellationToken.None);
 
         // Only 3 of the 4 seeded courses are Published ("Emergency Care" is Draft); with no
         // explicit status filter the listing defaults to Published only, so page 2 of 2 holds
@@ -98,6 +101,7 @@ public sealed class CourseRepositoryTests
 
         var result = await repository.GetPageAsync(
             new CourseCatalogQuery { Sort = sort },
+            includeNonPublic: false,
             CancellationToken.None);
 
         Assert.Equal(expectedFirstTitle, result.Items[0].Title);

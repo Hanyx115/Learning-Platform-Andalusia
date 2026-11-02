@@ -17,7 +17,8 @@ public sealed class ProgramsController(
     ProgramService programService,
     OfferingService offeringService,
     IValidator<CreateProgramRequest> createValidator,
-    IValidator<UpdateProgramRequest> updateValidator) : ControllerBase
+    IValidator<UpdateProgramRequest> updateValidator,
+    IValidator<ProgramContentRequest> contentValidator) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<PaginatedResult<ProgramSummaryDto>>(StatusCodes.Status200OK)]
@@ -29,6 +30,13 @@ public sealed class ProgramsController(
         var programs = await programService.GetProgramsAsync(query, cancellationToken);
         return Ok(programs);
     }
+
+    [HttpGet("manage")]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
+    public async Task<ActionResult<PaginatedResult<ProgramSummaryDto>>> GetProgramsForManagement(
+        [FromQuery] CatalogListQuery query,
+        CancellationToken cancellationToken)
+        => Ok(await programService.GetProgramsForManagementAsync(query, cancellationToken));
 
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetProgramBySlug(string slug, CancellationToken cancellationToken)
@@ -66,6 +74,20 @@ public sealed class ProgramsController(
         return ToFailureResult(outcome.FailureKind, outcome.Error);
     }
 
+    [HttpPost("content")]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
+    [ProducesResponseType<ProgramSummaryDto>(StatusCodes.Status201Created)]
+    public async Task<ActionResult<ProgramSummaryDto>> CreateContent(
+        ProgramContentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await contentValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var outcome = await programService.CreateContentAsync(request, cancellationToken);
+        return outcome.Succeeded
+            ? Created($"/api/v1/programs/{outcome.Value!.Slug}", outcome.Value)
+            : ToFailureResult(outcome.FailureKind, outcome.Error);
+    }
+
     [HttpPut("{id:guid}")]
     [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
     [ProducesResponseType<ProgramSummaryDto>(StatusCodes.Status200OK)]
@@ -78,6 +100,19 @@ public sealed class ProgramsController(
         await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
         var outcome = await programService.UpdateAsync(id, request, cancellationToken);
 
+        return outcome.Succeeded ? Ok(outcome.Value) : ToFailureResult(outcome.FailureKind, outcome.Error);
+    }
+
+    [HttpPut("{id:guid}/content")]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
+    [ProducesResponseType<ProgramSummaryDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ProgramSummaryDto>> UpdateContent(
+        Guid id,
+        ProgramContentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await contentValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var outcome = await programService.UpdateContentAsync(id, request, cancellationToken);
         return outcome.Succeeded ? Ok(outcome.Value) : ToFailureResult(outcome.FailureKind, outcome.Error);
     }
 

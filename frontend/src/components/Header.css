@@ -3,7 +3,8 @@
   top: 0;
   z-index: 20;
   background: var(--color-surface);
-  border-block-end: 1px solid var(--color-bg-neutral);
+  border-block-end: 1px solid var(--color-border);
+  box-shadow: 0 0.2rem 1rem rgb(33 45 48 / 3%);
 }
 
 .site-header__bar {
@@ -120,7 +121,7 @@
   min-height: 2.5rem;
   padding: 0.45rem 0.75rem;
   border: 1px solid var(--color-brand-light);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-primary);
   font: inherit;
@@ -231,6 +232,30 @@
   margin-block: 1.25rem;
 }
 
+.account-drawer__nav-group {
+  display: grid;
+  gap: 0.35rem;
+  margin-block-start: 0.9rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--color-border);
+}
+
+.account-drawer__nav-group:first-child {
+  margin-block-start: 0;
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
+.account-drawer__nav-heading {
+  margin: 0;
+  padding: 0 1rem 0.35rem;
+  color: var(--color-brand-hover);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .account-drawer__nav a {
   padding: 0.85rem 1rem;
   border-radius: 0.5rem;
@@ -276,8 +301,8 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border: 1px solid var(--color-bg-neutral);
-  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
@@ -286,6 +311,32 @@
 .nav-toggle svg {
   width: 1.25rem;
   height: 1.25rem;
+}
+
+.app-shell--workspace .site-header__bar,
+.app-shell--auth .site-header__bar {
+  width: min(100% - 2rem, 96rem);
+}
+
+.app-shell--workspace .site-nav,
+.app-shell--workspace .nav-toggle,
+.app-shell--auth .site-nav,
+.app-shell--auth .nav-toggle,
+.app-shell--auth .site-header__auth {
+  display: none;
+}
+
+.app-shell--workspace .site-header {
+  box-shadow: none;
+}
+
+.app-shell--workspace .site-header__bar {
+  min-height: 4rem;
+}
+
+.app-shell--workspace .site-logo img,
+.app-shell--auth .site-logo img {
+  height: 1.8rem;
 }
 
 .site-nav--open {

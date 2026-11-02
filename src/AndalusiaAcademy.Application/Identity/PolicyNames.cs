@@ -10,4 +10,5 @@ public static class PolicyNames
     public const string RequireContentManager = "RequireContentManager";
     public const string RequireContentManagerOrAdmin = "RequireContentManagerOrAdmin";
     public const string RequireContentManagerManagerOrAdmin = "RequireContentManagerManagerOrAdmin";
+    public const string CatalogEditor = "CatalogEditor";
 }

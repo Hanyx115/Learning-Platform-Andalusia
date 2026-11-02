@@ -126,6 +126,9 @@ export const arTranslations = {
     description: 'لا يملك حسابك صلاحية فتح هذه الصفحة.',
     returnHome: 'العودة إلى الصفحة الرئيسية',
   },
+  workspace: {
+    navigation: 'مساحة العمل',
+  },
   profileNav: {
     label: 'تنقل الملف الشخصي',
     profile: 'ملفي الشخصي',
@@ -138,6 +141,7 @@ export const arTranslations = {
   },
   cmsNav: {
     label: 'التنقل في لوحة المحتوى',
+    catalog: 'محتوى الدليل',
     content: 'محتوى الموقع',
     notifications: 'الإشعارات',
   },
@@ -304,11 +308,12 @@ export const arTranslations = {
   },
   adminCatalog: {
     title: 'إدارة الدليل',
-    description: 'إنشاء وتعديل فئات الدورات والدورات والبرامج.',
+    description: 'إنشاء وتعديل الفئات والدورات والبرامج والمسارات المهنية وفقًا لصلاحيات دورك.',
     loading: 'جارٍ تحميل بيانات الدليل…',
     categoriesTitle: 'الفئات',
     coursesTitle: 'الدورات',
     programsTitle: 'البرامج',
+    careerPathsTitle: 'المسارات المهنية',
     newCategoryPlaceholder: 'اسم الفئة الجديدة',
     addCategory: 'إضافة فئة',
     edit: 'تعديل',
@@ -319,6 +324,9 @@ export const arTranslations = {
     editCourse: 'تعديل الدورة',
     newProgram: 'برنامج جديد',
     editProgram: 'تعديل البرنامج',
+    newCareerPath: 'مسار مهني جديد',
+    editCareerPath: 'تعديل المسار المهني',
+    delete: 'حذف',
     manageOfferings: 'إدارة العروض',
     manageMaterials: 'إدارة المواد',
     fields: {
@@ -329,6 +337,10 @@ export const arTranslations = {
       status: 'الحالة',
       type: 'النوع',
       price: 'السعر (جنيه)',
+        recommendedSkills: 'المهارات المقترحة',
+        recommendedPrograms: 'البرامج المقترحة',
+        recommendedCourses: 'الدورات المقترحة',
+        multiSelectHint: 'اضغط باستمرار على Ctrl في ويندوز أو Command في macOS لاختيار أكثر من عنصر.',
     },
     errors: {
       load: 'تعذر تحميل الدليل. حاول مرة أخرى.',

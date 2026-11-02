@@ -7,6 +7,7 @@ public interface ICourseRepository
 {
     Task<PaginatedResult<CourseDto>> GetPageAsync(
         CourseCatalogQuery query,
+        bool includeNonPublic,
         CancellationToken cancellationToken);
 
     Task<CourseDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken);

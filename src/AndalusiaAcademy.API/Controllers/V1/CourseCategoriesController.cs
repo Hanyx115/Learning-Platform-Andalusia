@@ -23,7 +23,7 @@ public sealed class CourseCategoriesController(
         => Ok(await categoryService.GetAllAsync(cancellationToken));
 
     [HttpPost]
-    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
     [ProducesResponseType<CourseCategoryDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
@@ -39,7 +39,7 @@ public sealed class CourseCategoriesController(
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
     [ProducesResponseType<CourseCategoryDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

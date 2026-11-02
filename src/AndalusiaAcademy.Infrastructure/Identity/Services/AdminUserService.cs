@@ -14,11 +14,11 @@ public sealed class AdminUserService(
     IRefreshTokenRepository refreshTokenRepository) : IAdminUserService
 {
     private static readonly HashSet<string> ManageableRoles = new(
-        [RoleNames.Learner, RoleNames.Instructor, RoleNames.ContentManager],
+        [RoleNames.Learner, RoleNames.Instructor, RoleNames.ContentManager, RoleNames.Manager],
         StringComparer.OrdinalIgnoreCase);
 
     private static readonly HashSet<string> PrivilegedRoles = new(
-        [RoleNames.Manager, RoleNames.Admin],
+        [RoleNames.Admin],
         StringComparer.OrdinalIgnoreCase);
 
     public async Task<IReadOnlyList<AdminUserDto>> GetAllAsync(CancellationToken cancellationToken)

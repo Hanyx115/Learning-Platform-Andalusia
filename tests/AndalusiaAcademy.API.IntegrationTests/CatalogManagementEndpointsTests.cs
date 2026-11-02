@@ -73,6 +73,123 @@ public sealed class CatalogManagementEndpointsTests(ApiWebApplicationFactory fac
     }
 
     [Fact]
+    public async Task ContentManager_CanEditCatalogContent_WithoutChangingPrice()
+    {
+        var adminToken = await RegisterAsAsync(RoleNames.Admin);
+        var contentManagerToken = await RegisterAsAsync(RoleNames.ContentManager);
+        var suffix = Guid.NewGuid().ToString("N");
+        var categoryId = await CreateCategoryAsync($"Editorial Category {suffix}", contentManagerToken);
+
+        using var createResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/courses", adminToken,
+            new
+            {
+                title = $"Editorial Course {suffix}",
+                categoryId,
+                description = "Original description.",
+                status = "Draft",
+                type = "Online",
+                price = 925m,
+            });
+        createResponse.EnsureSuccessStatusCode();
+        using var createDocument = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+        var courseId = createDocument.RootElement.GetProperty("id").GetGuid();
+
+        using var updateResponse = await SendAuthorizedAsync(
+            HttpMethod.Put, $"/api/v1/courses/{courseId}/content", contentManagerToken,
+            new
+            {
+                title = $"Editorial Course Updated {suffix}",
+                categoryId,
+                description = "Updated by the content manager.",
+                status = "Published",
+                type = "Hybrid",
+            });
+        updateResponse.EnsureSuccessStatusCode();
+        using var updateDocument = JsonDocument.Parse(await updateResponse.Content.ReadAsStringAsync());
+        Assert.Equal(925m, updateDocument.RootElement.GetProperty("price").GetDecimal());
+        Assert.Equal("Published", updateDocument.RootElement.GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task ContentManager_CannotUseOperationalCatalogEndpoints()
+    {
+        var contentManagerToken = await RegisterAsAsync(RoleNames.ContentManager);
+
+        using var priceResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/courses", contentManagerToken,
+            new
+            {
+                title = "Forbidden priced course",
+                categoryId = Guid.NewGuid(),
+                description = "Not allowed.",
+                status = "Published",
+                type = "Online",
+                price = 1m,
+            });
+        Assert.Equal(HttpStatusCode.Forbidden, priceResponse.StatusCode);
+
+        using var offeringResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, $"/api/v1/courses/{Guid.NewGuid()}/offerings", contentManagerToken,
+            new
+            {
+                startsAtUtc = DateTimeOffset.UtcNow.AddDays(2),
+                endsAtUtc = DateTimeOffset.UtcNow.AddDays(3),
+                applicationOpensAtUtc = DateTimeOffset.UtcNow,
+                applicationClosesAtUtc = DateTimeOffset.UtcNow.AddDays(1),
+                price = 1m,
+                currency = "EGP",
+                capacity = 10,
+                status = "Open",
+            });
+        Assert.Equal(HttpStatusCode.Forbidden, offeringResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task ContentManager_CanCreateUpdateAndDeleteCareerPath_WhileLearnerCannot()
+    {
+        var contentManagerToken = await RegisterAsAsync(RoleNames.ContentManager);
+        var learnerToken = await RegisterAsAsync(RoleNames.Learner);
+        var suffix = Guid.NewGuid().ToString("N");
+        var request = new
+        {
+            title = $"Security Career {suffix}",
+            description = "A managed career path.",
+            recommendedSkills = "Security, networking",
+            status = "Draft",
+            recommendedProgramIds = Array.Empty<Guid>(),
+            recommendedCourseIds = Array.Empty<Guid>(),
+        };
+
+        using var learnerResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/career-paths", learnerToken, request);
+        Assert.Equal(HttpStatusCode.Forbidden, learnerResponse.StatusCode);
+
+        using var createResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/career-paths", contentManagerToken, request);
+        createResponse.EnsureSuccessStatusCode();
+        using var createDocument = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+        var careerPathId = createDocument.RootElement.GetProperty("id").GetGuid();
+
+        using var updateResponse = await SendAuthorizedAsync(
+            HttpMethod.Put, $"/api/v1/career-paths/{careerPathId}", contentManagerToken,
+            new
+            {
+                title = $"Security Career {suffix}",
+                description = "Published career path.",
+                recommendedSkills = "Security, networking, incident response",
+                status = "Published",
+                recommendedProgramIds = Array.Empty<Guid>(),
+                recommendedCourseIds = Array.Empty<Guid>(),
+            });
+        updateResponse.EnsureSuccessStatusCode();
+
+        using var deleteResponse = await SendAuthorizedAsync(
+            HttpMethod.Delete, $"/api/v1/career-paths/{careerPathId}", contentManagerToken);
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task CreateCourse_WithUnknownCategory_ReturnsValidationProblem()
     {
         var adminToken = await RegisterAsAsync(RoleNames.Admin);
@@ -113,7 +230,7 @@ public sealed class CatalogManagementEndpointsTests(ApiWebApplicationFactory fac
     }
 
     [Fact]
-    public async Task DraftCourse_IsHiddenFromPublicListingAndSlugLookup_ButVisibleWithExplicitStatusFilter()
+    public async Task DraftCourse_IsHiddenFromPublicEndpoints_ButVisibleToAuthorizedCatalogEditors()
     {
         var adminToken = await RegisterAsAsync(RoleNames.Admin);
         var suffix = Guid.NewGuid().ToString("N");
@@ -139,7 +256,15 @@ public sealed class CatalogManagementEndpointsTests(ApiWebApplicationFactory fac
             $"/api/v1/courses?search={Uri.EscapeDataString(title)}&status=Draft");
         filteredListResponse.EnsureSuccessStatusCode();
         using var filteredListDocument = JsonDocument.Parse(await filteredListResponse.Content.ReadAsStringAsync());
-        Assert.Single(filteredListDocument.RootElement.GetProperty("items").EnumerateArray());
+        Assert.Empty(filteredListDocument.RootElement.GetProperty("items").EnumerateArray());
+
+        using var managementListResponse = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/courses/manage?search={Uri.EscapeDataString(title)}&status=Draft",
+            adminToken);
+        managementListResponse.EnsureSuccessStatusCode();
+        using var managementListDocument = JsonDocument.Parse(await managementListResponse.Content.ReadAsStringAsync());
+        Assert.Single(managementListDocument.RootElement.GetProperty("items").EnumerateArray());
     }
 
     [Fact]

@@ -4,7 +4,7 @@ import { getAdminUsers, updateAdminUserRoles, updateAdminUserStatus, type AdminU
 import { getApiErrorMessage } from '../../api/auth'
 import { useAuthProfile } from '../../auth/profileContext'
 
-const manageableRoles = ['Learner', 'Instructor', 'ContentManager']
+const manageableRoles = ['Learner', 'Instructor', 'ContentManager', 'Manager']
 
 function AdminUsersPage() {
   const { t } = useTranslation()
@@ -98,7 +98,7 @@ function AdminUsersPage() {
                   </span>
                 </div>
                 {privilegedRoles.length ? <p>{t('adminUsers.protectedRoles')}: {privilegedRoles.join(', ')}</p> : null}
-                <fieldset>
+                <fieldset className="admin-user-roles">
                   <legend>{t('adminUsers.manageableRoles')}</legend>
                   {manageableRoles.map((role) => (
                     <label key={role}>
@@ -106,7 +106,7 @@ function AdminUsersPage() {
                         type="checkbox"
                         checked={(draftRoles[user.id] ?? []).includes(role)}
                         onChange={() => toggleRole(user.id, role)}
-                      />{' '}
+                      />
                       {t(`profile.roleNames.${role}`, { defaultValue: role })}
                     </label>
                   ))}

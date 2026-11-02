@@ -17,7 +17,8 @@ public sealed class CoursesController(
     CourseService courseService,
     OfferingService offeringService,
     IValidator<CreateCourseRequest> createValidator,
-    IValidator<UpdateCourseRequest> updateValidator) : ControllerBase
+    IValidator<UpdateCourseRequest> updateValidator,
+    IValidator<CourseContentRequest> contentValidator) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<PaginatedResult<CourseDto>>(StatusCodes.Status200OK)]
@@ -29,6 +30,13 @@ public sealed class CoursesController(
         var courses = await courseService.GetCoursesAsync(query, cancellationToken);
         return Ok(courses);
     }
+
+    [HttpGet("manage")]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
+    public async Task<ActionResult<PaginatedResult<CourseDto>>> GetCoursesForManagement(
+        [FromQuery] CourseCatalogQuery query,
+        CancellationToken cancellationToken)
+        => Ok(await courseService.GetCoursesForManagementAsync(query, cancellationToken));
 
     [HttpGet("{slug}")]
     [ProducesResponseType<CourseDto>(StatusCodes.Status200OK)]
@@ -69,6 +77,20 @@ public sealed class CoursesController(
         return ToFailureResult(outcome.FailureKind, outcome.Error);
     }
 
+    [HttpPost("content")]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
+    [ProducesResponseType<CourseDto>(StatusCodes.Status201Created)]
+    public async Task<ActionResult<CourseDto>> CreateContent(
+        CourseContentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await contentValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var outcome = await courseService.CreateContentAsync(request, cancellationToken);
+        return outcome.Succeeded
+            ? Created($"/api/v1/courses/{outcome.Value!.Slug}", outcome.Value)
+            : ToFailureResult(outcome.FailureKind, outcome.Error);
+    }
+
     [HttpPut("{id:guid}")]
     [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
     [ProducesResponseType<CourseDto>(StatusCodes.Status200OK)]
@@ -81,6 +103,19 @@ public sealed class CoursesController(
         await updateValidator.ValidateAndThrowAsync(request, cancellationToken);
         var outcome = await courseService.UpdateAsync(id, request, cancellationToken);
 
+        return outcome.Succeeded ? Ok(outcome.Value) : ToFailureResult(outcome.FailureKind, outcome.Error);
+    }
+
+    [HttpPut("{id:guid}/content")]
+    [Authorize(Policy = PolicyNames.CatalogEditor)]
+    [ProducesResponseType<CourseDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<CourseDto>> UpdateContent(
+        Guid id,
+        CourseContentRequest request,
+        CancellationToken cancellationToken)
+    {
+        await contentValidator.ValidateAndThrowAsync(request, cancellationToken);
+        var outcome = await courseService.UpdateContentAsync(id, request, cancellationToken);
         return outcome.Succeeded ? Ok(outcome.Value) : ToFailureResult(outcome.FailureKind, outcome.Error);
     }
 
