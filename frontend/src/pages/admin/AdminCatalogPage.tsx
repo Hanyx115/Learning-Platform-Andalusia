@@ -29,6 +29,7 @@ import Container from '../../components/Container'
 
 const STATUSES = ['Draft', 'Published', 'Archived']
 const COURSE_TYPES = ['Online', 'Offline', 'Hybrid']
+type CatalogSection = 'categories' | 'courses' | 'programs' | 'careerPaths'
 
 interface CourseDraft {
   title: string
@@ -79,6 +80,11 @@ async function fetchAllStatuses<T>(fetchByStatus: (status: string) => Promise<{ 
   return pages.flatMap((page) => page.items)
 }
 
+function matchesSearch(search: string, ...values: Array<string | null | undefined>) {
+  const normalizedSearch = search.trim().toLocaleLowerCase()
+  return normalizedSearch === '' || values.some((value) => value?.toLocaleLowerCase().includes(normalizedSearch))
+}
+
 function AdminCatalogPage() {
   const { t } = useTranslation()
   const { profile } = useAuthProfile()
@@ -90,6 +96,8 @@ function AdminCatalogPage() {
   const [careerPaths, setCareerPaths] = useState<CareerPathSummary[] | null>(null)
   const [loadError, setLoadError] = useState('')
   const [isForbidden, setIsForbidden] = useState(false)
+  const [activeSection, setActiveSection] = useState<CatalogSection>('categories')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const [categoryDraft, setCategoryDraft] = useState('')
   const [categoryError, setCategoryError] = useState('')
@@ -309,8 +317,47 @@ function AdminCatalogPage() {
     }
   }
 
+  const filteredCategories = categories?.filter((category) => matchesSearch(searchTerm, category.name)) ?? null
+  const filteredCourses = courses?.filter((course) => matchesSearch(
+    searchTerm,
+    course.title,
+    course.categoryName,
+    course.status,
+    course.type,
+  )) ?? null
+  const filteredPrograms = programs?.filter((program) => matchesSearch(
+    searchTerm,
+    program.title,
+    program.description,
+    program.status,
+  )) ?? null
+  const filteredCareerPaths = careerPaths?.filter((careerPath) => matchesSearch(
+    searchTerm,
+    careerPath.title,
+    careerPath.description,
+    careerPath.status,
+  )) ?? null
+
+  const sectionCounts: Record<CatalogSection, number> = {
+    categories: categories?.length ?? 0,
+    courses: courses?.length ?? 0,
+    programs: programs?.length ?? 0,
+    careerPaths: careerPaths?.length ?? 0,
+  }
+  const visibleCounts: Record<CatalogSection, number> = {
+    categories: filteredCategories?.length ?? 0,
+    courses: filteredCourses?.length ?? 0,
+    programs: filteredPrograms?.length ?? 0,
+    careerPaths: filteredCareerPaths?.length ?? 0,
+  }
+
+  function selectSection(section: CatalogSection) {
+    setActiveSection(section)
+    setSearchTerm('')
+  }
+
   return (
-    <div className="dashboard-section">
+    <div className="dashboard-section catalog-management">
       <div className="dashboard-section__heading">
         <h1>{t('adminCatalog.title')}</h1>
         <p>{t('adminCatalog.description')}</p>
@@ -318,15 +365,54 @@ function AdminCatalogPage() {
 
       {loadError ? <p className="auth-message auth-message--error" role="alert">{loadError}</p> : null}
 
+      <div className="catalog-management__tabs" role="tablist" aria-label={t('adminCatalog.sectionNavigation')}>
+        {(['categories', 'courses', 'programs', 'careerPaths'] as const).map((section) => (
+          <button
+            key={section}
+            className="catalog-management__tab"
+            type="button"
+            role="tab"
+            id={`catalog-tab-${section}`}
+            aria-controls={`catalog-panel-${section}`}
+            aria-selected={activeSection === section}
+            onClick={() => selectSection(section)}
+          >
+            <span>{t(`adminCatalog.tabs.${section}`)}</span>
+            <strong>{sectionCounts[section]}</strong>
+          </button>
+        ))}
+      </div>
+
+      <div className="catalog-management__toolbar">
+        <label>
+          <span>{t('adminCatalog.searchLabel')}</span>
+          <input
+            type="search"
+            value={searchTerm}
+            placeholder={t(`adminCatalog.searchPlaceholders.${activeSection}`)}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </label>
+        <p aria-live="polite">
+          {t('adminCatalog.resultSummary', {
+            shown: visibleCounts[activeSection],
+            total: sectionCounts[activeSection],
+          })}
+        </p>
+      </div>
+
       {/* Categories */}
-      <section className="dashboard-section">
+      {activeSection === 'categories' ? <section id="catalog-panel-categories" className="dashboard-section catalog-management__section" role="tabpanel" aria-labelledby="catalog-tab-categories">
         <h2>{t('adminCatalog.categoriesTitle')}</h2>
         {categoryError ? <p className="auth-message auth-message--error" role="alert">{categoryError}</p> : null}
         {categories === null ? (
           <p role="status">{t('adminCatalog.loading')}</p>
         ) : (
           <div className="dashboard-list">
-            {categories.map((category) => (
+            {filteredCategories?.length === 0 ? (
+              <p className="catalog-management__empty">{t('adminCatalog.noMatches')}</p>
+            ) : null}
+            {filteredCategories?.map((category) => (
               <article key={category.id} className="dashboard-card">
                 {editingCategoryId === category.id ? (
                   <div className="dashboard-card__actions">
@@ -361,28 +447,35 @@ function AdminCatalogPage() {
             ))}
           </div>
         )}
-        <div className="dashboard-card__actions">
-          <input
-            type="text"
-            placeholder={t('adminCatalog.newCategoryPlaceholder')}
-            value={categoryDraft}
-            onChange={(event) => setCategoryDraft(event.target.value)}
-          />
-          <button className="button button--primary" type="button" onClick={() => void handleCreateCategory()}>
-            {t('adminCatalog.addCategory')}
-          </button>
-        </div>
-      </section>
+        <details className="catalog-management__editor">
+          <summary>{t('adminCatalog.addCategory')}</summary>
+          <div className="dashboard-card__actions">
+            <input
+              aria-label={t('adminCatalog.newCategoryPlaceholder')}
+              type="text"
+              placeholder={t('adminCatalog.newCategoryPlaceholder')}
+              value={categoryDraft}
+              onChange={(event) => setCategoryDraft(event.target.value)}
+            />
+            <button className="button button--primary" type="button" onClick={() => void handleCreateCategory()}>
+              {t('adminCatalog.addCategory')}
+            </button>
+          </div>
+        </details>
+      </section> : null}
 
       {/* Courses */}
-      <section className="dashboard-section">
+      {activeSection === 'courses' ? <section id="catalog-panel-courses" className="dashboard-section catalog-management__section" role="tabpanel" aria-labelledby="catalog-tab-courses">
         <h2>{t('adminCatalog.coursesTitle')}</h2>
         {courseError ? <p className="auth-message auth-message--error" role="alert">{courseError}</p> : null}
         {courses === null ? (
           <p role="status">{t('adminCatalog.loading')}</p>
         ) : (
           <div className="dashboard-list">
-            {courses.map((course) => (
+            {filteredCourses?.length === 0 ? (
+              <p className="catalog-management__empty">{t('adminCatalog.noMatches')}</p>
+            ) : null}
+            {filteredCourses?.map((course) => (
               <article key={course.id} className="dashboard-card">
                 <div className="dashboard-card__heading">
                   <h3 dir="auto">{course.title}</h3>
@@ -413,8 +506,10 @@ function AdminCatalogPage() {
           </div>
         )}
 
-        <form
-          className="dashboard-card"
+        <details className="catalog-management__editor" open={editingCourseId ? true : undefined}>
+          <summary>{editingCourseId ? t('adminCatalog.editCourse') : t('adminCatalog.newCourse')}</summary>
+          <form
+          className="dashboard-card catalog-management__form"
           onSubmit={(event) => {
             event.preventDefault()
             void handleSaveCourse()
@@ -509,18 +604,22 @@ function AdminCatalogPage() {
               </button>
             ) : null}
           </div>
-        </form>
-      </section>
+          </form>
+        </details>
+      </section> : null}
 
       {/* Programs */}
-      <section className="dashboard-section">
+      {activeSection === 'programs' ? <section id="catalog-panel-programs" className="dashboard-section catalog-management__section" role="tabpanel" aria-labelledby="catalog-tab-programs">
         <h2>{t('adminCatalog.programsTitle')}</h2>
         {programError ? <p className="auth-message auth-message--error" role="alert">{programError}</p> : null}
         {programs === null ? (
           <p role="status">{t('adminCatalog.loading')}</p>
         ) : (
           <div className="dashboard-list">
-            {programs.map((program) => (
+            {filteredPrograms?.length === 0 ? (
+              <p className="catalog-management__empty">{t('adminCatalog.noMatches')}</p>
+            ) : null}
+            {filteredPrograms?.map((program) => (
               <article key={program.id} className="dashboard-card">
                 <div className="dashboard-card__heading">
                   <h3 dir="auto">{program.title}</h3>
@@ -544,8 +643,10 @@ function AdminCatalogPage() {
           </div>
         )}
 
-        <form
-          className="dashboard-card"
+        <details className="catalog-management__editor" open={editingProgramId ? true : undefined}>
+          <summary>{editingProgramId ? t('adminCatalog.editProgram') : t('adminCatalog.newProgram')}</summary>
+          <form
+          className="dashboard-card catalog-management__form"
           onSubmit={(event) => {
             event.preventDefault()
             void handleSaveProgram()
@@ -612,18 +713,22 @@ function AdminCatalogPage() {
               </button>
             ) : null}
           </div>
-        </form>
-      </section>
+          </form>
+        </details>
+      </section> : null}
 
       {/* Career paths */}
-      <section className="dashboard-section">
+      {activeSection === 'careerPaths' ? <section id="catalog-panel-careerPaths" className="dashboard-section catalog-management__section" role="tabpanel" aria-labelledby="catalog-tab-careerPaths">
         <h2>{t('adminCatalog.careerPathsTitle')}</h2>
         {careerPathError ? <p className="auth-message auth-message--error" role="alert">{careerPathError}</p> : null}
         {careerPaths === null ? (
           <p role="status">{t('adminCatalog.loading')}</p>
         ) : (
           <div className="dashboard-list">
-            {careerPaths.map((careerPath) => (
+            {filteredCareerPaths?.length === 0 ? (
+              <p className="catalog-management__empty">{t('adminCatalog.noMatches')}</p>
+            ) : null}
+            {filteredCareerPaths?.map((careerPath) => (
               <article key={careerPath.id} className="dashboard-card">
                 <div className="dashboard-card__heading">
                   <h3 dir="auto">{careerPath.title}</h3>
@@ -643,8 +748,10 @@ function AdminCatalogPage() {
           </div>
         )}
 
-        <form
-          className="dashboard-card"
+        <details className="catalog-management__editor" open={editingCareerPathId ? true : undefined}>
+          <summary>{editingCareerPathId ? t('adminCatalog.editCareerPath') : t('adminCatalog.newCareerPath')}</summary>
+          <form
+          className="dashboard-card catalog-management__form"
           onSubmit={(event) => {
             event.preventDefault()
             void handleSaveCareerPath()
@@ -731,8 +838,9 @@ function AdminCatalogPage() {
               </button>
             ) : null}
           </div>
-        </form>
-      </section>
+          </form>
+        </details>
+      </section> : null}
     </div>
   )
 }

@@ -398,6 +398,22 @@ export const enTranslations = {
   adminCatalog: {
     title: 'Catalog management',
     description: 'Create and edit categories, courses, programs, and career paths according to your role.',
+    sectionNavigation: 'Catalog sections',
+    tabs: {
+      categories: 'Categories',
+      courses: 'Courses',
+      programs: 'Programs',
+      careerPaths: 'Career paths',
+    },
+    searchLabel: 'Find an item',
+    searchPlaceholders: {
+      categories: 'Search categories by name',
+      courses: 'Search courses by title, category, type, or status',
+      programs: 'Search programs by title, description, or status',
+      careerPaths: 'Search career paths by title, description, or status',
+    },
+    resultSummary: 'Showing {{shown}} of {{total}} items',
+    noMatches: 'No items match your search.',
     loading: 'Loading catalog data…',
     categoriesTitle: 'Categories',
     coursesTitle: 'Courses',

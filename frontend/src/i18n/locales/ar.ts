@@ -398,6 +398,22 @@ export const arTranslations = {
   adminCatalog: {
     title: 'إدارة الدليل',
     description: 'إنشاء وتعديل الفئات والدورات والبرامج والمسارات المهنية وفقًا لصلاحيات دورك.',
+    sectionNavigation: 'أقسام الدليل',
+    tabs: {
+      categories: 'الفئات',
+      courses: 'الدورات',
+      programs: 'البرامج',
+      careerPaths: 'المسارات المهنية',
+    },
+    searchLabel: 'ابحث عن عنصر',
+    searchPlaceholders: {
+      categories: 'ابحث في الفئات بالاسم',
+      courses: 'ابحث في الدورات بالعنوان أو الفئة أو النوع أو الحالة',
+      programs: 'ابحث في البرامج بالعنوان أو الوصف أو الحالة',
+      careerPaths: 'ابحث في المسارات بالعنوان أو الوصف أو الحالة',
+    },
+    resultSummary: 'عرض {{shown}} من أصل {{total}} عنصرًا',
+    noMatches: 'لا توجد عناصر مطابقة لبحثك.',
     loading: 'جارٍ تحميل بيانات الدليل…',
     categoriesTitle: 'الفئات',
     coursesTitle: 'الدورات',
