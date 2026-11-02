@@ -12,6 +12,9 @@ export const arTranslations = {
     next: 'التالي',
     paginationLabel: 'صفحات الدليل',
     pageSummary: 'الصفحة {{page}} من {{totalPages}}',
+    pageSize: 'العناصر في الصفحة',
+    applyFilters: 'تطبيق عوامل التصفية',
+    resetFilters: 'إعادة تعيين',
   },
   language: {
     label: 'اللغة',
@@ -532,6 +535,17 @@ export const arTranslations = {
     description: 'كل متعلم مسجل عبر جميع الدورات والبرامج.',
     loading: 'جارٍ تحميل الطلاب…',
     empty: 'لا يوجد متعلمون مسجلون حتى الآن.',
+    results: 'تم العثور على {{count}} من تسجيلات الطلاب',
+    filters: {
+      search: 'بحث',
+      searchPlaceholder: 'الاسم أو البريد أو الدورة أو البرنامج',
+      status: 'حالة التسجيل',
+      allStatuses: 'جميع الحالات',
+      type: 'نوع العرض',
+      allTypes: 'الدورات والبرامج',
+    },
+    statuses: { active: 'نشط', completed: 'مكتمل', cancelled: 'ملغي' },
+    types: { course: 'دورة', program: 'برنامج' },
     errors: {
       load: 'تعذر تحميل قائمة الطلاب. حاول مرة أخرى.',
     },
@@ -541,6 +555,14 @@ export const arTranslations = {
     description: 'كل حساب يحمل دور المدرب.',
     loading: 'جارٍ تحميل المدربين…',
     empty: 'لا توجد حسابات مدربين حتى الآن.',
+    results: 'تم العثور على {{count}} مدربين',
+    filters: {
+      search: 'بحث',
+      searchPlaceholder: 'الاسم أو البريد أو رقم الهاتف',
+      status: 'حالة الحساب',
+      allStatuses: 'جميع الحالات',
+    },
+    statuses: { active: 'نشط', inactive: 'غير نشط' },
     errors: {
       load: 'تعذر تحميل قائمة المدربين. حاول مرة أخرى.',
     },

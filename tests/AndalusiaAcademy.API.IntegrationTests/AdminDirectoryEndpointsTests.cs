@@ -92,6 +92,67 @@ public sealed class AdminDirectoryEndpointsTests(ApiWebApplicationFactory factor
     }
 
     [Fact]
+    public async Task Manager_CanSearchAndFilterThePaginatedStudentDirectory()
+    {
+        var seed = await SeedEnrolledLearnerAsync();
+        var managerToken = await RegisterAsAsync(RoleNames.Manager);
+        var search = Uri.EscapeDataString(seed.CourseTitle);
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/enrollments/manage?search={search}&status=Active&type=Course&page=1&pageSize=1",
+            managerToken);
+        response.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(1, document.RootElement.GetProperty("page").GetInt32());
+        Assert.Equal(1, document.RootElement.GetProperty("pageSize").GetInt32());
+        Assert.True(document.RootElement.GetProperty("totalCount").GetInt32() >= 1);
+        var entry = Assert.Single(document.RootElement.GetProperty("items").EnumerateArray());
+        Assert.Equal(seed.EnrollmentId, entry.GetProperty("id").GetGuid());
+        Assert.Equal(seed.LearnerEmail, entry.GetProperty("email").GetString());
+    }
+
+    [Fact]
+    public async Task Admin_CanSearchFilterAndPaginateTheInstructorDirectory()
+    {
+        var adminToken = await RegisterAsAsync(RoleNames.Admin);
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var (_, activeInstructorId) = await RegisterAsWithUserIdAsync(
+            RoleNames.Instructor, $"Directory{suffix}", "Active");
+        var (_, inactiveInstructorId) = await RegisterAsWithUserIdAsync(
+            RoleNames.Instructor, $"Directory{suffix}", "Inactive");
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var inactiveInstructor = (await userManager.FindByIdAsync(inactiveInstructorId.ToString()))!;
+            inactiveInstructor.IsActive = false;
+            Assert.True((await userManager.UpdateAsync(inactiveInstructor)).Succeeded);
+        }
+
+        using var pageResponse = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/profile/by-role/Instructor/manage?search={suffix}&page=1&pageSize=1",
+            adminToken);
+        pageResponse.EnsureSuccessStatusCode();
+        using var pageDocument = JsonDocument.Parse(await pageResponse.Content.ReadAsStringAsync());
+        Assert.Equal(2, pageDocument.RootElement.GetProperty("totalCount").GetInt32());
+        Assert.Equal(2, pageDocument.RootElement.GetProperty("totalPages").GetInt32());
+        Assert.Single(pageDocument.RootElement.GetProperty("items").EnumerateArray());
+
+        using var activeResponse = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/profile/by-role/Instructor/manage?search={suffix}&status=Active",
+            adminToken);
+        activeResponse.EnsureSuccessStatusCode();
+        using var activeDocument = JsonDocument.Parse(await activeResponse.Content.ReadAsStringAsync());
+        var activeEntry = Assert.Single(activeDocument.RootElement.GetProperty("items").EnumerateArray());
+        Assert.Equal(activeInstructorId, activeEntry.GetProperty("id").GetGuid());
+        Assert.True(activeEntry.GetProperty("isActive").GetBoolean());
+    }
+
+    [Fact]
     public async Task Admin_CanListAllOfferingsForACourse_IncludingNonOpenStatus()
     {
         var adminToken = await RegisterAsAsync(RoleNames.Admin);
@@ -137,7 +198,13 @@ public sealed class AdminDirectoryEndpointsTests(ApiWebApplicationFactory factor
         Assert.Equal("Draft", entry.GetProperty("status").GetString());
     }
 
-    private sealed record EnrolledLearnerSeed(Guid EnrollmentId, Guid PaymentId, Guid LearnerId, string AdminToken);
+    private sealed record EnrolledLearnerSeed(
+        Guid EnrollmentId,
+        Guid PaymentId,
+        Guid LearnerId,
+        string LearnerEmail,
+        string CourseTitle,
+        string AdminToken);
 
     private async Task<EnrolledLearnerSeed> SeedEnrolledLearnerAsync()
     {
@@ -192,7 +259,7 @@ public sealed class AdminDirectoryEndpointsTests(ApiWebApplicationFactory factor
             learnerId = (await userManager.FindByEmailAsync(learnerEmail))!.Id;
         }
 
-        return new EnrolledLearnerSeed(enrollmentId, paymentId, learnerId, adminToken);
+        return new EnrolledLearnerSeed(enrollmentId, paymentId, learnerId, learnerEmail, course.Title, adminToken);
     }
 
     private async Task<HttpResponseMessage> SendAuthorizedAsync(
@@ -232,7 +299,10 @@ public sealed class AdminDirectoryEndpointsTests(ApiWebApplicationFactory factor
 
     private async Task<string> RegisterAsAsync(string role) => (await RegisterAsWithUserIdAsync(role)).AccessToken;
 
-    private async Task<(string AccessToken, Guid UserId)> RegisterAsWithUserIdAsync(string role)
+    private async Task<(string AccessToken, Guid UserId)> RegisterAsWithUserIdAsync(
+        string role,
+        string firstName = "AdminDir",
+        string lastName = "Staff")
     {
         var email = $"{Guid.NewGuid()}@example.com";
         const string password = "P@ssw0rd123!";
@@ -241,8 +311,8 @@ public sealed class AdminDirectoryEndpointsTests(ApiWebApplicationFactory factor
         {
             email,
             password,
-            firstName = "AdminDir",
-            lastName = "Staff",
+            firstName,
+            lastName,
             phoneNumber = "+201234567890",
             countryCode = "EG",
             preferredLanguage = "en",

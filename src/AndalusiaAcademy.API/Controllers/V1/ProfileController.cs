@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using AndalusiaAcademy.Application.DTOs;
+using AndalusiaAcademy.Application.DTOs.Admin;
 using AndalusiaAcademy.Application.Identity;
 using Asp.Versioning;
 using FluentValidation;
@@ -62,6 +63,16 @@ public sealed class ProfileController(
     public async Task<ActionResult<IReadOnlyList<ProfileDto>>> GetUsersInRole(
         string role, CancellationToken cancellationToken)
         => Ok(await profileService.GetUsersInRoleAsync(role, cancellationToken));
+
+    [HttpGet("by-role/{role}/manage")]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<PaginatedResult<DirectoryUserDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResult<DirectoryUserDto>>> GetUsersInRolePage(
+        string role,
+        [FromQuery] UserDirectoryQuery query,
+        CancellationToken cancellationToken)
+        => Ok(await profileService.GetUsersInRolePageAsync(role, query, cancellationToken));
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

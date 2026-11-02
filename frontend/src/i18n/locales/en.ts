@@ -12,6 +12,9 @@ export const enTranslations = {
     next: 'Next',
     paginationLabel: 'Catalog pages',
     pageSummary: 'Page {{page}} of {{totalPages}}',
+    pageSize: 'Items per page',
+    applyFilters: 'Apply filters',
+    resetFilters: 'Reset',
   },
   language: {
     label: 'Language',
@@ -532,6 +535,17 @@ export const enTranslations = {
     description: 'Every learner enrolled across all courses and programs.',
     loading: 'Loading students…',
     empty: 'No learners are enrolled yet.',
+    results: '{{count}} student enrollments found',
+    filters: {
+      search: 'Search',
+      searchPlaceholder: 'Name, email, course, or program',
+      status: 'Enrollment status',
+      allStatuses: 'All statuses',
+      type: 'Offering type',
+      allTypes: 'Courses and programs',
+    },
+    statuses: { active: 'Active', completed: 'Completed', cancelled: 'Cancelled' },
+    types: { course: 'Course', program: 'Program' },
     errors: {
       load: 'We could not load the student list. Please try again.',
     },
@@ -541,6 +555,14 @@ export const enTranslations = {
     description: 'Every account with the Instructor role.',
     loading: 'Loading instructors…',
     empty: 'No instructor accounts exist yet.',
+    results: '{{count}} instructors found',
+    filters: {
+      search: 'Search',
+      searchPlaceholder: 'Name, email, or phone number',
+      status: 'Account status',
+      allStatuses: 'All statuses',
+    },
+    statuses: { active: 'Active', inactive: 'Inactive' },
     errors: {
       load: 'We could not load the instructor list. Please try again.',
     },

@@ -73,6 +73,23 @@ export interface AdminUser {
   roles: string[]
 }
 
+export interface DirectoryUser {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  phoneNumber: string
+  isActive: boolean
+}
+
+export interface DirectoryQuery {
+  page?: number
+  pageSize?: number
+  search?: string
+  status?: string
+  type?: string
+}
+
 export interface StatusSummary {
   status: string
   count: number
@@ -134,6 +151,19 @@ const jsonHeaders = { 'Content-Type': 'application/json' }
 
 function managementQuery(status: string, pageSize = 100) {
   return `?status=${encodeURIComponent(status)}&pageSize=${pageSize}`
+}
+
+function directoryQuery(query: DirectoryQuery) {
+  const searchParams = new URLSearchParams()
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') {
+      searchParams.set(key, String(value))
+    }
+  })
+
+  const queryString = searchParams.toString()
+  return queryString ? `?${queryString}` : ''
 }
 
 // Course categories
@@ -415,6 +445,10 @@ export function getAllEnrollments() {
   return apiRequest<AdminEnrollment[]>('/api/v1/enrollments')
 }
 
+export function getStudentDirectory(query: DirectoryQuery = {}) {
+  return apiRequest<PaginatedResult<AdminEnrollment>>(`/api/v1/enrollments/manage${directoryQuery(query)}`)
+}
+
 export function getOperationsOverview() {
   return apiRequest<OperationsOverview>('/api/v1/operations/overview')
 }
@@ -451,4 +485,10 @@ export function updateAdminUserRoles(userId: string, roles: string[]) {
 
 export function getUsersInRole(role: string) {
   return apiRequest<Profile[]>(`/api/v1/profile/by-role/${role}`)
+}
+
+export function getInstructorDirectory(query: DirectoryQuery = {}) {
+  return apiRequest<PaginatedResult<DirectoryUser>>(
+    `/api/v1/profile/by-role/Instructor/manage${directoryQuery(query)}`,
+  )
 }

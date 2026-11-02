@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.DTOs.Enrollments;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Services;
@@ -30,4 +31,13 @@ public sealed class EnrollmentsController(EnrollmentReadService enrollmentServic
     [ProducesResponseType<IReadOnlyList<AdminEnrollmentDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AdminEnrollmentDto>>> GetAll(CancellationToken cancellationToken)
         => Ok(await enrollmentService.GetAllAsync(cancellationToken));
+
+    [HttpGet("manage")]
+    [Authorize(Policy = PolicyNames.RequireManagerOrAdmin)]
+    [ProducesResponseType<PaginatedResult<AdminEnrollmentDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResult<AdminEnrollmentDto>>> GetPage(
+        [FromQuery] EnrollmentDirectoryQuery query,
+        CancellationToken cancellationToken)
+        => Ok(await enrollmentService.GetPageAsync(query, cancellationToken));
 }

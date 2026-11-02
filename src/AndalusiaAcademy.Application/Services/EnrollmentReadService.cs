@@ -1,3 +1,4 @@
+using AndalusiaAcademy.Application.DTOs;
 using AndalusiaAcademy.Application.DTOs.Enrollments;
 using AndalusiaAcademy.Application.Repositories;
 
@@ -10,4 +11,9 @@ public sealed class EnrollmentReadService(IEnrollmentRepository enrollmentReposi
 
     public Task<IReadOnlyList<AdminEnrollmentDto>> GetAllAsync(CancellationToken cancellationToken)
         => enrollmentRepository.GetAllAsync(cancellationToken);
+
+    public Task<PaginatedResult<AdminEnrollmentDto>> GetPageAsync(
+        EnrollmentDirectoryQuery query,
+        CancellationToken cancellationToken)
+        => enrollmentRepository.GetPageAsync(query, cancellationToken);
 }

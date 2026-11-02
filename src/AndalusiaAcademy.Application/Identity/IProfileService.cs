@@ -1,4 +1,5 @@
 using AndalusiaAcademy.Application.DTOs;
+using AndalusiaAcademy.Application.DTOs.Admin;
 
 namespace AndalusiaAcademy.Application.Identity;
 
@@ -12,4 +13,9 @@ public interface IProfileService
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ProfileDto>> GetUsersInRoleAsync(string role, CancellationToken cancellationToken);
+
+    Task<PaginatedResult<DirectoryUserDto>> GetUsersInRolePageAsync(
+        string role,
+        UserDirectoryQuery query,
+        CancellationToken cancellationToken);
 }
