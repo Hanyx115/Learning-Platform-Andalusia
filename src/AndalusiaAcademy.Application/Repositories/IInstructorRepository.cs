@@ -4,6 +4,11 @@ namespace AndalusiaAcademy.Application.Repositories;
 
 public interface IInstructorRepository
 {
+    Task<InstructorOverviewDto> GetOverviewAsync(
+        Guid instructorUserId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<InstructorSessionDto>> GetSessionsAsync(Guid instructorUserId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<InstructorOfferingDto>> GetOfferingsAsync(Guid instructorUserId, CancellationToken cancellationToken);

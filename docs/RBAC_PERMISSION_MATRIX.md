@@ -18,6 +18,8 @@ This document is the Phase 1 authorization contract. API authorization is author
 | Review applications and view payment operations | — | Own status | — | — | Yes | Yes |
 | Perform administrative payment corrections | — | — | — | — | — | Yes |
 | Manage users, account status, and role assignments | — | — | — | — | — | Yes |
+| View instructor operational overview | — | — | Own assignments only | — | — | — |
+| View academy KPIs, reports, revenue, and recent activity | — | — | — | — | Yes | Yes |
 
 ## API policy boundaries
 
@@ -30,6 +32,8 @@ This document is the Phase 1 authorization contract. API authorization is author
 - Admins can assign or remove Learner, Instructor, Content Manager, and Manager roles; the Admin role itself remains protected from role-management requests.
 - Public course, program, and career-path queries return `Published` records only. Non-public records are available through authenticated `/manage` endpoints.
 - Instructor services verify assignment ownership in the application/repository layer before exposing rosters, attendance, assignments, materials, submissions, or progress.
+- `GET /api/v1/instructor/overview` is self-scoped to the authenticated instructor.
+- `GET /api/v1/operations/overview` is protected by `RequireManagerOrAdmin`; revenue is read-only and grouped by currency.
 
 ## Catalog mutation endpoints
 
@@ -52,9 +56,10 @@ This document is the Phase 1 authorization contract. API authorization is author
 - `/cms/catalog`: Content Manager, Manager, Admin.
 - `/cms/content` and `/cms/notifications`: Content Manager, Admin.
 - `/admin/*` operational routes: Manager, Admin.
+- `/admin` is the Manager/Admin operations overview with Phase 1 KPIs, status reports, and recent activity.
 - `/admin/users`: Admin only.
 - `/admin/payments`: Manager may review; Admin additionally receives corrective actions.
-- `/instructor/*`: Instructor role; API ownership checks still apply.
+- `/instructor/*`: Instructor role; `/instructor` is the self-scoped teaching overview and API ownership checks still apply.
 - learner dashboard application, payment, enrollment, learning, attendance, and schedule routes: Learner role.
 
 Phase 1 policies map roles to named policies. A later permission-table implementation can replace the role mapping without changing controller policy names.

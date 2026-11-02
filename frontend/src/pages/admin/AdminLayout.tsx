@@ -15,6 +15,9 @@ function AdminLayout() {
       <Container className="profile-dashboard__layout">
         <nav className="profile-dashboard__sidebar" aria-label={t('adminNav.label')}>
           <WorkspaceNavigation title={t('adminNav.label')} />
+          <NavLink to="/admin" end className="profile-dashboard__link">
+            {t('adminNav.overview')}
+          </NavLink>
           <NavLink to="/admin/catalog" className="profile-dashboard__link">
             {t('adminNav.catalog')}
           </NavLink>

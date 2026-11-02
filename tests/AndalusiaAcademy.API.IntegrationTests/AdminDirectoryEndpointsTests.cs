@@ -48,6 +48,35 @@ public sealed class AdminDirectoryEndpointsTests(ApiWebApplicationFactory factor
     }
 
     [Fact]
+    public async Task Manager_CanViewOperationsOverview_WhileLearnerIsForbidden()
+    {
+        var seed = await SeedEnrolledLearnerAsync();
+        var managerToken = await RegisterAsAsync(RoleNames.Manager);
+
+        using var managerResponse = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/operations/overview", managerToken);
+        managerResponse.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await managerResponse.Content.ReadAsStringAsync());
+        Assert.True(document.RootElement.GetProperty("activeStudents").GetInt32() >= 1);
+        Assert.True(document.RootElement.GetProperty("activeInstructors").GetInt32() >= 0);
+        Assert.True(document.RootElement.GetProperty("activeEnrollments").GetInt32() >= 1);
+        Assert.Contains(
+            document.RootElement.GetProperty("revenue").EnumerateArray(),
+            entry => entry.GetProperty("currency").GetString() == "EGP"
+                && entry.GetProperty("amount").GetDecimal() >= 500m);
+        Assert.Contains(
+            document.RootElement.GetProperty("recentActivity").EnumerateArray(),
+            entry => entry.GetProperty("id").GetGuid() == seed.EnrollmentId
+                && entry.GetProperty("activityType").GetString() == "Enrollment");
+
+        var (learnerToken, _) = await RegisterAsync();
+        using var learnerResponse = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/operations/overview", learnerToken);
+        Assert.Equal(HttpStatusCode.Forbidden, learnerResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Admin_CanListUsersInInstructorRole()
     {
         var adminToken = await RegisterAsAsync(RoleNames.Admin);

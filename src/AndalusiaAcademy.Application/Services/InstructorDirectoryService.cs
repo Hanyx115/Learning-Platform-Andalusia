@@ -5,8 +5,13 @@ namespace AndalusiaAcademy.Application.Services;
 
 /// <summary>Self-scoped by the caller's own id, so unlike most services here there is no
 /// ownership check to fail: an instructor's dashboard can only ever be empty, never forbidden.</summary>
-public sealed class InstructorDirectoryService(IInstructorRepository repository)
+public sealed class InstructorDirectoryService(IInstructorRepository repository, TimeProvider timeProvider)
 {
+    public Task<InstructorOverviewDto> GetMyOverviewAsync(
+        Guid instructorUserId,
+        CancellationToken cancellationToken)
+        => repository.GetOverviewAsync(instructorUserId, timeProvider.GetUtcNow(), cancellationToken);
+
     public Task<IReadOnlyList<InstructorSessionDto>> GetMySessionsAsync(Guid instructorUserId, CancellationToken cancellationToken)
         => repository.GetSessionsAsync(instructorUserId, cancellationToken);
 

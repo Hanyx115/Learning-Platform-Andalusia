@@ -41,6 +41,14 @@ export interface InstructorStudent {
   offeringTitle: string
 }
 
+export interface InstructorOverview {
+  assignedOfferings: number
+  activeStudents: number
+  upcomingSessions: number
+  pendingSubmissions: number
+  nextSessions: InstructorSession[]
+}
+
 export interface SessionAttendanceRecord {
   userId: string
   learnerName: string
@@ -90,6 +98,10 @@ const jsonHeaders = { 'Content-Type': 'application/json' }
 
 export function getMyInstructorSessions() {
   return apiRequest<InstructorSession[]>('/api/v1/instructor/sessions')
+}
+
+export function getMyInstructorOverview() {
+  return apiRequest<InstructorOverview>('/api/v1/instructor/overview')
 }
 
 export function getMyInstructorOfferings() {

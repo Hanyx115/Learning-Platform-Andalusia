@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<CourseMaterialService>();
         services.AddScoped<ProgressService>();
         services.AddScoped<InstructorDirectoryService>();
+        services.AddScoped<OperationsDashboardService>();
         services.AddScoped<CmsService>();
         services.AddScoped<NotificationService>();
 

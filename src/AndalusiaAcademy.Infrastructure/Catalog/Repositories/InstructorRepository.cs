@@ -2,6 +2,7 @@ using AndalusiaAcademy.Application.DTOs.Instructor;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Enrollment;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Domain.Models;
 using AndalusiaAcademy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,48 @@ namespace AndalusiaAcademy.Infrastructure.Catalog.Repositories;
 
 public sealed class InstructorRepository(ApplicationDbContext dbContext) : IInstructorRepository
 {
+    public async Task<InstructorOverviewDto> GetOverviewAsync(
+        Guid instructorUserId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var offerings = await GetOfferingsAsync(instructorUserId, cancellationToken);
+        var sessions = await GetSessionsAsync(instructorUserId, cancellationToken);
+        var students = await GetStudentsAsync(instructorUserId, cancellationToken);
+
+        var courseOfferingIds = offerings
+            .Where(offering => offering.CourseOfferingId.HasValue)
+            .Select(offering => offering.CourseOfferingId!.Value)
+            .ToList();
+        var programOfferingIds = offerings
+            .Where(offering => offering.ProgramOfferingId.HasValue)
+            .Select(offering => offering.ProgramOfferingId!.Value)
+            .ToList();
+
+        var pendingSubmissions = await dbContext.AssignmentSubmissions
+            .AsNoTracking()
+            .CountAsync(
+                submission => submission.Score == null
+                    && ((submission.Assignment!.CourseOfferingId != null
+                            && courseOfferingIds.Contains(submission.Assignment.CourseOfferingId.Value))
+                        || (submission.Assignment.ProgramOfferingId != null
+                            && programOfferingIds.Contains(submission.Assignment.ProgramOfferingId.Value))),
+                cancellationToken);
+
+        var nextSessions = sessions
+            .Where(session => session.Status == CourseSessionStatuses.Scheduled && session.StartsAtUtc >= now)
+            .OrderBy(session => session.StartsAtUtc)
+            .Take(5)
+            .ToList();
+
+        return new InstructorOverviewDto(
+            offerings.Count,
+            students.Select(student => student.UserId).Distinct().Count(),
+            sessions.Count(session => session.Status == CourseSessionStatuses.Scheduled && session.StartsAtUtc >= now),
+            pendingSubmissions,
+            nextSessions);
+    }
+
     public async Task<IReadOnlyList<InstructorSessionDto>> GetSessionsAsync(
         Guid instructorUserId, CancellationToken cancellationToken)
     {

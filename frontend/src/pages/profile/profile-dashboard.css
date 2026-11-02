@@ -253,6 +253,106 @@
   flex-wrap: wrap;
 }
 
+.operations-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 1rem;
+}
+
+.operations-metric {
+  display: grid;
+  gap: 0.5rem;
+  min-height: 8rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.operations-metric span {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.operations-metric strong {
+  align-self: end;
+  color: var(--color-primary-dark);
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.15;
+}
+
+.operations-metric--revenue {
+  grid-column: span 2;
+}
+
+.operations-subheading {
+  margin-block-start: 1rem;
+}
+
+.operations-subheading h2 {
+  margin: 0 0 0.35rem;
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+}
+
+.operations-reports {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.operations-report h2,
+.operations-report dl,
+.operations-report dd {
+  margin: 0;
+}
+
+.operations-report dl {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.operations-report dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block-start: 0.65rem;
+  border-block-start: 1px solid var(--color-border);
+}
+
+.operations-report dt {
+  color: var(--color-text-secondary);
+}
+
+.operations-report dd {
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.operations-activity {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.operations-activity > div {
+  display: flex;
+  gap: 0.55rem 0.9rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.operations-activity > div:first-child {
+  display: grid;
+}
+
+.operations-activity > div:last-child {
+  justify-content: flex-end;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
 .dashboard-card label {
   display: grid;
   gap: 0.4rem;
@@ -731,9 +831,25 @@
     position: static;
     grid-row: 1;
   }
+
+  .operations-reports {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 36rem) {
+  .operations-metric--revenue {
+    grid-column: auto;
+  }
+
+  .operations-activity {
+    grid-template-columns: 1fr;
+  }
+
+  .operations-activity > div:last-child {
+    justify-content: flex-start;
+  }
+
   .payment-methods,
   .payment-checkout__fields {
     grid-template-columns: 1fr;

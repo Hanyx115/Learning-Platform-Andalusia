@@ -33,7 +33,9 @@ import InstructorOfferingAssignmentsPage from './pages/instructor/InstructorOffe
 import InstructorAssignmentSubmissionsPage from './pages/instructor/InstructorAssignmentSubmissionsPage'
 import InstructorOfferingProgressPage from './pages/instructor/InstructorOfferingProgressPage'
 import InstructorStudentsPage from './pages/instructor/InstructorStudentsPage'
+import InstructorOverviewPage from './pages/instructor/InstructorOverviewPage'
 import AdminLayout from './pages/admin/AdminLayout'
+import AdminOverviewPage from './pages/admin/AdminOverviewPage'
 import AdminCatalogPage from './pages/admin/AdminCatalogPage'
 import AdminLocationsPage from './pages/admin/AdminLocationsPage'
 import AdminOfferingsPage from './pages/admin/AdminOfferingsPage'
@@ -229,7 +231,7 @@ export const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="/instructor/sessions" replace />,
+                    element: <InstructorOverviewPage />,
                   },
                   {
                     path: 'sessions',
@@ -276,7 +278,7 @@ export const router = createBrowserRouter([
                 children: [
                   {
                     index: true,
-                    element: <Navigate to="/admin/catalog" replace />,
+                    element: <AdminOverviewPage />,
                   },
                   {
                     path: 'catalog',

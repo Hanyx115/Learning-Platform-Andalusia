@@ -12,6 +12,9 @@ function InstructorLayout() {
       <Container className="profile-dashboard__layout">
         <nav className="profile-dashboard__sidebar" aria-label={t('instructorNav.label')}>
           <WorkspaceNavigation title={t('instructorNav.label')} />
+          <NavLink to="/instructor" end className="profile-dashboard__link">
+            {t('instructorNav.overview')}
+          </NavLink>
           <NavLink to="/instructor/sessions" className="profile-dashboard__link">
             {t('instructorNav.sessions')}
           </NavLink>

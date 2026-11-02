@@ -39,6 +39,15 @@ public sealed class InstructorDashboardEndpointsTests(ApiWebApplicationFactory f
         using var studentsDocument = JsonDocument.Parse(await studentsResponse.Content.ReadAsStringAsync());
         var studentEntry = Assert.Single(studentsDocument.RootElement.EnumerateArray());
         Assert.Equal(seed.LearnerId.ToString(), studentEntry.GetProperty("userId").GetString());
+
+        using var overviewResponse = await SendAuthorizedAsync(HttpMethod.Get, "/api/v1/instructor/overview", seed.InstructorToken);
+        overviewResponse.EnsureSuccessStatusCode();
+        using var overviewDocument = JsonDocument.Parse(await overviewResponse.Content.ReadAsStringAsync());
+        Assert.Equal(1, overviewDocument.RootElement.GetProperty("assignedOfferings").GetInt32());
+        Assert.Equal(1, overviewDocument.RootElement.GetProperty("activeStudents").GetInt32());
+        Assert.Equal(1, overviewDocument.RootElement.GetProperty("upcomingSessions").GetInt32());
+        Assert.Equal(0, overviewDocument.RootElement.GetProperty("pendingSubmissions").GetInt32());
+        Assert.Single(overviewDocument.RootElement.GetProperty("nextSessions").EnumerateArray());
     }
 
     [Fact]

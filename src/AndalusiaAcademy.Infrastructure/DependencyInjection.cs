@@ -15,6 +15,7 @@ using AndalusiaAcademy.Infrastructure.Lms.Storage;
 using AndalusiaAcademy.Infrastructure.Content.Repositories;
 using AndalusiaAcademy.Infrastructure.Notifications;
 using AndalusiaAcademy.Infrastructure.Notifications.Repositories;
+using AndalusiaAcademy.Infrastructure.Operations.Repositories;
 using AndalusiaAcademy.Application.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -170,6 +171,7 @@ public static class DependencyInjection
         services.AddSingleton<IAssignmentSubmissionFileStore, LocalAssignmentSubmissionFileStore>();
         services.AddScoped<IProgressRepository, ProgressRepository>();
         services.AddScoped<IInstructorRepository, InstructorRepository>();
+        services.AddScoped<IOperationsDashboardRepository, OperationsDashboardRepository>();
         services.AddScoped<IApplicationRepository, ApplicationRepository>();
         services.AddScoped<IPaymentProcessor, SimulatedPaymentProcessor>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();

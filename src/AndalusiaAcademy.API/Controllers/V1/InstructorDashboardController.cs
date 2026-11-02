@@ -14,6 +14,11 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 [Authorize(Policy = PolicyNames.RequireInstructor)]
 public sealed class InstructorDashboardController(InstructorDirectoryService instructorDirectoryService) : ControllerBase
 {
+    [HttpGet("overview")]
+    [ProducesResponseType<InstructorOverviewDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<InstructorOverviewDto>> GetMyOverview(CancellationToken cancellationToken)
+        => Ok(await instructorDirectoryService.GetMyOverviewAsync(GetUserId(), cancellationToken));
+
     [HttpGet("sessions")]
     [ProducesResponseType<IReadOnlyList<InstructorSessionDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<InstructorSessionDto>>> GetMySessions(CancellationToken cancellationToken)

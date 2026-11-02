@@ -73,6 +73,39 @@ export interface AdminUser {
   roles: string[]
 }
 
+export interface StatusSummary {
+  status: string
+  count: number
+}
+
+export interface RevenueSummary {
+  currency: string
+  amount: number
+  paymentCount: number
+}
+
+export interface OperationsActivity {
+  id: string
+  activityType: string
+  status: string
+  occurredAtUtc: string
+  learnerName: string
+  offeringTitle: string
+}
+
+export interface OperationsOverview {
+  activeStudents: number
+  activeInstructors: number
+  runningCourses: number
+  pendingApplications: number
+  activeEnrollments: number
+  revenue: RevenueSummary[]
+  applicationsByStatus: StatusSummary[]
+  paymentsByStatus: StatusSummary[]
+  enrollmentsByStatus: StatusSummary[]
+  recentActivity: OperationsActivity[]
+}
+
 export interface ManageOfferingRequest {
   locationId?: string | null
   startsAtUtc: string
@@ -380,6 +413,10 @@ export function cancelProgramSession(sessionId: string, reason: string) {
 // Directory
 export function getAllEnrollments() {
   return apiRequest<AdminEnrollment[]>('/api/v1/enrollments')
+}
+
+export function getOperationsOverview() {
+  return apiRequest<OperationsOverview>('/api/v1/operations/overview')
 }
 
 export function getAllPayments() {
