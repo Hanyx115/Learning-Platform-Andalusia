@@ -50,9 +50,11 @@ import InstructorsPage from './pages/InstructorsPage'
 import NotificationsPage from './pages/profile/NotificationsPage'
 import PaymentHistoryPage from './pages/profile/PaymentHistoryPage'
 import PaymentCheckoutPage from './pages/profile/PaymentCheckoutPage'
+import BalancePage from './pages/profile/BalancePage'
 import CmsLayout from './pages/cms/CmsLayout'
 import CmsContentPage from './pages/cms/CmsContentPage'
 import CmsNotificationsPage from './pages/cms/CmsNotificationsPage'
+import AdminCompensationPage from './pages/admin/AdminCompensationPage'
 
 export const router = createBrowserRouter([
   {
@@ -145,6 +147,10 @@ export const router = createBrowserRouter([
               {
                 path: 'notifications',
                 element: <NotificationsPage />,
+              },
+              {
+                path: 'balance',
+                element: <BalancePage />,
               },
               {
                 element: <ProtectedRoute allowedRoles={['Learner']} />,
@@ -327,6 +333,10 @@ export const router = createBrowserRouter([
                   {
                     path: 'payments',
                     element: <AdminPaymentsPage />,
+                  },
+                  {
+                    path: 'compensation',
+                    element: <AdminCompensationPage />,
                   },
                   {
                     element: <ProtectedRoute allowedRoles={['Admin']} />,

@@ -137,6 +137,7 @@ export const enTranslations = {
     schedule: 'My schedule',
     attendance: 'My attendance',
     payments: 'My payments',
+    balance: 'My balance',
     notifications: 'Notifications',
   },
   cmsNav: {
@@ -305,6 +306,7 @@ export const enTranslations = {
     students: 'Students',
     instructors: 'Instructors',
     payments: 'Payments',
+    compensation: 'Compensation',
     users: 'Users & roles',
   },
   operationsDashboard: {
@@ -328,6 +330,50 @@ export const enTranslations = {
     noActivity: 'No operational activity has been recorded yet.',
     errors: {
       load: 'We could not load the operations overview. Please try again.',
+    },
+  },
+  balance: {
+    title: 'My balance',
+    description: 'Your private demo balance. Only your signed-in account can view it.',
+    current: 'Current balance',
+    privateNote: 'This balance is private and uses simulated funds only.',
+    demo: {
+      title: 'Add demo funds',
+      description: 'Simulate a Visa, Mastercard, or Fawry balance credit. No real payment is made.',
+      amount: 'Amount',
+      method: 'Demo method',
+      submit: 'Add demo funds',
+      success: 'Demo funds were added to your balance.',
+    },
+    errors: {
+      load: 'We could not load your balance.',
+      credit: 'We could not add the demo funds.',
+    },
+  },
+  compensation: {
+    title: 'Compensation management',
+    description: 'Set course and monthly rates, review payouts, and approve demo balance credits.',
+    rate: 'Course rate',
+    monthlyRate: 'Monthly rate',
+    createPayout: 'Create course payout',
+    createMonthlyPayout: 'Create current-month payout',
+    review: 'Review payout',
+    approve: 'Approve and credit balance',
+    instructors: {
+      title: 'Instructor course rates',
+      description: 'Each instructor receives a separate rate for each assigned course intake.',
+    },
+    staff: {
+      title: 'Manager monthly rates',
+      description: 'Admin-only rates for Managers and Content Managers.',
+    },
+    payouts: {
+      title: 'Payout workflow',
+      description: 'Managers review draft payouts. Admins approve them and credit the user’s private balance.',
+    },
+    errors: {
+      load: 'We could not load compensation information.',
+      action: 'The compensation action could not be completed.',
     },
   },
   adminUsers: {

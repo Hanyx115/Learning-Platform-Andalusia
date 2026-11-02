@@ -29,6 +29,7 @@ export function getWorkspaceNavGroups(roles: string[]): WorkspaceNavGroup[] {
       items: [
         { path: '/profile', labelKey: 'profileNav.profile', end: true },
         { path: '/profile/notifications', labelKey: 'profileNav.notifications' },
+        { path: '/profile/balance', labelKey: 'profileNav.balance' },
         ...(hasRole('Learner') ? [
           { path: '/profile/applications', labelKey: 'profileNav.applications' },
           { path: '/profile/enrollments', labelKey: 'profileNav.enrollments' },
@@ -74,6 +75,7 @@ export function getWorkspaceNavGroups(roles: string[]): WorkspaceNavGroup[] {
         { path: '/admin/students', labelKey: 'adminNav.students' },
         { path: '/admin/instructors', labelKey: 'adminNav.instructors' },
         { path: '/admin/payments', labelKey: 'adminNav.payments' },
+        { path: '/admin/compensation', labelKey: 'adminNav.compensation' },
         ...(hasRole('Admin') ? [{ path: '/admin/users', labelKey: 'adminNav.users' }] : []),
       ],
     })

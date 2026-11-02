@@ -65,6 +65,16 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    public DbSet<WalletAccount> WalletAccounts => Set<WalletAccount>();
+
+    public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
+
+    public DbSet<InstructorCourseRate> InstructorCourseRates => Set<InstructorCourseRate>();
+
+    public DbSet<StaffCompensationRate> StaffCompensationRates => Set<StaffCompensationRate>();
+
+    public DbSet<CompensationPayout> CompensationPayouts => Set<CompensationPayout>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

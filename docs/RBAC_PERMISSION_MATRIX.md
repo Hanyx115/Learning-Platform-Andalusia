@@ -8,6 +8,7 @@ This document is the Phase 1 authorization contract. API authorization is author
 |---|---:|---:|---:|---:|---:|---:|
 | View published public catalog and website content | Yes | Yes | Yes | Yes | Yes | Yes |
 | Manage own profile and notifications | — | Own | Own | Own | Own | Own |
+| View and demo-credit private balance | — | Own | Own | Own | Own | Own |
 | Apply, pay, and view enrollments | — | Own | — | — | Oversight | Full |
 | View learner schedule, attendance, materials, assignments | — | Own | — | — | Oversight | Full |
 | Manage sessions, attendance, assignments, materials, grades | — | — | Assigned offerings only | — | All | All |
@@ -20,6 +21,8 @@ This document is the Phase 1 authorization contract. API authorization is author
 | Manage users, account status, and role assignments | — | — | — | — | — | Yes |
 | View instructor operational overview | — | — | Own assignments only | — | — | — |
 | View academy KPIs, reports, revenue, and recent activity | — | — | — | — | Yes | Yes |
+| Set instructor course rates and review payouts | — | — | — | — | Yes | — |
+| Set Manager/Content Manager monthly rates and approve payouts | — | — | — | — | — | Yes |
 
 ## API policy boundaries
 
@@ -34,6 +37,9 @@ This document is the Phase 1 authorization contract. API authorization is author
 - Instructor services verify assignment ownership in the application/repository layer before exposing rosters, attendance, assignments, materials, submissions, or progress.
 - `GET /api/v1/instructor/overview` is self-scoped to the authenticated instructor.
 - `GET /api/v1/operations/overview` is protected by `RequireManagerOrAdmin`; revenue is read-only and grouped by currency.
+- `GET /api/v1/balance/me` and `POST /api/v1/balance/me/demo-credit` always use the authenticated user id and never accept a target user id.
+- Instructor rates and payout review use `RequireManager`; staff monthly rates and final payout approval use `RequireAdmin`. The reviewer and approver must be different users.
+- Final payout approval atomically credits the payee's private demo balance and records an internal audit transaction.
 
 ## Catalog mutation endpoints
 
@@ -59,6 +65,8 @@ This document is the Phase 1 authorization contract. API authorization is author
 - `/admin` is the Manager/Admin operations overview with Phase 1 KPIs, status reports, and recent activity.
 - `/admin/users`: Admin only.
 - `/admin/payments`: Manager may review; Admin additionally receives corrective actions.
+- `/admin/compensation`: Manager may set instructor rates and review payouts; Admin additionally manages staff rates and approves balance credits.
+- `/profile/balance`: any authenticated user, self-scoped by the API.
 - `/instructor/*`: Instructor role; `/instructor` is the self-scoped teaching overview and API ownership checks still apply.
 - learner dashboard application, payment, enrollment, learning, attendance, and schedule routes: Learner role.
 

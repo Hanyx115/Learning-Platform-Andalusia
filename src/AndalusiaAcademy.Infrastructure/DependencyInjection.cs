@@ -133,6 +133,7 @@ public static class DependencyInjection
         {
             options.AddPolicy(PolicyNames.RequireLearner, policy => policy.RequireRole(RoleNames.Learner));
             options.AddPolicy(PolicyNames.RequireAdmin, policy => policy.RequireRole(RoleNames.Admin));
+            options.AddPolicy(PolicyNames.RequireManager, policy => policy.RequireRole(RoleNames.Manager));
             options.AddPolicy(
                 PolicyNames.RequireManagerOrAdmin,
                 policy => policy.RequireRole(RoleNames.Manager, RoleNames.Admin));
@@ -172,6 +173,7 @@ public static class DependencyInjection
         services.AddScoped<IProgressRepository, ProgressRepository>();
         services.AddScoped<IInstructorRepository, InstructorRepository>();
         services.AddScoped<IOperationsDashboardRepository, OperationsDashboardRepository>();
+        services.AddScoped<ICompensationRepository, CompensationRepository>();
         services.AddScoped<IApplicationRepository, ApplicationRepository>();
         services.AddScoped<IPaymentProcessor, SimulatedPaymentProcessor>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
