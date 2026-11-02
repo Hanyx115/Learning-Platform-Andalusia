@@ -154,6 +154,9 @@ export const enTranslations = {
     description: 'Your attendance record for every scheduled learning session.',
     loading: 'Loading your attendance…',
     empty: 'No attendance has been recorded yet.',
+    uncategorized: 'Other learning sessions',
+    recordCount_one: '{{count}} attendance record',
+    recordCount_other: '{{count}} attendance records',
     status: {
       Present: 'Present',
       Absent: 'Absent',
@@ -620,6 +623,8 @@ export const enTranslations = {
     myDescription: 'Your upcoming sessions, locations, and instructor details.',
     loading: 'Loading your upcoming sessions…',
     myEmpty: 'You do not have any upcoming course sessions.',
+    sessionCount_one: '{{count}} session',
+    sessionCount_other: '{{count}} sessions',
     errors: {
       load: 'We could not load your schedule. Please try again.',
     },

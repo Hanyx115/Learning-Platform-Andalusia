@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as enrollmentApi from '../../api/enrollment'
 import AttendancePage from './AttendancePage'
@@ -24,16 +24,30 @@ describe('AttendancePage', () => {
         status: 'Late',
         note: null,
       },
+      {
+        sessionId: 'session-3',
+        sessionTitle: 'Routing fundamentals',
+        courseTitle: 'Computer Networks Fundamentals',
+        programTitle: null,
+        startsAtUtc: '2027-02-15T08:00:00Z',
+        status: 'Absent',
+        note: null,
+      },
     ])
   })
 
-  it('shows every recorded session with status and note', async () => {
+  it('groups every attendance record by course with status and note', async () => {
     render(<AttendancePage />)
 
-    expect(await screen.findByRole('heading', { name: 'Network security lab' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Incident response' })).toBeInTheDocument()
-    expect(screen.getByText('Present')).toBeInTheDocument()
-    expect(screen.getByText('Late')).toBeInTheDocument()
-    expect(screen.getByText('Completed the practical exercise.')).toBeInTheDocument()
+    const cybersecurityGroup = await screen.findByRole('region', { name: 'Cybersecurity Foundations' })
+    const networksGroup = screen.getByRole('region', { name: 'Computer Networks Fundamentals' })
+
+    expect(within(cybersecurityGroup).getByText('2 attendance records')).toBeInTheDocument()
+    expect(within(cybersecurityGroup).getByRole('heading', { name: 'Network security lab' })).toBeInTheDocument()
+    expect(within(cybersecurityGroup).getByRole('heading', { name: 'Incident response' })).toBeInTheDocument()
+    expect(within(cybersecurityGroup).getByText('Present')).toBeInTheDocument()
+    expect(within(cybersecurityGroup).getByText('Late')).toBeInTheDocument()
+    expect(within(cybersecurityGroup).getByText('Completed the practical exercise.')).toBeInTheDocument()
+    expect(within(networksGroup).getByText('1 attendance record')).toBeInTheDocument()
   })
 })

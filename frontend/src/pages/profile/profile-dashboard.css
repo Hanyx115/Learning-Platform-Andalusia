@@ -425,6 +425,65 @@
   color: var(--color-primary-dark);
 }
 
+.course-record-groups {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.course-record-group {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.course-record-group__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-block-end: 1px solid var(--color-border);
+  background: rgb(176 121 99 / 9%);
+}
+
+.course-record-group__heading h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1.1rem;
+}
+
+.course-record-group__heading span {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-brand-hover);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.course-record-group__list {
+  display: grid;
+}
+
+.course-record-item {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.course-record-item + .course-record-item {
+  border-block-start: 1px solid var(--color-border);
+}
+
+.course-record-item h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+}
+
 .schedule-card time {
   color: var(--color-brand-hover);
   font-weight: 700;
@@ -433,6 +492,14 @@
 .schedule-card .dashboard-card__heading > div {
   display: grid;
   gap: 0.25rem;
+}
+
+.schedule-card .course-record-item__status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .dashboard-card__meta {
@@ -1138,6 +1205,17 @@
 
   .catalog-management__section > .dashboard-list {
     grid-template-columns: 1fr;
+  }
+
+  .course-record-group__heading,
+  .course-record-item .dashboard-card__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .schedule-card .course-record-item__status {
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .compensation-rate-form {

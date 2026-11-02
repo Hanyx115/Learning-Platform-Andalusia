@@ -3,6 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { getApiErrorMessage } from '../../api/auth'
 import { getMyAttendance, type LearnerAttendance } from '../../api/enrollment'
 
+interface AttendanceGroup {
+  key: string
+  title: string
+  records: LearnerAttendance[]
+}
+
 function statusBadgeClass(status: string) {
   switch (status) {
     case 'Present':
@@ -14,10 +20,32 @@ function statusBadgeClass(status: string) {
   }
 }
 
+function groupAttendanceByCourse(records: LearnerAttendance[], fallbackTitle: string) {
+  const groups = new Map<string, AttendanceGroup>()
+
+  records.forEach((record) => {
+    const title = record.courseTitle ?? record.programTitle ?? fallbackTitle
+    const type = record.courseTitle ? 'course' : record.programTitle ? 'program' : 'other'
+    const key = `${type}:${title}`
+    const group = groups.get(key) ?? { key, title, records: [] }
+
+    if (!group.records.some((groupedRecord) => groupedRecord.sessionId === record.sessionId)) {
+      group.records.push(record)
+    }
+
+    groups.set(key, group)
+  })
+
+  return Array.from(groups.values())
+}
+
 function AttendancePage() {
   const { t } = useTranslation()
   const [records, setRecords] = useState<LearnerAttendance[] | null>(null)
   const [error, setError] = useState('')
+  const groupedRecords = records
+    ? groupAttendanceByCourse(records, t('learnerAttendance.uncategorized'))
+    : []
 
   useEffect(() => {
     let isCurrent = true
@@ -44,23 +72,30 @@ function AttendancePage() {
       ) : records.length === 0 ? (
         <p>{t('learnerAttendance.empty')}</p>
       ) : (
-        <div className="dashboard-list">
-          {records.map((record) => (
-            <article key={record.sessionId} className="dashboard-card">
-              <div className="dashboard-card__heading">
-                <div>
-                  <h2 dir="auto">{record.sessionTitle}</h2>
-                  <p dir="auto">{record.courseTitle ?? record.programTitle}</p>
-                </div>
-                <span className={statusBadgeClass(record.status)}>
-                  {t(`learnerAttendance.status.${record.status}`, { defaultValue: record.status })}
-                </span>
+        <div className="course-record-groups">
+          {groupedRecords.map((group, groupIndex) => (
+            <section key={group.key} className="course-record-group" aria-labelledby={`attendance-group-${groupIndex}`}>
+              <div className="course-record-group__heading">
+                <h2 id={`attendance-group-${groupIndex}`} dir="auto">{group.title}</h2>
+                <span>{t('learnerAttendance.recordCount', { count: group.records.length })}</span>
               </div>
-              <div className="dashboard-card__meta">
-                <span>{new Date(record.startsAtUtc).toLocaleString()}</span>
-                {record.note ? <span dir="auto">{record.note}</span> : null}
+              <div className="course-record-group__list">
+                {group.records.map((record) => (
+                  <article key={record.sessionId} className="course-record-item">
+                    <div className="dashboard-card__heading">
+                      <h3 dir="auto">{record.sessionTitle}</h3>
+                      <span className={statusBadgeClass(record.status)}>
+                        {t(`learnerAttendance.status.${record.status}`, { defaultValue: record.status })}
+                      </span>
+                    </div>
+                    <div className="dashboard-card__meta">
+                      <span>{new Date(record.startsAtUtc).toLocaleString()}</span>
+                      {record.note ? <span dir="auto">{record.note}</span> : null}
+                    </div>
+                  </article>
+                ))}
               </div>
-            </article>
+            </section>
           ))}
         </div>
       )}
