@@ -8,6 +8,7 @@ import {
   getMyEnrollments,
   getMyProgress,
   getMyUpcomingSessions,
+  downloadEnrollmentMaterialFile,
   downloadMyAssignmentFile,
   submitAssignmentFile,
   submitAssignmentLink,
@@ -42,6 +43,7 @@ function CourseLearningPage() {
   const [fileDrafts, setFileDrafts] = useState<Record<string, File | null>>({})
   const [submittingId, setSubmittingId] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [downloadingMaterialId, setDownloadingMaterialId] = useState<string | null>(null)
   const [submitErrors, setSubmitErrors] = useState<Record<string, string>>({})
 
   const load = useCallback(() => {
@@ -151,6 +153,25 @@ function CourseLearningPage() {
     }
   }
 
+  async function handleMaterialDownload(material: CourseMaterial) {
+    if (!enrollmentId || !material.originalFileName) {
+      return
+    }
+
+    setDownloadingMaterialId(material.id)
+    setLoadError('')
+    try {
+      saveBlob(
+        await downloadEnrollmentMaterialFile(enrollmentId, material.id),
+        material.originalFileName,
+      )
+    } catch (requestError) {
+      setLoadError(getApiErrorMessage(requestError, t('materials.errors.download')))
+    } finally {
+      setDownloadingMaterialId(null)
+    }
+  }
+
   return (
     <section className="dashboard-section">
       <div>
@@ -257,9 +278,22 @@ function CourseLearningPage() {
                     </div>
                     {material.description ? <p dir="auto">{material.description}</p> : null}
                     <div className="dashboard-card__actions">
-                      <a className="button button--primary" href={material.resourceUrl} target="_blank" rel="noreferrer">
-                        {t('materials.openResource')}
-                      </a>
+                      {material.resourceType === 'File' ? (
+                        <button
+                          className="button button--primary"
+                          type="button"
+                          disabled={downloadingMaterialId === material.id}
+                          onClick={() => void handleMaterialDownload(material)}
+                        >
+                          {downloadingMaterialId === material.id
+                            ? t('materials.downloading')
+                            : t('materials.downloadFile')}
+                        </button>
+                      ) : material.resourceUrl ? (
+                        <a className="button button--primary" href={material.resourceUrl} target="_blank" rel="noreferrer">
+                          {t('materials.openResource')}
+                        </a>
+                      ) : null}
                     </div>
                   </article>
                 ))}

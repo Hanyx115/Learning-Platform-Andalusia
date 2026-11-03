@@ -172,6 +172,7 @@ public static class DependencyInjection
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<IAssignmentRepository, AssignmentRepository>();
         services.AddSingleton<IAssignmentSubmissionFileStore, LocalAssignmentSubmissionFileStore>();
+        services.AddSingleton<ICourseMaterialFileStore, LocalCourseMaterialFileStore>();
         services.AddScoped<IProgressRepository, ProgressRepository>();
         services.AddScoped<IInstructorRepository, InstructorRepository>();
         services.AddScoped<IOperationsDashboardRepository, OperationsDashboardRepository>();

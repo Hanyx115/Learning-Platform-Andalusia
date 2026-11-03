@@ -935,9 +935,25 @@
   padding-inline-start: 1.2rem;
 }
 
-.course-assistant__sources a {
+.course-assistant__sources a,
+.course-assistant__source-button {
   color: var(--color-brand-hover);
   font-weight: 700;
+}
+
+.course-assistant__source-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: start;
+  text-decoration: underline;
+}
+
+.course-assistant__source-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .course-assistant__thinking {
@@ -975,7 +991,8 @@
 
 .course-assistant__composer textarea:focus,
 .course-assistant__reset:focus-visible,
-.course-assistant__prompts button:focus-visible {
+.course-assistant__prompts button:focus-visible,
+.course-assistant__source-button:focus-visible {
   border-color: var(--color-brand);
   outline: 3px solid rgb(176 121 99 / 25%);
   outline-offset: 2px;
@@ -1073,6 +1090,45 @@
 .submission-file-picker small {
   color: var(--color-text-secondary);
   font-weight: 400;
+}
+
+.material-source-picker {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.material-source-picker legend {
+  padding-inline: 0.35rem;
+  color: var(--color-primary-dark);
+  font-weight: 750;
+}
+
+.material-current-source {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+}
+
+.dashboard-card > .submission-file-picker {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 700;
+}
+
+.dashboard-card > .submission-file-picker input[type='file'] {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgb(52 74 78 / 28%);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
 }
 
 .application-history {

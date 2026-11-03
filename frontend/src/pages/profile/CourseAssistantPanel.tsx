@@ -2,10 +2,12 @@ import { type FormEvent, type KeyboardEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   askCourseAssistant,
+  downloadEnrollmentMaterialFile,
   type CourseAssistantCitation,
   type CourseAssistantHistoryMessage,
 } from '../../api/enrollment'
 import { getApiErrorMessage } from '../../api/auth'
+import { saveBlob } from '../../utils/download'
 
 interface CourseAssistantPanelProps {
   enrollmentId: string
@@ -22,6 +24,7 @@ function CourseAssistantPanel({ enrollmentId }: CourseAssistantPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [downloadingMaterialId, setDownloadingMaterialId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   const quickPrompts = [
@@ -85,6 +88,25 @@ function CourseAssistantPanel({ enrollmentId }: CourseAssistantPanelProps) {
     }
   }
 
+  async function downloadCitation(citation: CourseAssistantCitation) {
+    if (!citation.originalFileName) {
+      return
+    }
+
+    setDownloadingMaterialId(citation.materialId)
+    setError('')
+    try {
+      saveBlob(
+        await downloadEnrollmentMaterialFile(enrollmentId, citation.materialId),
+        citation.originalFileName,
+      )
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, t('courseAssistant.errors.download')))
+    } finally {
+      setDownloadingMaterialId(null)
+    }
+  }
+
   return (
     <section className="course-assistant" aria-labelledby="course-assistant-title">
       <div className="course-assistant__header">
@@ -136,9 +158,20 @@ function CourseAssistantPanel({ enrollmentId }: CourseAssistantPanelProps) {
                   <ul>
                     {message.citations.map((citation, index) => (
                       <li key={citation.materialId}>
-                        <a href={citation.resourceUrl} target="_blank" rel="noreferrer">
-                          {t('courseAssistant.sourceLabel', { number: index + 1, title: citation.title })}
-                        </a>
+                        {citation.resourceType === 'File' ? (
+                          <button
+                            className="course-assistant__source-button"
+                            type="button"
+                            disabled={downloadingMaterialId === citation.materialId}
+                            onClick={() => void downloadCitation(citation)}
+                          >
+                            {t('courseAssistant.sourceLabel', { number: index + 1, title: citation.title })}
+                          </button>
+                        ) : citation.resourceUrl ? (
+                          <a href={citation.resourceUrl} target="_blank" rel="noreferrer">
+                            {t('courseAssistant.sourceLabel', { number: index + 1, title: citation.title })}
+                          </a>
+                        ) : null}
                       </li>
                     ))}
                   </ul>

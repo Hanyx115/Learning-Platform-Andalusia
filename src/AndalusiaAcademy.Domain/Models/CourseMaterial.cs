@@ -16,7 +16,17 @@ public sealed class CourseMaterial
 
     public string? Description { get; set; }
 
-    public string ResourceUrl { get; set; } = string.Empty;
+    public string ResourceType { get; set; } = CourseMaterialResourceTypes.Link;
+
+    public string? ResourceUrl { get; set; }
+
+    public string? OriginalFileName { get; set; }
+
+    public string? StoredFileName { get; set; }
+
+    public string? FileContentType { get; set; }
+
+    public long? FileSizeBytes { get; set; }
 
     public string MaterialType { get; set; } = string.Empty;
 

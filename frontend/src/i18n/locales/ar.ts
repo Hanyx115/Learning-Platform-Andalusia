@@ -517,10 +517,20 @@ export const arTranslations = {
     empty: 'لم تتم إضافة أي مواد حتى الآن.',
     newMaterial: 'مادة جديدة',
     editMaterial: 'تعديل المادة',
+    linkOption: 'إضافة رابط',
+    fileOption: 'رفع ملف',
+    openLink: 'فتح الرابط',
+    downloadFile: 'تنزيل الملف',
+    downloading: 'جارٍ التنزيل…',
+    editingLink: 'أنت تعدّل رابطًا خارجيًا.',
+    editingFile: 'أنت تعدّل ملفًا مرفوعًا. سيبقى الملف الحالي محفوظًا.',
+    fileHelp: 'PDF أو Office أو نص أو صورة أو CSV أو ZIP. الحد الأقصى 25 ميجابايت.',
     fields: {
+      attachmentType: 'نوع المرفق',
       title: 'العنوان',
       description: 'الوصف (اختياري)',
       resourceUrl: 'رابط المورد',
+      file: 'اختر ملفًا',
       materialType: 'النوع',
       visibility: 'الظهور',
       sortOrder: 'ترتيب العرض',
@@ -528,6 +538,8 @@ export const arTranslations = {
     errors: {
       load: 'تعذر تحميل مواد الدورة. حاول مرة أخرى.',
       save: 'تعذر حفظ المادة. حاول مرة أخرى.',
+      download: 'تعذر تنزيل هذا الملف. حاول مرة أخرى.',
+      fileRequired: 'اختر ملفًا قبل الحفظ.',
     },
   },
   adminSessions: {
@@ -778,6 +790,7 @@ export const arTranslations = {
     },
     errors: {
       send: 'تعذر على عوفة شبير الإجابة الآن. حاول مرة أخرى.',
+      download: 'تعذر تنزيل مصدر الدورة. حاول مرة أخرى.',
     },
   },
   materials: {
@@ -787,6 +800,8 @@ export const arTranslations = {
     empty: 'لم يتم نشر أي مواد للدورة بعد.',
     back: 'العودة إلى تسجيلاتي',
     openResource: 'فتح المصدر',
+    downloadFile: 'تنزيل الملف',
+    downloading: 'جارٍ التنزيل…',
     session: 'الجلسة: {{title}}',
     types: {
       Document: 'مستند',
@@ -797,6 +812,7 @@ export const arTranslations = {
     errors: {
       load: 'تعذر تحميل مواد الدورة. حاول مرة أخرى.',
       notFound: 'هذا التسجيل غير موجود أو الوصول إلى المحتوى غير متاح.',
+      download: 'تعذر تنزيل ملف الدورة. حاول مرة أخرى.',
     },
   },
   staffApplications: {

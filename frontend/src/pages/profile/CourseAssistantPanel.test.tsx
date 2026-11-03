@@ -12,7 +12,9 @@ describe('CourseAssistantPanel', () => {
         {
           materialId: 'material-1',
           title: 'Networking workbook',
+          resourceType: 'Link',
           resourceUrl: 'https://learning.example.com/networking.pdf',
+          originalFileName: null,
           materialType: 'Document',
         },
       ],

@@ -10,7 +10,9 @@ public sealed record CourseAssistantRequest(
 public sealed record CourseAssistantCitationDto(
     Guid MaterialId,
     string Title,
-    string ResourceUrl,
+    string ResourceType,
+    string? ResourceUrl,
+    string? OriginalFileName,
     string MaterialType);
 
 public sealed record CourseAssistantResponseDto(

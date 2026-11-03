@@ -15,7 +15,8 @@ namespace AndalusiaAcademy.API.Controllers.V1;
 [Authorize(Policy = PolicyNames.RequireInstructorManagerOrAdmin)]
 public sealed class CourseMaterialsController(
     CourseMaterialService materialService,
-    IValidator<CreateCourseMaterialRequest> validator) : ControllerBase
+    IValidator<CreateCourseMaterialRequest> validator,
+    IValidator<CreateCourseMaterialFileRequest> fileValidator) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<CourseMaterialDto>>(StatusCodes.Status200OK)]
@@ -59,6 +60,57 @@ public sealed class CourseMaterialsController(
             : ValidationProblem(new ValidationProblemDetails(new Dictionary<string, string[]>
             {
                 [nameof(request.CourseSessionId)] = [outcome.Error ?? "The material request is invalid."],
+            }));
+    }
+
+    [HttpPost("file")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(26 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 26 * 1024 * 1024)]
+    [ProducesResponseType<CourseMaterialDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CourseMaterialDto>> CreateFile(
+        Guid courseId,
+        [FromForm] IFormFile file,
+        [FromForm] string title,
+        [FromForm] string? description,
+        [FromForm] string materialType,
+        [FromForm] int sortOrder,
+        [FromForm] string visibility,
+        [FromForm] Guid? courseSessionId,
+        CancellationToken cancellationToken)
+    {
+        var request = new CreateCourseMaterialFileRequest(
+            courseSessionId,
+            title,
+            description,
+            materialType,
+            sortOrder,
+            visibility);
+        await fileValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        await using var content = file.OpenReadStream();
+        var outcome = await materialService.CreateFileAsync(
+            courseId,
+            GetUserId(),
+            IsPrivileged(),
+            request,
+            content,
+            file.FileName,
+            file.Length,
+            cancellationToken);
+
+        if (outcome.Succeeded)
+        {
+            return Created($"/api/v1/course-materials/{outcome.Value!.Id}", outcome.Value);
+        }
+
+        return outcome.FailureKind == CourseMaterialFailureKind.NotFound
+            ? NotFound(new ProblemDetails { Title = outcome.Error })
+            : ValidationProblem(new ValidationProblemDetails(new Dictionary<string, string[]>
+            {
+                ["file"] = [outcome.Error ?? "The material file is invalid."],
             }));
     }
 

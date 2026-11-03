@@ -68,7 +68,9 @@ public sealed class CourseAssistantService(
             .Select(source => new CourseAssistantCitationDto(
                 source.MaterialId,
                 source.Title,
+                source.ResourceType,
                 source.ResourceUrl,
+                source.OriginalFileName,
                 source.MaterialType))
             .ToArray();
 
@@ -106,7 +108,9 @@ public sealed class CourseAssistantService(
                 item.Material.Id,
                 item.Material.Title,
                 item.Material.Description,
+                item.Material.ResourceType,
                 item.Material.ResourceUrl,
+                item.Material.OriginalFileName,
                 item.Material.MaterialType))
             .ToArray();
 

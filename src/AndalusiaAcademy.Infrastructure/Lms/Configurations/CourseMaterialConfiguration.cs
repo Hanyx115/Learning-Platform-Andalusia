@@ -18,6 +18,15 @@ public sealed class CourseMaterialConfiguration : IEntityTypeConfiguration<Cours
                 "CK_CourseMaterials_Visibility",
                 "[Visibility] IN ('Published', 'Hidden')");
             table.HasCheckConstraint(
+                "CK_CourseMaterials_ResourceType",
+                "[ResourceType] IN ('Link', 'File')");
+            table.HasCheckConstraint(
+                "CK_CourseMaterials_ResourceShape",
+                "([ResourceType] = 'Link' AND [ResourceUrl] IS NOT NULL AND [OriginalFileName] IS NULL AND " +
+                "[StoredFileName] IS NULL AND [FileContentType] IS NULL AND [FileSizeBytes] IS NULL) OR " +
+                "([ResourceType] = 'File' AND [ResourceUrl] IS NULL AND [OriginalFileName] IS NOT NULL AND " +
+                "[StoredFileName] IS NOT NULL AND [FileContentType] IS NOT NULL AND [FileSizeBytes] > 0)");
+            table.HasCheckConstraint(
                 "CK_CourseMaterials_SortOrder",
                 "[SortOrder] >= 0");
         });
@@ -31,9 +40,22 @@ public sealed class CourseMaterialConfiguration : IEntityTypeConfiguration<Cours
         builder.Property(material => material.Description)
             .HasMaxLength(2000);
 
-        builder.Property(material => material.ResourceUrl)
-            .HasMaxLength(2048)
+        builder.Property(material => material.ResourceType)
+            .HasMaxLength(20)
+            .HasDefaultValue(CourseMaterialResourceTypes.Link)
             .IsRequired();
+
+        builder.Property(material => material.ResourceUrl)
+            .HasMaxLength(2048);
+
+        builder.Property(material => material.OriginalFileName)
+            .HasMaxLength(255);
+
+        builder.Property(material => material.StoredFileName)
+            .HasMaxLength(100);
+
+        builder.Property(material => material.FileContentType)
+            .HasMaxLength(100);
 
         builder.Property(material => material.MaterialType)
             .HasMaxLength(50)

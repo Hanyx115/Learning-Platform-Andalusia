@@ -13,6 +13,11 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
         "andalusia-assignment-submission-tests",
         Guid.NewGuid().ToString("N"));
 
+    private readonly string _courseMaterialStoragePath = Path.Combine(
+        Path.GetTempPath(),
+        "andalusia-course-material-tests",
+        Guid.NewGuid().ToString("N"));
+
     internal const string TestJwtKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     internal const string TestConnectionStringEnvironmentVariable =
         "ANDALUSIA_TEST_CONNECTION_STRING";
@@ -39,6 +44,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 ["Database:MigrateOnStartup"] = "true",
                 ["Notifications:ProcessingEnabled"] = "false",
                 ["AssignmentSubmissions:StoragePath"] = _assignmentSubmissionStoragePath,
+                ["CourseMaterials:StoragePath"] = _courseMaterialStoragePath,
             }));
         builder.ConfigureServices(services =>
         {
@@ -56,6 +62,11 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
         if (disposing && Directory.Exists(_assignmentSubmissionStoragePath))
         {
             Directory.Delete(_assignmentSubmissionStoragePath, recursive: true);
+        }
+
+        if (disposing && Directory.Exists(_courseMaterialStoragePath))
+        {
+            Directory.Delete(_courseMaterialStoragePath, recursive: true);
         }
     }
 }

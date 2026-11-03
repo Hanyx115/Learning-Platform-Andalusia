@@ -30,4 +30,22 @@ public sealed class LearnerMaterialsController(CourseMaterialService materialSer
             ? NotFound(new ProblemDetails { Title = "Enrollment not found or learning access is unavailable." })
             : Ok(materials);
     }
+
+    [HttpGet("{materialId:guid}/file")]
+    [ProducesResponseType<FileStreamResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DownloadFile(
+        Guid enrollmentId,
+        Guid materialId,
+        CancellationToken cancellationToken)
+    {
+        var outcome = await materialService.GetLearnerFileAsync(
+            enrollmentId,
+            materialId,
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            cancellationToken);
+        return outcome.Succeeded
+            ? File(outcome.Value!.Content, outcome.Value.ContentType, outcome.Value.OriginalFileName)
+            : NotFound(new ProblemDetails { Title = outcome.Error });
+    }
 }

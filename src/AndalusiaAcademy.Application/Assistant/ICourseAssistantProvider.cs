@@ -6,7 +6,9 @@ public sealed record CourseAssistantSource(
     Guid MaterialId,
     string Title,
     string? Description,
-    string ResourceUrl,
+    string ResourceType,
+    string? ResourceUrl,
+    string? OriginalFileName,
     string MaterialType);
 
 public sealed record CourseAssistantProviderRequest(

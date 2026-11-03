@@ -513,10 +513,20 @@ export const enTranslations = {
     empty: 'No materials have been added yet.',
     newMaterial: 'New material',
     editMaterial: 'Edit material',
+    linkOption: 'Add link',
+    fileOption: 'Upload file',
+    openLink: 'Open link',
+    downloadFile: 'Download file',
+    downloading: 'Downloading…',
+    editingLink: 'Editing an external link.',
+    editingFile: 'Editing an uploaded file. The existing file will be kept.',
+    fileHelp: 'PDF, Office, text, image, CSV, or ZIP. Maximum 25 MB.',
     fields: {
+      attachmentType: 'Attachment type',
       title: 'Title',
       description: 'Description (optional)',
       resourceUrl: 'Resource URL',
+      file: 'Choose file',
       materialType: 'Type',
       visibility: 'Visibility',
       sortOrder: 'Sort order',
@@ -524,6 +534,8 @@ export const enTranslations = {
     errors: {
       load: 'We could not load the course materials. Please try again.',
       save: 'We could not save this material. Please try again.',
+      download: 'We could not download this file. Please try again.',
+      fileRequired: 'Choose a file before saving.',
     },
   },
   adminSessions: {
@@ -770,6 +782,7 @@ export const enTranslations = {
     },
     errors: {
       send: 'Oufa Shobeir could not answer right now. Please try again.',
+      download: 'We could not download this course source. Please try again.',
     },
   },
   materials: {
@@ -779,6 +792,8 @@ export const enTranslations = {
     empty: 'No course materials have been published yet.',
     back: 'Back to my enrollments',
     openResource: 'Open resource',
+    downloadFile: 'Download file',
+    downloading: 'Downloading…',
     session: 'Session: {{title}}',
     types: {
       Document: 'Document',
@@ -789,6 +804,7 @@ export const enTranslations = {
     errors: {
       load: 'We could not load the course materials. Please try again.',
       notFound: 'This enrollment was not found or learning access is unavailable.',
+      download: 'We could not download this course file. Please try again.',
     },
   },
   staffApplications: {

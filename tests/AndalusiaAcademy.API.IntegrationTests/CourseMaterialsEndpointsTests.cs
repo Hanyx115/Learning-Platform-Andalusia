@@ -97,6 +97,58 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
     }
 
     [Fact]
+    public async Task AssignedInstructor_CanUploadFile_AndOnlyEnrolledLearnerCanDownloadIt()
+    {
+        var seeded = await SeedCourseOfferingAsync();
+        var instructor = await RegisterAsWithUserIdAsync(RoleNames.Instructor);
+        await AssignInstructorToCourseAsync(seeded.OfferingId, instructor.UserId);
+
+        using var uploadRequest = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"/api/v1/courses/{seeded.CourseId}/materials/file");
+        uploadRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", instructor.AccessToken);
+        using var form = new MultipartFormDataContent();
+        form.Add(new ByteArrayContent([0x25, 0x50, 0x44, 0x46]), "file", "lesson-notes.pdf");
+        form.Add(new StringContent("Lesson notes"), "title");
+        form.Add(new StringContent("Instructor handout"), "description");
+        form.Add(new StringContent(CourseMaterialTypes.Document), "materialType");
+        form.Add(new StringContent("1"), "sortOrder");
+        form.Add(new StringContent(CourseMaterialVisibilities.Published), "visibility");
+        uploadRequest.Content = form;
+
+        using var uploadResponse = await _client.SendAsync(uploadRequest);
+        Assert.Equal(HttpStatusCode.Created, uploadResponse.StatusCode);
+        using var uploadDocument = JsonDocument.Parse(await uploadResponse.Content.ReadAsStringAsync());
+        var materialId = uploadDocument.RootElement.GetProperty("id").GetGuid();
+        Assert.Equal("File", uploadDocument.RootElement.GetProperty("resourceType").GetString());
+        Assert.Equal("lesson-notes.pdf", uploadDocument.RootElement.GetProperty("originalFileName").GetString());
+        Assert.Equal(JsonValueKind.Null, uploadDocument.RootElement.GetProperty("resourceUrl").ValueKind);
+
+        using var staffDownload = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/course-materials/{materialId}/file",
+            instructor.AccessToken);
+        staffDownload.EnsureSuccessStatusCode();
+        Assert.Equal(4, (await staffDownload.Content.ReadAsByteArrayAsync()).Length);
+
+        var (learnerToken, _) = await RegisterAsync();
+        var enrollmentId = await EnrollAsync(learnerToken, seeded.OfferingId);
+        using var learnerDownload = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/learner/enrollments/{enrollmentId}/materials/{materialId}/file",
+            learnerToken);
+        learnerDownload.EnsureSuccessStatusCode();
+        Assert.Equal("lesson-notes.pdf", learnerDownload.Content.Headers.ContentDisposition?.FileNameStar);
+
+        var (otherLearnerToken, _) = await RegisterAsync();
+        using var otherLearnerDownload = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"/api/v1/learner/enrollments/{enrollmentId}/materials/{materialId}/file",
+            otherLearnerToken);
+        Assert.Equal(HttpStatusCode.NotFound, otherLearnerDownload.StatusCode);
+    }
+
+    [Fact]
     public async Task EnrolledLearner_ReceivesPublishedMaterialsOnly_AndCannotReadAnotherEnrollment()
     {
         var (learnerToken, learnerEmail) = await RegisterAsync();
@@ -331,6 +383,24 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
         return (course.Id, offering.Id);
     }
 
+    private async Task AssignInstructorToCourseAsync(Guid offeringId, Guid instructorUserId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        dbContext.CourseSessions.Add(new CourseSession
+        {
+            Id = Guid.NewGuid(),
+            CourseOfferingId = offeringId,
+            InstructorUserId = instructorUserId,
+            Title = "Instructor materials session",
+            StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2).AddDays(1),
+            EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(2).AddDays(1).AddHours(2),
+            Status = CourseSessionStatuses.Scheduled,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+        await dbContext.SaveChangesAsync();
+    }
+
     private async Task<(Guid CourseId, Guid OfferingId)> SeedProgramOfferingWithCourseAsync()
     {
         using var scope = factory.Services.CreateScope();
@@ -421,16 +491,21 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
     }
 
     private async Task<string> RegisterAsAsync(string role)
+        => (await RegisterAsWithUserIdAsync(role)).AccessToken;
+
+    private async Task<(string AccessToken, Guid UserId)> RegisterAsWithUserIdAsync(string role)
     {
         var (initialToken, email) = await RegisterAsync();
         _ = initialToken;
         const string password = "P@ssw0rd123!";
+        Guid userId;
 
         using (var scope = factory.Services.CreateScope())
         {
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByEmailAsync(email);
             await userManager.AddToRoleAsync(user!, role);
+            userId = user!.Id;
         }
 
         using var loginResponse = await _client.PostAsJsonAsync(
@@ -439,7 +514,7 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
         loginResponse.EnsureSuccessStatusCode();
 
         using var document = JsonDocument.Parse(await loginResponse.Content.ReadAsStringAsync());
-        return document.RootElement.GetProperty("accessToken").GetString()!;
+        return (document.RootElement.GetProperty("accessToken").GetString()!, userId);
     }
 
     private async Task<HttpResponseMessage> SendAuthorizedAsync(

@@ -766,7 +766,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasFilter("[PeriodMonth] IS NOT NULL");
 
-                    b.ToTable("CompensationPayouts", t =>
+                    b.ToTable("CompensationPayouts", null, t =>
                         {
                             t.HasCheckConstraint("CK_CompensationPayouts_Amount", "[Amount] > 0");
 
@@ -873,18 +873,39 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("FileContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("MaterialType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("ResourceUrl")
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ResourceType")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Link");
+
+                    b.Property<string>("ResourceUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("nvarchar(2048)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
+
+                    b.Property<string>("StoredFileName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -910,6 +931,10 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.ToTable("CourseMaterials", t =>
                         {
                             t.HasCheckConstraint("CK_CourseMaterials_MaterialType", "[MaterialType] IN ('Document', 'Video', 'Link', 'Other')");
+
+                            t.HasCheckConstraint("CK_CourseMaterials_ResourceShape", "([ResourceType] = 'Link' AND [ResourceUrl] IS NOT NULL AND [OriginalFileName] IS NULL AND [StoredFileName] IS NULL AND [FileContentType] IS NULL AND [FileSizeBytes] IS NULL) OR ([ResourceType] = 'File' AND [ResourceUrl] IS NULL AND [OriginalFileName] IS NOT NULL AND [StoredFileName] IS NOT NULL AND [FileContentType] IS NOT NULL AND [FileSizeBytes] > 0)");
+
+                            t.HasCheckConstraint("CK_CourseMaterials_ResourceType", "[ResourceType] IN ('Link', 'File')");
 
                             t.HasCheckConstraint("CK_CourseMaterials_SortOrder", "[SortOrder] >= 0");
 
@@ -1133,7 +1158,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                     b.HasIndex("InstructorUserId", "CourseOfferingId")
                         .IsUnique();
 
-                    b.ToTable("InstructorCourseRates", t =>
+                    b.ToTable("InstructorCourseRates", null, t =>
                         {
                             t.HasCheckConstraint("CK_InstructorCourseRates_Amount", "[Amount] > 0");
                         });
@@ -1907,7 +1932,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
 
                     b.HasIndex("SetByAdminUserId");
 
-                    b.ToTable("StaffCompensationRates", t =>
+                    b.ToTable("StaffCompensationRates", null, t =>
                         {
                             t.HasCheckConstraint("CK_StaffCompensationRates_Amount", "[MonthlyAmount] > 0");
                         });
@@ -1982,7 +2007,7 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("WalletAccounts", t =>
+                    b.ToTable("WalletAccounts", null, t =>
                         {
                             t.HasCheckConstraint("CK_WalletAccounts_Balance", "[Balance] >= 0");
                         });

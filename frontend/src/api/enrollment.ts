@@ -102,7 +102,10 @@ export interface CourseMaterial {
   sessionTitle: string | null
   title: string
   description: string | null
-  resourceUrl: string
+  resourceType: 'Link' | 'File'
+  resourceUrl: string | null
+  originalFileName: string | null
+  fileSizeBytes: number | null
   materialType: string
   sortOrder: number
   visibility: string
@@ -200,6 +203,10 @@ export function getEnrollmentMaterials(enrollmentId: string) {
   return apiRequest<CourseMaterial[]>(`/api/v1/learner/enrollments/${enrollmentId}/materials`)
 }
 
+export function downloadEnrollmentMaterialFile(enrollmentId: string, materialId: string) {
+  return apiDownload(`/api/v1/learner/enrollments/${enrollmentId}/materials/${materialId}/file`)
+}
+
 export interface CourseAssistantHistoryMessage {
   role: 'user' | 'assistant'
   content: string
@@ -208,7 +215,9 @@ export interface CourseAssistantHistoryMessage {
 export interface CourseAssistantCitation {
   materialId: string
   title: string
-  resourceUrl: string
+  resourceType: 'Link' | 'File'
+  resourceUrl: string | null
+  originalFileName: string | null
   materialType: string
 }
 
