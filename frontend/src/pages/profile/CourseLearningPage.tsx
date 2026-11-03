@@ -19,6 +19,7 @@ import {
 } from '../../api/enrollment'
 import Container from '../../components/Container'
 import { saveBlob } from '../../utils/download'
+import CourseAssistantPanel from './CourseAssistantPanel'
 
 type SubmissionMethod = 'link' | 'file'
 
@@ -199,6 +200,8 @@ function CourseLearningPage() {
               </div>
             </article>
           ) : null}
+
+          <CourseAssistantPanel enrollmentId={enrollment.id} />
 
           {/* Schedule */}
           <section className="dashboard-section">

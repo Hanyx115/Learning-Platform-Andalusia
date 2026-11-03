@@ -8,6 +8,8 @@ services:
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       ConnectionStrings__DefaultConnection: ${CONNECTION_STRING:?Supply the database connection from a secret store}
       Jwt__Key: ${JWT_KEY:?Supply the JWT signing key from a secret store}
+      CourseAssistant__Provider: ${COURSE_ASSISTANT_PROVIDER:-Demo}
+      CourseAssistant__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
       AllowedHosts: ${ALLOWED_HOSTS:?Set the production API host}
       Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN:?Set the HTTPS web origin}
       Database__MigrateOnStartup: "false"

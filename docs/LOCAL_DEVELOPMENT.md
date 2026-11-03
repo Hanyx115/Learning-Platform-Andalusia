@@ -174,6 +174,40 @@ Visual Studio URLs are:
 | `https` | `https://localhost:7115/swagger` |
 | `Container (Dockerfile)` | `https://localhost:7115/swagger` or `http://localhost:5032/swagger` |
 
+### Optional: enable real AI responses for Oufa Shobeir
+
+The course assistant runs in safe demo mode by default, so the enrolled-learner flow works without an external account.
+Demo mode uses published material titles and descriptions and clearly labels its answers.
+
+For Docker Compose, update the ignored root `.env` file:
+
+```text
+COURSE_ASSISTANT_PROVIDER=OpenAI
+OPENAI_API_KEY=your-local-api-key
+```
+
+Then rebuild the API container:
+
+```powershell
+docker compose up --build -d api
+```
+
+For the Visual Studio workflow, keep the API key outside source control by using User Secrets:
+
+```powershell
+dotnet user-secrets set `
+    --project src\AndalusiaAcademy.API\AndalusiaAcademy.API.csproj `
+    'CourseAssistant:Provider' `
+    'OpenAI'
+
+dotnet user-secrets set `
+    --project src\AndalusiaAcademy.API\AndalusiaAcademy.API.csproj `
+    'CourseAssistant:OpenAI:ApiKey' `
+    'your-local-api-key'
+```
+
+Restart the API after changing these values. Never place the API key in a frontend environment file or commit it to Git.
+
 ## 8. Run the frontend
 
 Open a second PowerShell terminal at the repository root:

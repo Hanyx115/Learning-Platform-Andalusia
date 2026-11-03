@@ -200,6 +200,40 @@ export function getEnrollmentMaterials(enrollmentId: string) {
   return apiRequest<CourseMaterial[]>(`/api/v1/learner/enrollments/${enrollmentId}/materials`)
 }
 
+export interface CourseAssistantHistoryMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface CourseAssistantCitation {
+  materialId: string
+  title: string
+  resourceUrl: string
+  materialType: string
+}
+
+export interface CourseAssistantResponse {
+  answer: string
+  citations: CourseAssistantCitation[]
+  isDemoMode: boolean
+}
+
+export function askCourseAssistant(
+  enrollmentId: string,
+  question: string,
+  language: string,
+  history: CourseAssistantHistoryMessage[],
+) {
+  return apiRequest<CourseAssistantResponse>(
+    `/api/v1/learner/enrollments/${enrollmentId}/assistant/messages`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ question, language, history }),
+    },
+  )
+}
+
 export interface LearnerAssignment {
   assignmentId: string
   title: string

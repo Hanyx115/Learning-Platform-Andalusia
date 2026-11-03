@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AndalusiaAcademy.Application.Assistant;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Infrastructure.Catalog.Repositories;
@@ -11,6 +12,7 @@ using AndalusiaAcademy.Infrastructure.Identity.Models;
 using AndalusiaAcademy.Infrastructure.Identity.Repositories;
 using AndalusiaAcademy.Infrastructure.Identity.Services;
 using AndalusiaAcademy.Infrastructure.Lms.Repositories;
+using AndalusiaAcademy.Infrastructure.Lms.Assistant;
 using AndalusiaAcademy.Infrastructure.Lms.Storage;
 using AndalusiaAcademy.Infrastructure.Content.Repositories;
 using AndalusiaAcademy.Infrastructure.Notifications;
@@ -179,6 +181,10 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<ICourseMaterialRepository, CourseMaterialRepository>();
+        services.AddOptions<CourseAssistantOptions>()
+            .Bind(configuration.GetSection(CourseAssistantOptions.SectionName));
+        services.AddHttpClient<ICourseAssistantProvider, ConfigurableCourseAssistantProvider>(client =>
+            client.Timeout = TimeSpan.FromSeconds(45));
         services.AddScoped<ICmsRepository, CmsRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationOutbox, NotificationOutbox>();

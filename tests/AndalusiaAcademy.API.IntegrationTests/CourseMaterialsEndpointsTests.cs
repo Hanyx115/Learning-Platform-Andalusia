@@ -26,6 +26,16 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
     }
 
     [Fact]
+    public async Task Visitor_CannotAccessCourseAssistant()
+    {
+        using var response = await _client.PostAsJsonAsync(
+            $"/api/v1/learner/enrollments/{Guid.NewGuid()}/assistant/messages",
+            new { question = "What should I study?", language = "en", history = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Manager_CanCreateAndUpdateMaterial_WhileLearnerCannotManage()
     {
         var seeded = await SeedCourseOfferingAsync();
@@ -110,6 +120,47 @@ public sealed class CourseMaterialsEndpointsTests(ApiWebApplicationFactory facto
             HttpMethod.Get,
             $"/api/v1/learner/enrollments/{enrollmentId}/materials",
             otherLearnerToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, otherLearnerResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task EnrolledLearner_CanAskGroundedCourseAssistant_WhileAnotherLearnerCannot()
+    {
+        var (learnerToken, learnerEmail) = await RegisterAsync();
+        var seeded = await SeedCourseOfferingAsync();
+        var enrollmentId = await EnrollAsync(learnerToken, seeded.OfferingId);
+        await SeedMaterialsAsync(seeded.CourseId, learnerEmail);
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Post,
+            $"/api/v1/learner/enrollments/{enrollmentId}/assistant/messages",
+            learnerToken,
+            new
+            {
+                question = "Which workbook should I review?",
+                language = "en",
+                history = Array.Empty<object>(),
+            });
+        response.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.True(document.RootElement.GetProperty("isDemoMode").GetBoolean());
+        Assert.False(string.IsNullOrWhiteSpace(document.RootElement.GetProperty("answer").GetString()));
+        var citation = Assert.Single(document.RootElement.GetProperty("citations").EnumerateArray());
+        Assert.Equal("Published workbook", citation.GetProperty("title").GetString());
+
+        var (otherLearnerToken, _) = await RegisterAsync();
+        using var otherLearnerResponse = await SendAuthorizedAsync(
+            HttpMethod.Post,
+            $"/api/v1/learner/enrollments/{enrollmentId}/assistant/messages",
+            otherLearnerToken,
+            new
+            {
+                question = "Show another learner's content.",
+                language = "en",
+                history = Array.Empty<object>(),
+            });
 
         Assert.Equal(HttpStatusCode.NotFound, otherLearnerResponse.StatusCode);
     }

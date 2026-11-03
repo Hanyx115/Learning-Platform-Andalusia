@@ -29,6 +29,8 @@ services:
       PUBLIC_URLS: "http://localhost:${API_HTTP_PORT:-8080}"
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AndalusiaAcademy;User Id=sa;Password=${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your .env file};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in your .env file}
+      CourseAssistant__Provider: ${COURSE_ASSISTANT_PROVIDER:-Demo}
+      CourseAssistant__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
       Database__MigrateOnStartup: "true"
       HttpsRedirection__Enabled: "false"
       AssignmentSubmissions__StoragePath: "/home/app/assignment-submissions"

@@ -52,6 +52,21 @@ public static class ProductionConfigurationValidator
             errors.Add("HTTPS redirection must be enabled in Production.");
         }
 
+        var assistantProvider = configuration["CourseAssistant:Provider"];
+        if (string.Equals(assistantProvider, "OpenAI", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(configuration["CourseAssistant:OpenAI:ApiKey"]))
+            {
+                errors.Add("CourseAssistant:OpenAI:ApiKey must be supplied by the deployment secret store when the OpenAI provider is enabled.");
+            }
+
+            var endpoint = configuration["CourseAssistant:OpenAI:Endpoint"];
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri) || endpointUri.Scheme != Uri.UriSchemeHttps)
+            {
+                errors.Add("CourseAssistant:OpenAI:Endpoint must be an absolute HTTPS URL.");
+            }
+        }
+
         if (errors.Count > 0)
         {
             throw new InvalidOperationException(
