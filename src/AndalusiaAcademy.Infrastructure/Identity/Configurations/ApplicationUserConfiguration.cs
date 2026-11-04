@@ -32,6 +32,15 @@ public sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Appl
             .HasMaxLength(5)
             .IsRequired();
 
+        builder.Property(user => user.LearnerPetEnabled)
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(user => user.LearnerPetType)
+            .HasMaxLength(20)
+            .HasDefaultValue("cat")
+            .IsRequired();
+
         builder.Property(user => user.ConsentedAt)
             .IsRequired();
 

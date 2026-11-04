@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { AuthProfileProvider } from '../auth/profile'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import LearnerCompanion from '../components/LearnerCompanion'
 import { persistLanguage, resolveLanguage } from '../i18n'
 
 function RootLayout() {
@@ -35,6 +36,7 @@ function RootLayout() {
         <main>
           <Outlet />
         </main>
+        <LearnerCompanion />
         {!isWorkspace && !isAuthPage ? <Footer /> : null}
       </div>
     </AuthProfileProvider>

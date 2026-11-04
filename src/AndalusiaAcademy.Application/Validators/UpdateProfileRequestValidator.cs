@@ -26,5 +26,9 @@ public sealed class UpdateProfileRequestValidator : AbstractValidator<UpdateProf
         RuleFor(request => request.PreferredLanguage)
             .NotEmpty()
             .MaximumLength(5);
+
+        RuleFor(request => request.LearnerPetType)
+            .Must(type => type is null or "cat" or "owl" or "fox")
+            .WithMessage("Learner pet must be one of: cat, owl, fox.");
     }
 }

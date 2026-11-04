@@ -39,6 +39,7 @@ public sealed class ProgramService(IProgramRepository programRepository, TimePro
             Description = request.Description.Trim(),
             Status = request.Status,
             Price = request.Price,
+            ImageUrl = NormalizeImageUrl(request.ImageUrl),
             CreatedAt = timeProvider.GetUtcNow(),
         };
 
@@ -72,6 +73,7 @@ public sealed class ProgramService(IProgramRepository programRepository, TimePro
         program.Description = request.Description.Trim();
         program.Status = request.Status;
         program.Price = request.Price;
+        program.ImageUrl = NormalizeImageUrl(request.ImageUrl);
 
         await programRepository.SaveChangesAsync(cancellationToken);
 
@@ -82,7 +84,7 @@ public sealed class ProgramService(IProgramRepository programRepository, TimePro
     public Task<SchedulingMutationOutcome<ProgramSummaryDto>> CreateContentAsync(
         ProgramContentRequest request, CancellationToken cancellationToken)
         => CreateAsync(
-            new CreateProgramRequest(request.Title, request.Description, request.Status, Price: null),
+            new CreateProgramRequest(request.Title, request.Description, request.Status, Price: null, request.ImageUrl),
             cancellationToken);
 
     public async Task<SchedulingMutationOutcome<ProgramSummaryDto>> UpdateContentAsync(
@@ -106,6 +108,7 @@ public sealed class ProgramService(IProgramRepository programRepository, TimePro
         program.Slug = slug;
         program.Description = request.Description.Trim();
         program.Status = request.Status;
+        program.ImageUrl = NormalizeImageUrl(request.ImageUrl);
 
         await programRepository.SaveChangesAsync(cancellationToken);
         return SchedulingMutationOutcome<ProgramSummaryDto>.Success(
@@ -114,4 +117,7 @@ public sealed class ProgramService(IProgramRepository programRepository, TimePro
 
     private static SchedulingMutationOutcome<ProgramSummaryDto> Fail(string error)
         => SchedulingMutationOutcome<ProgramSummaryDto>.Failure(SchedulingFailureKind.Conflict, error);
+
+    private static string? NormalizeImageUrl(string? imageUrl)
+        => string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim();
 }

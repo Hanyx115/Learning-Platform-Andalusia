@@ -29,6 +29,7 @@ function FeaturedCoursesPrograms() {
           {courses.map((course) => (
             <Card key={course.id}>
               <CatalogPhoto
+                imageUrl={course.imageUrl}
                 categoryName={course.categoryName}
                 slug={course.slug}
                 className="home-card-photo"
@@ -40,7 +41,7 @@ function FeaturedCoursesPrograms() {
           ))}
           {programs.map((program) => (
             <Card key={program.id}>
-              <CatalogPhoto slug={program.slug} className="home-card-photo" />
+              <CatalogPhoto imageUrl={program.imageUrl} slug={program.slug} className="home-card-photo" />
               <span className="badge">{t('home.featured.programLabel')}</span>
               <h3 dir="auto"><Link to={`/programs/${program.slug}`}>{program.title}</Link></h3>
               <p dir="auto">{program.description}</p>

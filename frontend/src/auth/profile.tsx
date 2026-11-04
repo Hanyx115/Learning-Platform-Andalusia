@@ -32,6 +32,20 @@ export function AuthProfileProvider({ children }: { children: ReactNode }) {
     }
   }, [tokens])
 
+  useEffect(() => {
+    function handleProfileUpdate(event: Event) {
+      if (!tokens || !(event instanceof CustomEvent)) {
+        return
+      }
+
+      const profile = event.detail as Profile
+      setLoaded({ accessToken: tokens.accessToken, profile })
+    }
+
+    window.addEventListener('andalusia:profile-updated', handleProfileUpdate)
+    return () => window.removeEventListener('andalusia:profile-updated', handleProfileUpdate)
+  }, [tokens])
+
   // Derived at render time so signing out clears the profile immediately, without waiting on an
   // extra effect-driven render.
   const hasLoadedCurrentSession = Boolean(tokens && loaded?.accessToken === tokens.accessToken)

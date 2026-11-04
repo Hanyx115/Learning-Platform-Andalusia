@@ -32,5 +32,8 @@ public sealed class CareerPathConfiguration : IEntityTypeConfiguration<CareerPat
         builder.Property(careerPath => careerPath.Status)
             .HasMaxLength(50)
             .IsRequired();
+
+        builder.Property(careerPath => careerPath.ImageUrl)
+            .HasMaxLength(500);
     }
 }

@@ -1,12 +1,14 @@
 import careerDevelopmentPhoto from '../assets/catalog/career-development.jpg'
 import computerEngineeringPhoto from '../assets/catalog/computer-engineering.jpg'
 import healthcareTrainingPhoto from '../assets/catalog/healthcare-training.jpg'
+import { resolveApiUrl } from '../api/client'
 
 interface CatalogPhotoProps {
   alt?: string
   categoryName?: string
   className?: string
   slug?: string
+  imageUrl?: string | null
 }
 
 function getCatalogPhoto(categoryName = '', slug = '') {
@@ -23,11 +25,11 @@ function getCatalogPhoto(categoryName = '', slug = '') {
   return healthcareTrainingPhoto
 }
 
-function CatalogPhoto({ alt = '', categoryName, className, slug }: CatalogPhotoProps) {
+function CatalogPhoto({ alt = '', categoryName, className, imageUrl, slug }: CatalogPhotoProps) {
   return (
     <img
       className={className}
-      src={getCatalogPhoto(categoryName, slug)}
+      src={imageUrl ? resolveApiUrl(imageUrl) : getCatalogPhoto(categoryName, slug)}
       alt={alt}
       width="1200"
       height="800"

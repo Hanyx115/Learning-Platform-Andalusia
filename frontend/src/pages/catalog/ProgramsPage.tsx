@@ -84,7 +84,7 @@ function ProgramsPage() {
               <div className="catalog-grid">
                 {programs.map((program) => (
                   <Card key={program.id} as="article" className="catalog-card">
-                    <CatalogPhoto slug={program.slug} className="catalog-card__image" />
+                    <CatalogPhoto imageUrl={program.imageUrl} slug={program.slug} className="catalog-card__image" />
                     <CatalogMeta>{t('programs.programLabel')}</CatalogMeta>
                     <h2 dir="auto"><Link to={`/programs/${program.slug}`}>{program.title}</Link></h2>
                     <p dir="auto">{program.description}</p>

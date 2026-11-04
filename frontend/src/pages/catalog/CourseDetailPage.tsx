@@ -72,6 +72,7 @@ function CourseDetailPage() {
         <Container>
           <article className="catalog-detail">
             <CatalogPhoto
+              imageUrl={query.data.imageUrl}
               categoryName={query.data.categoryName}
               slug={query.data.slug}
               className="catalog-detail__image"

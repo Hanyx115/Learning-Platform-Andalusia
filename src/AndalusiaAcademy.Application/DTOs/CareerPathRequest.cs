@@ -6,4 +6,5 @@ public sealed record CareerPathRequest(
     string RecommendedSkills,
     string Status,
     IReadOnlyCollection<Guid>? RecommendedProgramIds,
-    IReadOnlyCollection<Guid>? RecommendedCourseIds);
+    IReadOnlyCollection<Guid>? RecommendedCourseIds,
+    string? ImageUrl = null);

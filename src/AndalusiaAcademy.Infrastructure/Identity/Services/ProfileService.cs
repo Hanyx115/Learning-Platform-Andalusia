@@ -35,6 +35,8 @@ public sealed class ProfileService(
         user.PhoneNumber = request.PhoneNumber;
         user.CountryCode = request.CountryCode;
         user.PreferredLanguage = request.PreferredLanguage;
+        user.LearnerPetEnabled = request.LearnerPetEnabled ?? user.LearnerPetEnabled;
+        user.LearnerPetType = request.LearnerPetType ?? user.LearnerPetType;
 
         var updateResult = await userManager.UpdateAsync(user);
 
@@ -129,6 +131,8 @@ public sealed class ProfileService(
             user.PhoneNumber!,
             user.CountryCode,
             user.PreferredLanguage,
+            user.LearnerPetEnabled,
+            user.LearnerPetType,
             roles.ToArray());
     }
 }

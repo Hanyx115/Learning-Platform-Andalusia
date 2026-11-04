@@ -29,6 +29,8 @@ export interface Profile {
   phoneNumber: string
   countryCode: string
   preferredLanguage: string
+  learnerPetEnabled?: boolean
+  learnerPetType?: 'cat' | 'owl' | 'fox'
   roles: string[]
 }
 
@@ -38,6 +40,8 @@ export interface UpdateProfileRequest {
   phoneNumber: string
   countryCode: string
   preferredLanguage: string
+  learnerPetEnabled: boolean
+  learnerPetType: 'cat' | 'owl' | 'fox'
 }
 
 const jsonHeaders = { 'Content-Type': 'application/json' }

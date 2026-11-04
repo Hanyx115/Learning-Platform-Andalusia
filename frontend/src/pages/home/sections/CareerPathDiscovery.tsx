@@ -24,7 +24,7 @@ function CareerPathDiscovery() {
         <div className="card-grid">
           {items.map((item) => (
             <Card key={item.id}>
-              <CatalogPhoto slug={item.slug} className="home-card-photo" />
+              <CatalogPhoto imageUrl={item.imageUrl} slug={item.slug} className="home-card-photo" />
               <h3 dir="auto"><Link to={`/career-paths/${item.slug}`}>{item.title}</Link></h3>
               <p dir="auto">{item.description}</p>
             </Card>

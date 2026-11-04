@@ -8,4 +8,6 @@ public sealed record ProfileDto(
     string PhoneNumber,
     string CountryCode,
     string PreferredLanguage,
+    bool LearnerPetEnabled,
+    string LearnerPetType,
     IReadOnlyList<string> Roles);

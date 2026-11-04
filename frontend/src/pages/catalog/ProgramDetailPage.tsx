@@ -72,6 +72,7 @@ function ProgramDetailPage() {
         <Container>
           <article className="catalog-detail">
             <CatalogPhoto
+              imageUrl={query.data.imageUrl}
               slug={query.data.slug}
               className="catalog-detail__image"
               alt={query.data.title}

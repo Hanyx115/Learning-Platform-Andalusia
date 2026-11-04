@@ -26,6 +26,7 @@ describe('CourseAssistantPanel', () => {
     const user = userEvent.setup()
     render(<CourseAssistantPanel enrollmentId="enrollment-1" />)
 
+    await user.click(screen.getByRole('button', { name: 'Open Oufa Shobeir' }))
     await user.click(screen.getByRole('button', { name: 'What key concepts should I review?' }))
 
     expect(await screen.findByText('Start with the published networking workbook [Source 1].')).toBeInTheDocument()

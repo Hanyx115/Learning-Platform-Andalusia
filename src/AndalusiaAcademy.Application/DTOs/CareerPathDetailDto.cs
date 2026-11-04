@@ -14,6 +14,8 @@ public sealed class CareerPathDetailDto
 
     public string Status { get; init; } = string.Empty;
 
+    public string? ImageUrl { get; init; }
+
     public IReadOnlyList<CareerPathProgramItemDto> RecommendedPrograms { get; init; } = [];
 
     public IReadOnlyList<CareerPathCourseItemDto> RecommendedCourses { get; init; } = [];

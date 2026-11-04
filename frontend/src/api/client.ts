@@ -3,6 +3,14 @@ import { authSession, type AuthTokens } from '../auth/session'
 const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:7115'
 const apiBaseUrl = configuredBaseUrl.replace(/\/$/, '')
 
+export function resolveApiUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) {
+    return path
+  }
+
+  return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`
+}
+
 export class ApiError extends Error {
   readonly status: number
   readonly details: unknown

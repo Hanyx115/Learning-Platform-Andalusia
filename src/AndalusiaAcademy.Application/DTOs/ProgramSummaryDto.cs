@@ -14,5 +14,7 @@ public sealed class ProgramSummaryDto
 
     public decimal? Price { get; init; }
 
+    public string? ImageUrl { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
 }
