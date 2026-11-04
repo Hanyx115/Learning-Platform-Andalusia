@@ -48,6 +48,7 @@ public sealed class CareerPathService(ICareerPathRepository careerPathRepository
             Description = request.Description.Trim(),
             RecommendedSkills = request.RecommendedSkills.Trim(),
             Status = request.Status,
+            ImageUrl = NormalizeImageUrl(request.ImageUrl),
         };
 
         careerPathRepository.Add(
@@ -89,6 +90,7 @@ public sealed class CareerPathService(ICareerPathRepository careerPathRepository
         careerPath.Description = request.Description.Trim();
         careerPath.RecommendedSkills = request.RecommendedSkills.Trim();
         careerPath.Status = request.Status;
+        careerPath.ImageUrl = NormalizeImageUrl(request.ImageUrl);
 
         await careerPathRepository.ReplaceRecommendationsAsync(
             id,
@@ -137,4 +139,7 @@ public sealed class CareerPathService(ICareerPathRepository careerPathRepository
         SchedulingFailureKind kind,
         string error)
         => SchedulingMutationOutcome<CareerPathDetailDto>.Failure(kind, error);
+
+    private static string? NormalizeImageUrl(string? imageUrl)
+        => string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim();
 }

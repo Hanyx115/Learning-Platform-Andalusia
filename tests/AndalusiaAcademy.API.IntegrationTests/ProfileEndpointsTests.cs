@@ -54,6 +54,8 @@ public sealed class ProfileEndpointsTests(ApiWebApplicationFactory factory) : IC
                 phoneNumber = "+201111111111",
                 countryCode = "SA",
                 preferredLanguage = "ar",
+                learnerPetEnabled = true,
+                learnerPetType = "owl",
             }),
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -68,6 +70,8 @@ public sealed class ProfileEndpointsTests(ApiWebApplicationFactory factory) : IC
         Assert.Equal("Name", root.GetProperty("lastName").GetString());
         Assert.Equal("SA", root.GetProperty("countryCode").GetString());
         Assert.Equal("ar", root.GetProperty("preferredLanguage").GetString());
+        Assert.True(root.GetProperty("learnerPetEnabled").GetBoolean());
+        Assert.Equal("owl", root.GetProperty("learnerPetType").GetString());
 
         using var getRequest = new HttpRequestMessage(HttpMethod.Get, "/api/v1/profile");
         getRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -75,6 +79,8 @@ public sealed class ProfileEndpointsTests(ApiWebApplicationFactory factory) : IC
         using var getDocument = JsonDocument.Parse(await getResponse.Content.ReadAsStringAsync());
 
         Assert.Equal("Updated", getDocument.RootElement.GetProperty("firstName").GetString());
+        Assert.True(getDocument.RootElement.GetProperty("learnerPetEnabled").GetBoolean());
+        Assert.Equal("owl", getDocument.RootElement.GetProperty("learnerPetType").GetString());
     }
 
     [Fact]

@@ -128,6 +128,7 @@ function CoursesPage() {
                 {coursesQuery.data.items.map((course) => (
                   <Card key={course.id} as="article" className="catalog-card">
                     <CatalogPhoto
+                      imageUrl={course.imageUrl}
                       categoryName={course.categoryName}
                       slug={course.slug}
                       className="catalog-card__image"

@@ -38,39 +38,111 @@ function CareerPathDetailPage() {
         <Container>
           <article className="catalog-detail catalog-detail--sections">
             <CatalogPhoto
+              imageUrl={query.data.imageUrl}
               slug={query.data.slug}
               className="catalog-detail__image"
               alt={query.data.title}
             />
-            <section>
-              <h2>{t('careerPaths.recommendedSkills')}</h2>
-              {skills.length > 0 ? (
-                <ul className="catalog-skill-list">
-                  {skills.map((skill) => <li key={skill} dir="auto">{skill}</li>)}
-                </ul>
-              ) : <QueryState kind="empty" />}
-            </section>
-            <section>
-              <h2>{t('careerPaths.recommendedPrograms')}</h2>
-              {query.data.recommendedPrograms.length > 0 ? (
-                <ul className="catalog-link-list">
-                  {query.data.recommendedPrograms.map((program) => (
-                    <li key={program.programId}><Link dir="auto" to={`/programs/${program.programSlug}`}>{program.programTitle}</Link></li>
-                  ))}
-                </ul>
-              ) : <QueryState kind="empty" />}
-            </section>
-            <section>
-              <h2>{t('careerPaths.recommendedCourses')}</h2>
-              {query.data.recommendedCourses.length > 0 ? (
-                <ul className="catalog-link-list">
-                  {query.data.recommendedCourses.map((course) => (
-                    <li key={course.courseId}><Link dir="auto" to={`/courses/${course.courseSlug}`}>{course.courseTitle}</Link></li>
-                  ))}
-                </ul>
-              ) : <QueryState kind="empty" />}
-            </section>
-            <Link className="catalog-card__link" to="/career-paths">{t('careerPaths.backToCareerPaths')}</Link>
+            <div className="career-plan">
+              <header className="career-plan__intro">
+                <span className="career-plan__eyebrow">{t('careerPaths.planEyebrow')}</span>
+                <h2>{t('careerPaths.planTitle')}</h2>
+                <p>{t('careerPaths.planDescription')}</p>
+              </header>
+
+              <section className="career-plan__section">
+                <header className="career-plan__section-header">
+                  <span className="career-plan__step" aria-hidden="true">1</span>
+                  <div>
+                    <h2>{t('careerPaths.recommendedSkills')}</h2>
+                    <p>{t('careerPaths.skillsDescription')}</p>
+                  </div>
+                  <span className="career-plan__count">
+                    {t('careerPaths.itemCount', { count: skills.length })}
+                  </span>
+                </header>
+                {skills.length > 0 ? (
+                  <ul className="catalog-skill-list">
+                    {skills.map((skill) => (
+                      <li key={skill} dir="auto">
+                        <span aria-hidden="true">✓</span>
+                        {skill}
+                      </li>
+                    ))}
+                  </ul>
+                ) : <QueryState kind="empty" />}
+              </section>
+
+              <section className="career-plan__section">
+                <header className="career-plan__section-header">
+                  <span className="career-plan__step" aria-hidden="true">2</span>
+                  <div>
+                    <h2>{t('careerPaths.recommendedPrograms')}</h2>
+                    <p>{t('careerPaths.programsDescription')}</p>
+                  </div>
+                  <span className="career-plan__count">
+                    {t('careerPaths.itemCount', { count: query.data.recommendedPrograms.length })}
+                  </span>
+                </header>
+                {query.data.recommendedPrograms.length > 0 ? (
+                  <ul className="career-recommendation-grid">
+                    {query.data.recommendedPrograms.map((program) => (
+                      <li key={program.programId}>
+                        <Link
+                          className="career-recommendation-card"
+                          aria-label={program.programTitle}
+                          to={`/programs/${program.programSlug}`}
+                        >
+                          <span className="career-recommendation-card__type">{t('careerPaths.programLabel')}</span>
+                          <strong dir="auto">{program.programTitle}</strong>
+                          <span className="career-recommendation-card__action">
+                            {t('careerPaths.viewProgram')}
+                            <span aria-hidden="true">→</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <QueryState kind="empty" />}
+              </section>
+
+              <section className="career-plan__section">
+                <header className="career-plan__section-header">
+                  <span className="career-plan__step" aria-hidden="true">3</span>
+                  <div>
+                    <h2>{t('careerPaths.recommendedCourses')}</h2>
+                    <p>{t('careerPaths.coursesDescription')}</p>
+                  </div>
+                  <span className="career-plan__count">
+                    {t('careerPaths.itemCount', { count: query.data.recommendedCourses.length })}
+                  </span>
+                </header>
+                {query.data.recommendedCourses.length > 0 ? (
+                  <ul className="career-recommendation-grid">
+                    {query.data.recommendedCourses.map((course) => (
+                      <li key={course.courseId}>
+                        <Link
+                          className="career-recommendation-card"
+                          aria-label={course.courseTitle}
+                          to={`/courses/${course.courseSlug}`}
+                        >
+                          <span className="career-recommendation-card__type">{t('careerPaths.courseLabel')}</span>
+                          <strong dir="auto">{course.courseTitle}</strong>
+                          <span className="career-recommendation-card__action">
+                            {t('careerPaths.viewCourse')}
+                            <span aria-hidden="true">→</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <QueryState kind="empty" />}
+              </section>
+            </div>
+            <Link className="button button--secondary career-plan__back" to="/career-paths">
+              <span aria-hidden="true">←</span>
+              {t('careerPaths.backToCareerPaths')}
+            </Link>
           </article>
         </Container>
       </section>

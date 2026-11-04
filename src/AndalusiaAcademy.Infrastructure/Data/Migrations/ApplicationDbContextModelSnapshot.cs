@@ -36,6 +36,10 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<decimal?>("Price")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
@@ -207,6 +211,10 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("RecommendedSkills")
                         .IsRequired()
@@ -792,6 +800,10 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal?>("Price")
                         .HasPrecision(10, 2)
@@ -2158,6 +2170,18 @@ namespace AndalusiaAcademy.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("LearnerPetEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LearnerPetType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("cat");
 
                     b.Property<string>("LastName")
                         .IsRequired()

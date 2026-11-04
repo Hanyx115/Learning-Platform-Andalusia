@@ -34,6 +34,9 @@ public sealed class AcademyProgramConfiguration : IEntityTypeConfiguration<Acade
         builder.Property(program => program.Price)
             .HasPrecision(10, 2);
 
+        builder.Property(program => program.ImageUrl)
+            .HasMaxLength(500);
+
         builder.Property(program => program.CreatedAt)
             .IsRequired();
     }

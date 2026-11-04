@@ -1,0 +1,71 @@
+.learner-companion {
+  position: fixed;
+  inset-inline-start: clamp(0.75rem, 2vw, 1.5rem);
+  inset-block-end: clamp(0.75rem, 2vw, 1.5rem);
+  z-index: 70;
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.learner-companion__pet,
+.learner-companion__message {
+  pointer-events: auto;
+}
+
+.learner-companion__pet {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  padding: 0;
+  border: 2px solid var(--color-surface);
+  border-radius: 50% 50% 44% 56%;
+  background: var(--color-brand-light);
+  box-shadow: 0 0.7rem 1.8rem rgb(33 45 48 / 22%);
+  cursor: pointer;
+  animation: companion-bob 3.4s ease-in-out infinite;
+}
+
+.learner-companion__pet span {
+  font-size: 2.35rem;
+  line-height: 1;
+}
+
+.learner-companion__message {
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 0.25rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+[dir='rtl'] .learner-companion__message {
+  border-radius: var(--radius-md) var(--radius-md) 0.25rem var(--radius-md);
+}
+
+.learner-companion__message p {
+  margin: 0.25rem 0 0.65rem;
+  color: var(--color-text-secondary);
+}
+
+.learner-companion__message button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-brand-hover);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+@keyframes companion-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-0.45rem) rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-companion__pet { animation: none; }
+}

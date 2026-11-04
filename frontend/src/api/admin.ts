@@ -195,6 +195,7 @@ export interface CreateCourseRequest {
   status: string
   type: string
   price: number | null
+  imageUrl: string | null
 }
 
 export function createCourse(request: CreateCourseRequest) {
@@ -241,6 +242,7 @@ export interface CreateProgramRequest {
   description: string
   status: string
   price: number | null
+  imageUrl: string | null
 }
 
 export function createProgram(request: CreateProgramRequest) {
@@ -289,6 +291,16 @@ export interface CareerPathRequest {
   status: string
   recommendedProgramIds: string[]
   recommendedCourseIds: string[]
+  imageUrl: string | null
+}
+
+export function uploadCatalogImage(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return apiRequest<{ imageUrl: string }>('/api/v1/catalog-images', {
+    method: 'POST',
+    body: formData,
+  })
 }
 
 export function getCareerPathsForManagement(status: string) {

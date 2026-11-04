@@ -26,6 +26,7 @@ import {
 import type { CareerPathSummary, Course, ProgramSummary } from '../../api/catalog'
 import { useAuthProfile } from '../../auth/profileContext'
 import Container from '../../components/Container'
+import CatalogImageField from './CatalogImageField'
 
 const STATUSES = ['Draft', 'Published', 'Archived']
 const COURSE_TYPES = ['Online', 'Offline', 'Hybrid']
@@ -38,6 +39,7 @@ interface CourseDraft {
   status: string
   type: string
   price: string
+  imageUrl: string
 }
 
 interface ProgramDraft {
@@ -45,6 +47,7 @@ interface ProgramDraft {
   description: string
   status: string
   price: string
+  imageUrl: string
 }
 
 interface CareerPathDraft {
@@ -54,6 +57,7 @@ interface CareerPathDraft {
   status: string
   recommendedProgramIds: string[]
   recommendedCourseIds: string[]
+  imageUrl: string
 }
 
 const emptyCourseDraft: CourseDraft = {
@@ -63,9 +67,10 @@ const emptyCourseDraft: CourseDraft = {
   status: 'Published',
   type: 'Online',
   price: '',
+  imageUrl: '',
 }
 
-const emptyProgramDraft: ProgramDraft = { title: '', description: '', status: 'Published', price: '' }
+const emptyProgramDraft: ProgramDraft = { title: '', description: '', status: 'Published', price: '', imageUrl: '' }
 const emptyCareerPathDraft: CareerPathDraft = {
   title: '',
   description: '',
@@ -73,6 +78,7 @@ const emptyCareerPathDraft: CareerPathDraft = {
   status: 'Draft',
   recommendedProgramIds: [],
   recommendedCourseIds: [],
+  imageUrl: '',
 }
 
 async function fetchAllStatuses<T>(fetchByStatus: (status: string) => Promise<{ items: T[] }>) {
@@ -184,6 +190,7 @@ function AdminCatalogPage() {
       status: courseDraft.status,
       type: courseDraft.type,
       price: courseDraft.price === '' ? null : Number(courseDraft.price),
+      imageUrl: courseDraft.imageUrl || null,
     }
 
     try {
@@ -194,6 +201,7 @@ function AdminCatalogPage() {
           description: request.description,
           status: request.status,
           type: request.type,
+          imageUrl: request.imageUrl,
         }
         if (editingCourseId) {
           await updateCourseContent(editingCourseId, contentRequest)
@@ -222,6 +230,7 @@ function AdminCatalogPage() {
       status: course.status,
       type: course.type,
       price: course.price?.toString() ?? '',
+      imageUrl: course.imageUrl ?? '',
     })
   }
 
@@ -232,6 +241,7 @@ function AdminCatalogPage() {
       description: programDraft.description.trim(),
       status: programDraft.status,
       price: programDraft.price === '' ? null : Number(programDraft.price),
+      imageUrl: programDraft.imageUrl || null,
     }
 
     try {
@@ -240,6 +250,7 @@ function AdminCatalogPage() {
           title: request.title,
           description: request.description,
           status: request.status,
+          imageUrl: request.imageUrl,
         }
         if (editingProgramId) {
           await updateProgramContent(editingProgramId, contentRequest)
@@ -266,6 +277,7 @@ function AdminCatalogPage() {
       description: program.description,
       status: program.status,
       price: program.price?.toString() ?? '',
+      imageUrl: program.imageUrl ?? '',
     })
   }
 
@@ -281,6 +293,7 @@ function AdminCatalogPage() {
         status: detail.status,
         recommendedProgramIds: detail.recommendedPrograms.map((program) => program.programId),
         recommendedCourseIds: detail.recommendedCourses.map((course) => course.courseId),
+        imageUrl: detail.imageUrl ?? '',
       })
     } catch (requestError) {
       setCareerPathError(getApiErrorMessage(requestError, t('adminCatalog.errors.load')))
@@ -549,6 +562,10 @@ function AdminCatalogPage() {
               onChange={(event) => setCourseDraft((previous) => ({ ...previous, description: event.target.value }))}
             />
           </label>
+          <CatalogImageField
+            imageUrl={courseDraft.imageUrl}
+            onChange={(imageUrl) => setCourseDraft((previous) => ({ ...previous, imageUrl }))}
+          />
           <label>
             {t('adminCatalog.fields.status')}
             <select
@@ -671,6 +688,10 @@ function AdminCatalogPage() {
               onChange={(event) => setProgramDraft((previous) => ({ ...previous, description: event.target.value }))}
             />
           </label>
+          <CatalogImageField
+            imageUrl={programDraft.imageUrl}
+            onChange={(imageUrl) => setProgramDraft((previous) => ({ ...previous, imageUrl }))}
+          />
           <label>
             {t('adminCatalog.fields.status')}
             <select
@@ -785,6 +806,10 @@ function AdminCatalogPage() {
               onChange={(event) => setCareerPathDraft((previous) => ({ ...previous, recommendedSkills: event.target.value }))}
             />
           </label>
+          <CatalogImageField
+            imageUrl={careerPathDraft.imageUrl}
+            onChange={(imageUrl) => setCareerPathDraft((previous) => ({ ...previous, imageUrl }))}
+          />
           <label>
             {t('adminCatalog.fields.status')}
             <select

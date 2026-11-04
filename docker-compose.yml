@@ -35,15 +35,18 @@ services:
       HttpsRedirection__Enabled: "false"
       AssignmentSubmissions__StoragePath: "/home/app/assignment-submissions"
       CourseMaterials__StoragePath: "/home/app/course-materials"
+      CatalogImages__StoragePath: "/home/app/catalog-images"
     ports:
       - "${API_HTTP_PORT:-8080}:8080"
     volumes:
       - api-dataprotection-keys:/home/app/.aspnet/DataProtection-Keys
       - assignment-submissions:/home/app/assignment-submissions
       - course-materials:/home/app/course-materials
+      - catalog-images:/home/app/catalog-images
 
 volumes:
   sqlserver-data:
   api-dataprotection-keys:
   assignment-submissions:
   course-materials:
+  catalog-images:

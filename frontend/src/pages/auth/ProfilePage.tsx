@@ -19,6 +19,8 @@ function ProfilePage() {
   const [saveError, setSaveError] = useState('')
   const [isSaved, setIsSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [learnerPetEnabled, setLearnerPetEnabled] = useState(false)
+  const [learnerPetType, setLearnerPetType] = useState<'cat' | 'owl' | 'fox'>('cat')
 
   useEffect(() => {
     let isCurrent = true
@@ -27,6 +29,8 @@ function ProfilePage() {
       .then((loadedProfile) => {
         if (isCurrent) {
           setProfile(loadedProfile)
+          setLearnerPetEnabled(loadedProfile.learnerPetEnabled ?? false)
+          setLearnerPetType(loadedProfile.learnerPetType ?? 'cat')
         }
       })
       .catch((requestError: unknown) => {
@@ -61,8 +65,13 @@ function ProfilePage() {
         phoneNumber: String(formData.get('phoneNumber') ?? '').trim(),
         countryCode: String(formData.get('countryCode') ?? '').trim().toUpperCase(),
         preferredLanguage: String(formData.get('preferredLanguage') ?? ''),
+        learnerPetEnabled,
+        learnerPetType,
       })
       setProfile(updatedProfile)
+      setLearnerPetEnabled(updatedProfile.learnerPetEnabled ?? false)
+      setLearnerPetType(updatedProfile.learnerPetType ?? 'cat')
+      window.dispatchEvent(new CustomEvent('andalusia:profile-updated', { detail: updatedProfile }))
       setIsSaved(true)
     } catch (requestError) {
       if (getApiErrorStatus(requestError) === 403) {
@@ -150,6 +159,72 @@ function ProfilePage() {
               <option value="en">{t('language.english')}</option>
             </select>
           </label>
+
+          {profile.roles.includes('Learner') ? (
+            <fieldset className="profile-pet-settings">
+              <legend className="profile-pet-settings__legend">{t('learnerPet.settingsTitle')}</legend>
+              <div className="profile-pet-settings__header">
+                <div className="profile-pet-settings__intro">
+                  <span className="profile-pet-settings__paw" aria-hidden="true">🐾</span>
+                  <div>
+                    <h2>{t('learnerPet.settingsTitle')}</h2>
+                    <p>{t('learnerPet.settingsDescription')}</p>
+                  </div>
+                </div>
+                <label className="profile-pet-settings__toggle">
+                  <span className="profile-pet-settings__toggle-copy">
+                    <strong>
+                      {learnerPetEnabled ? t('learnerPet.statusEnabled') : t('learnerPet.statusDisabled')}
+                    </strong>
+                    <small>{t('learnerPet.enableLabel')}</small>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={learnerPetEnabled}
+                    aria-label={t('learnerPet.enableLabel')}
+                    onChange={(event) => setLearnerPetEnabled(event.target.checked)}
+                  />
+                  <span className="profile-pet-settings__switch" aria-hidden="true" />
+                </label>
+              </div>
+              <div className="profile-pet-settings__choice-heading">
+                <strong>{t('learnerPet.chooseLabel')}</strong>
+                <small>
+                  {learnerPetEnabled
+                    ? t('learnerPet.selectedCompanion', { pet: t(`learnerPet.types.${learnerPetType}`) })
+                    : t('learnerPet.disabledHint')}
+                </small>
+              </div>
+              <div className="profile-pet-settings__choices" aria-label={t('learnerPet.chooseLabel')}>
+                {(['cat', 'owl', 'fox'] as const).map((petType) => (
+                  <label
+                    key={petType}
+                    className={learnerPetEnabled && learnerPetType === petType ? 'is-selected' : ''}
+                  >
+                    <input
+                      type="radio"
+                      name="learnerPetType"
+                      value={petType}
+                      checked={learnerPetType === petType}
+                      disabled={!learnerPetEnabled}
+                      onChange={() => setLearnerPetType(petType)}
+                    />
+                    <span className="profile-pet-settings__pet" aria-hidden="true">
+                      {petType === 'cat' ? '🐱' : petType === 'owl' ? '🦉' : '🦊'}
+                    </span>
+                    <strong>{t(`learnerPet.types.${petType}`)}</strong>
+                    <small>
+                      {learnerPetEnabled && learnerPetType === petType
+                        ? t('learnerPet.selectedBadge')
+                        : t('learnerPet.selectAction')}
+                    </small>
+                    <span className="profile-pet-settings__check" aria-hidden="true">✓</span>
+                  </label>
+                ))}
+              </div>
+              <p className="profile-pet-settings__reminder">{t('learnerPet.enableHint')}</p>
+            </fieldset>
+          ) : null}
 
           <button className="button button--primary auth-form__submit" type="submit" disabled={isSaving}>
             {isSaving ? t('auth.actions.saving') : t('auth.actions.saveChanges')}

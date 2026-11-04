@@ -8,6 +8,7 @@ import {
 } from '../../api/enrollment'
 import { getApiErrorMessage } from '../../api/auth'
 import { saveBlob } from '../../utils/download'
+import robotHead from '../../assets/oufa-shobeir-robot.png'
 
 interface CourseAssistantPanelProps {
   enrollmentId: string
@@ -26,6 +27,7 @@ function CourseAssistantPanel({ enrollmentId }: CourseAssistantPanelProps) {
   const [isSending, setIsSending] = useState(false)
   const [downloadingMaterialId, setDownloadingMaterialId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [isOpen, setIsOpen] = useState(false)
 
   const quickPrompts = [
     t('courseAssistant.prompts.summarize'),
@@ -108,7 +110,8 @@ function CourseAssistantPanel({ enrollmentId }: CourseAssistantPanelProps) {
   }
 
   return (
-    <section className="course-assistant" aria-labelledby="course-assistant-title">
+    <div className={`course-assistant-widget${isOpen ? ' is-open' : ''}`}>
+      {isOpen ? <section className="course-assistant" aria-labelledby="course-assistant-title">
       <div className="course-assistant__header">
         <div className="course-assistant__identity">
           <span aria-hidden="true">OS</span>
@@ -117,14 +120,24 @@ function CourseAssistantPanel({ enrollmentId }: CourseAssistantPanelProps) {
             <h2 id="course-assistant-title">{t('courseAssistant.name')}</h2>
           </div>
         </div>
-        {messages.length > 0 ? (
-          <button className="course-assistant__reset" type="button" onClick={() => {
-            setMessages([])
-            setError('')
-          }}>
-            {t('courseAssistant.newConversation')}
+        <div className="course-assistant__header-actions">
+          {messages.length > 0 ? (
+            <button className="course-assistant__reset" type="button" onClick={() => {
+              setMessages([])
+              setError('')
+            }}>
+              {t('courseAssistant.newConversation')}
+            </button>
+          ) : null}
+          <button
+            className="course-assistant__close"
+            type="button"
+            aria-label={t('courseAssistant.close')}
+            onClick={() => setIsOpen(false)}
+          >
+            ×
           </button>
-        ) : null}
+        </div>
       </div>
 
       <p className="course-assistant__description">{t('courseAssistant.description')}</p>
@@ -206,7 +219,18 @@ function CourseAssistantPanel({ enrollmentId }: CourseAssistantPanelProps) {
         </div>
         <small>{t('courseAssistant.disclaimer')}</small>
       </form>
-    </section>
+      </section> : null}
+      <button
+        className="course-assistant__launcher"
+        type="button"
+        aria-label={isOpen ? t('courseAssistant.close') : t('courseAssistant.open')}
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <img src={robotHead} alt="" aria-hidden="true" />
+        {!isOpen ? <span>{t('courseAssistant.launcherLabel')}</span> : null}
+      </button>
+    </div>
   )
 }
 

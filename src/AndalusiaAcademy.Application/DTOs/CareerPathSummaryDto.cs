@@ -11,4 +11,6 @@ public sealed class CareerPathSummaryDto
     public string Description { get; init; } = string.Empty;
 
     public string Status { get; init; } = string.Empty;
+
+    public string? ImageUrl { get; init; }
 }

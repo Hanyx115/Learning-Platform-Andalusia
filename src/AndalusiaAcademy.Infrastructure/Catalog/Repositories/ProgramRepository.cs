@@ -56,6 +56,7 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 Description = program.Description,
                 Status = program.Status,
                 Price = program.Price,
+                ImageUrl = program.ImageUrl,
                 CreatedAt = program.CreatedAt,
             })
             .Skip((int)offset)
@@ -82,6 +83,7 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 Description = program.Description,
                 Status = program.Status,
                 Price = program.Price,
+                ImageUrl = program.ImageUrl,
                 CreatedAt = program.CreatedAt,
                 Courses = dbContext.ProgramCourses
                     .Where(link => link.ProgramId == program.Id)
@@ -122,6 +124,7 @@ public sealed class ProgramRepository(ApplicationDbContext dbContext) : IProgram
                 Description = program.Description,
                 Status = program.Status,
                 Price = program.Price,
+                ImageUrl = program.ImageUrl,
                 CreatedAt = program.CreatedAt,
             })
             .FirstOrDefaultAsync(cancellationToken);

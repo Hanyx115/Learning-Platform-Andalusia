@@ -8,6 +8,7 @@ export interface Course {
   status: string
   type: string
   price: number | null
+  imageUrl?: string | null
   categorySlug: string
   categoryName: string
   createdAt: string
@@ -46,6 +47,7 @@ export interface ProgramSummary {
   description: string
   status: string
   price: number | null
+  imageUrl?: string | null
   createdAt: string
 }
 
@@ -120,6 +122,7 @@ export interface CareerPathSummary {
   slug: string
   description: string
   status: string
+  imageUrl?: string | null
 }
 
 export interface CareerPathProgram {

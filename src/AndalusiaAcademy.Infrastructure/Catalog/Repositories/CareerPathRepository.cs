@@ -54,6 +54,7 @@ public sealed class CareerPathRepository(ApplicationDbContext dbContext) : ICare
                 Slug = careerPath.Slug,
                 Description = careerPath.Description,
                 Status = careerPath.Status,
+                ImageUrl = careerPath.ImageUrl,
             })
             .Skip((int)offset)
             .Take(query.PageSize)
@@ -79,6 +80,7 @@ public sealed class CareerPathRepository(ApplicationDbContext dbContext) : ICare
                 Description = careerPath.Description,
                 RecommendedSkills = careerPath.RecommendedSkills,
                 Status = careerPath.Status,
+                ImageUrl = careerPath.ImageUrl,
                 RecommendedPrograms = dbContext.CareerPathPrograms
                     .Where(link => link.CareerPathId == careerPath.Id)
                     .Select(link => new CareerPathProgramItemDto
@@ -185,6 +187,7 @@ public sealed class CareerPathRepository(ApplicationDbContext dbContext) : ICare
             Description = careerPath.Description,
             RecommendedSkills = careerPath.RecommendedSkills,
             Status = careerPath.Status,
+            ImageUrl = careerPath.ImageUrl,
             RecommendedPrograms = dbContext.CareerPathPrograms
                 .Where(link => link.CareerPathId == careerPath.Id)
                 .Select(link => new CareerPathProgramItemDto

@@ -46,6 +46,7 @@ public sealed class CourseService(ICourseRepository courseRepository, TimeProvid
             Status = request.Status,
             Type = request.Type,
             Price = request.Price,
+            ImageUrl = NormalizeImageUrl(request.ImageUrl),
             CreatedAt = timeProvider.GetUtcNow(),
         };
 
@@ -85,6 +86,7 @@ public sealed class CourseService(ICourseRepository courseRepository, TimeProvid
         course.Status = request.Status;
         course.Type = request.Type;
         course.Price = request.Price;
+        course.ImageUrl = NormalizeImageUrl(request.ImageUrl);
 
         await courseRepository.SaveChangesAsync(cancellationToken);
 
@@ -101,7 +103,8 @@ public sealed class CourseService(ICourseRepository courseRepository, TimeProvid
                 request.Description,
                 request.Status,
                 request.Type,
-                Price: null),
+                Price: null,
+                request.ImageUrl),
             cancellationToken);
 
     public async Task<SchedulingMutationOutcome<CourseDto>> UpdateContentAsync(
@@ -131,6 +134,7 @@ public sealed class CourseService(ICourseRepository courseRepository, TimeProvid
         course.Description = request.Description.Trim();
         course.Status = request.Status;
         course.Type = request.Type;
+        course.ImageUrl = NormalizeImageUrl(request.ImageUrl);
 
         await courseRepository.SaveChangesAsync(cancellationToken);
         return SchedulingMutationOutcome<CourseDto>.Success(
@@ -139,4 +143,7 @@ public sealed class CourseService(ICourseRepository courseRepository, TimeProvid
 
     private static SchedulingMutationOutcome<CourseDto> Fail(SchedulingFailureKind kind, string error)
         => SchedulingMutationOutcome<CourseDto>.Failure(kind, error);
+
+    private static string? NormalizeImageUrl(string? imageUrl)
+        => string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim();
 }

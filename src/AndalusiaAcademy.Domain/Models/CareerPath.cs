@@ -13,4 +13,6 @@ public class CareerPath
     public string RecommendedSkills { get; set; } = string.Empty;
 
     public string Status { get; set; } = string.Empty;
+
+    public string? ImageUrl { get; set; }
 }

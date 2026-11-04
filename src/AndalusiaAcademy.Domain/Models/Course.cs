@@ -20,5 +20,7 @@ public class Course
 
     public decimal? Price { get; set; }
 
+    public string? ImageUrl { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }

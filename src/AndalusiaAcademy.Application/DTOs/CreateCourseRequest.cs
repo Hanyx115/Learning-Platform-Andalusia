@@ -6,4 +6,5 @@ public sealed record CreateCourseRequest(
     string Description,
     string Status,
     string Type,
-    decimal? Price);
+    decimal? Price,
+    string? ImageUrl = null);

@@ -14,6 +14,8 @@ public sealed class ProgramDetailDto
 
     public decimal? Price { get; init; }
 
+    public string? ImageUrl { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public IReadOnlyList<ProgramCourseItemDto> Courses { get; init; } = [];

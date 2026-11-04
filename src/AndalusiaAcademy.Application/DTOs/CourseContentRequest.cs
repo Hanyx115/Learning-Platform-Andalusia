@@ -5,4 +5,5 @@ public sealed record CourseContentRequest(
     Guid CategoryId,
     string Description,
     string Status,
-    string Type);
+    string Type,
+    string? ImageUrl = null);
