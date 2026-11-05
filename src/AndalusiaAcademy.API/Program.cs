@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,9 +39,59 @@ if (builder.Environment.IsProduction())
 builder.Services.AddControllers();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services
+    .AddOptions<AuthRateLimitOptions>()
+    .Bind(builder.Configuration.GetSection(AuthRateLimitOptions.SectionName))
+    .ValidateOnStart();
+builder.Services
+    .AddOptions<RefreshTokenCookieOptions>()
+    .Bind(builder.Configuration.GetSection(RefreshTokenCookieOptions.SectionName))
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Name), "The refresh-token cookie name is required.")
+    .ValidateOnStart();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                Math.Ceiling(retryAfter.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new ProblemDetails
+            {
+                Status = StatusCodes.Status429TooManyRequests,
+                Title = "Too many requests.",
+                Detail = "Please wait before trying this authentication action again.",
+                Extensions = { ["traceId"] = context.HttpContext.TraceIdentifier },
+            },
+            options: null,
+            contentType: "application/problem+json",
+            cancellationToken: cancellationToken);
+    };
+
+    options.AddPolicy(AuthRateLimitPolicies.Login, httpContext =>
+    {
+        var rateLimits = httpContext.RequestServices.GetRequiredService<IOptions<AuthRateLimitOptions>>().Value;
+        return CreateIpRateLimiter(httpContext, rateLimits.LoginPermitLimit, rateLimits.LoginWindowSeconds);
+    });
+    options.AddPolicy(AuthRateLimitPolicies.Registration, httpContext =>
+    {
+        var rateLimits = httpContext.RequestServices.GetRequiredService<IOptions<AuthRateLimitOptions>>().Value;
+        return CreateIpRateLimiter(httpContext, rateLimits.RegistrationPermitLimit, rateLimits.RegistrationWindowSeconds);
+    });
+    options.AddPolicy(AuthRateLimitPolicies.Recovery, httpContext =>
+    {
+        var rateLimits = httpContext.RequestServices.GetRequiredService<IOptions<AuthRateLimitOptions>>().Value;
+        return CreateIpRateLimiter(httpContext, rateLimits.RecoveryPermitLimit, rateLimits.RecoveryWindowSeconds);
+    });
+    options.AddPolicy(AuthRateLimitPolicies.Session, httpContext =>
+    {
+        var rateLimits = httpContext.RequestServices.GetRequiredService<IOptions<AuthRateLimitOptions>>().Value;
+        return CreateIpRateLimiter(httpContext, rateLimits.SessionPermitLimit, rateLimits.SessionWindowSeconds);
+    });
     options.AddPolicy("course-assistant", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -66,7 +118,8 @@ builder.Services.AddCors(options =>
             policy
                 .WithOrigins(allowedOrigins)
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .AllowCredentials();
         }
     });
 });
@@ -233,5 +286,19 @@ app.Lifetime.ApplicationStarted.Register(() =>
 });
 
 app.Run();
+
+static RateLimitPartition<string> CreateIpRateLimiter(
+    HttpContext httpContext,
+    int permitLimit,
+    int windowSeconds) =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = Math.Max(1, permitLimit),
+            Window = TimeSpan.FromSeconds(Math.Max(1, windowSeconds)),
+            QueueLimit = 0,
+            AutoReplenishment = true,
+        });
 
 public partial class Program;

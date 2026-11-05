@@ -5,14 +5,12 @@ import { apiRequest } from './client'
 const initialTokens: AuthTokens = {
   accessToken: 'old-access-token',
   accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
-  refreshToken: 'valid-refresh-token',
   refreshTokenExpiresAtUtc: '2099-02-01T00:00:00Z',
 }
 
 const refreshedTokens: AuthTokens = {
   accessToken: 'new-access-token',
   accessTokenExpiresAtUtc: '2099-01-01T00:15:00Z',
-  refreshToken: 'rotated-refresh-token',
   refreshTokenExpiresAtUtc: '2099-02-01T00:15:00Z',
 }
 
@@ -49,6 +47,7 @@ describe('apiRequest authentication', () => {
     const retryHeaders = fetchMock.mock.calls[2][1]?.headers as Headers
     expect(firstHeaders.get('Authorization')).toBe('Bearer old-access-token')
     expect(retryHeaders.get('Authorization')).toBe('Bearer new-access-token')
+    expect(fetchMock.mock.calls[1][1]?.credentials).toBe('include')
     expect(authSession.getTokens()).toEqual(refreshedTokens)
   })
 

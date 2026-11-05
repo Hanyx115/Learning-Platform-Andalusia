@@ -558,6 +558,8 @@ All routes are proposed under `/api/v1`.
 - `GET /auth/me`
 - `PUT /auth/me`
 
+Login and registration return the short-lived access token in JSON and issue the rotating refresh token only as an `HttpOnly`, `SameSite=Strict` cookie scoped to `/api/v1/auth`. Refresh and logout therefore accept no refresh-token request body; browser clients must send credentials with those requests.
+
 ### Public catalog and content
 
 - `GET /courses`

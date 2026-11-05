@@ -49,8 +49,8 @@ async function refreshSession(): Promise<AuthTokens | null> {
     return refreshInProgress
   }
 
-  const refreshToken = authSession.getTokens()?.refreshToken
-  if (!refreshToken) {
+  const currentSession = authSession.getTokens()
+  if (!currentSession || Date.parse(currentSession.refreshTokenExpiresAtUtc) <= Date.now()) {
     authSession.clear()
     return null
   }
@@ -61,9 +61,8 @@ async function refreshSession(): Promise<AuthTokens | null> {
         method: 'POST',
         headers: {
           Accept: 'application/json',
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken }),
+        credentials: 'include',
       })
 
       if (!response.ok) {
@@ -104,6 +103,7 @@ async function sendRequest(
   return fetch(`${apiBaseUrl}${path}`, {
     ...options,
     headers,
+    credentials: 'include',
   })
 }
 
@@ -117,7 +117,7 @@ export async function apiRequest<T>(
   const retryAfterRefresh = configuration.retryAfterRefresh ?? true
   let response = await sendRequest(normalizedPath, options, includeAccessToken)
 
-  if (response.status === 401 && retryAfterRefresh && authSession.getTokens()?.refreshToken) {
+  if (response.status === 401 && retryAfterRefresh && authSession.getTokens()) {
     const refreshedTokens = await refreshSession()
     if (refreshedTokens) {
       response = await sendRequest(normalizedPath, options, includeAccessToken)
@@ -139,7 +139,7 @@ export async function apiDownload(path: string): Promise<Blob> {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   let response = await sendRequest(normalizedPath, {}, true)
 
-  if (response.status === 401 && authSession.getTokens()?.refreshToken) {
+  if (response.status === 401 && authSession.getTokens()) {
     const refreshedTokens = await refreshSession()
     if (refreshedTokens) {
       response = await sendRequest(normalizedPath, {}, true)

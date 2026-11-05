@@ -1,6 +1,8 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using AndalusiaAcademy.API.Configuration;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +17,7 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
-    public async Task Register_WithValidRequest_ReturnsTokens()
+    public async Task Register_WithValidRequest_ReturnsAccessTokenAndProtectedRefreshCookie()
     {
         var email = $"{Guid.NewGuid()}@example.com";
 
@@ -35,7 +37,12 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
         var root = document.RootElement;
 
         Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("accessToken").GetString()));
-        Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("refreshToken").GetString()));
+        Assert.False(root.TryGetProperty("refreshToken", out _));
+
+        var setCookie = GetRefreshSetCookieHeader(response);
+        Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=strict", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"path={RefreshTokenCookieOptions.CookiePath}", setCookie, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -110,9 +117,7 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     [Fact]
     public async Task Logout_WithoutAuthentication_ReturnsUnauthorized()
     {
-        using var response = await _client.PostAsJsonAsync(
-            "/api/v1/auth/logout",
-            new { refreshToken = "anything" });
+        using var response = await _client.PostAsync("/api/v1/auth/logout", content: null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -120,13 +125,12 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     [Fact]
     public async Task Logout_WithValidRefreshToken_RevokesItInStorage()
     {
-        var (accessToken, refreshToken) = await RegisterAsync();
+        var session = await RegisterAsync();
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout")
         {
-            Content = JsonContent.Create(new { refreshToken }),
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", session.AccessToken) },
         };
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         using var response = await _client.SendAsync(request);
 
@@ -134,7 +138,7 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
 
         using var scope = factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var tokenHash = scope.ServiceProvider.GetRequiredService<ITokenService>().Hash(refreshToken);
+        var tokenHash = scope.ServiceProvider.GetRequiredService<ITokenService>().Hash(session.RefreshCookie);
         var storedToken = await dbContext.RefreshTokens.SingleAsync(token => token.TokenHash == tokenHash);
         Assert.NotNull(storedToken.RevokedAtUtc);
     }
@@ -142,14 +146,16 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     [Fact]
     public async Task ForgotPassword_ForKnownAndUnknownEmail_BothReturnGenericSuccess()
     {
-        var (_, _, email) = await RegisterWithEmailAsync();
+        var email = (await RegisterAsync()).Email;
 
         using var knownResponse = await _client.PostAsJsonAsync("/api/v1/auth/forgot-password", new { email });
         using var unknownResponse = await _client.PostAsJsonAsync(
             "/api/v1/auth/forgot-password",
             new { email = $"{Guid.NewGuid()}@example.com" });
 
-        Assert.Equal(HttpStatusCode.OK, knownResponse.StatusCode);
+        Assert.True(
+            knownResponse.StatusCode == HttpStatusCode.OK,
+            $"Expected OK but received {knownResponse.StatusCode}: {await knownResponse.Content.ReadAsStringAsync()}");
         Assert.Equal(HttpStatusCode.OK, unknownResponse.StatusCode);
 
         using var knownDocument = JsonDocument.Parse(await knownResponse.Content.ReadAsStringAsync());
@@ -162,7 +168,7 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     [Fact]
     public async Task ResetPassword_WithValidToken_AllowsLoginWithNewPasswordOnly()
     {
-        var (_, _, email) = await RegisterWithEmailAsync();
+        var email = (await RegisterAsync()).Email;
 
         using var forgotResponse = await _client.PostAsJsonAsync("/api/v1/auth/forgot-password", new { email });
         using var forgotDocument = JsonDocument.Parse(await forgotResponse.Content.ReadAsStringAsync());
@@ -188,19 +194,19 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     [Fact]
     public async Task Refresh_WithValidToken_ReturnsNewTokensAndRevokesOldOne()
     {
-        var (_, refreshToken) = await RegisterAsync();
+        var session = await RegisterAsync();
 
-        using var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken });
+        using var response = await _client.PostAsync("/api/v1/auth/refresh", content: null);
         response.EnsureSuccessStatusCode();
 
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var newRefreshToken = document.RootElement.GetProperty("refreshToken").GetString();
-        Assert.False(string.IsNullOrWhiteSpace(newRefreshToken));
-        Assert.NotEqual(refreshToken, newRefreshToken);
+        Assert.False(document.RootElement.TryGetProperty("refreshToken", out _));
+        var newRefreshToken = GetRefreshCookieValue(response);
+        Assert.NotEqual(session.RefreshCookie, newRefreshToken);
 
         using var scope = factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var tokenHash = scope.ServiceProvider.GetRequiredService<ITokenService>().Hash(refreshToken);
+        var tokenHash = scope.ServiceProvider.GetRequiredService<ITokenService>().Hash(session.RefreshCookie);
         var oldToken = await dbContext.RefreshTokens.SingleAsync(token => token.TokenHash == tokenHash);
         Assert.NotNull(oldToken.RevokedAtUtc);
     }
@@ -208,9 +214,14 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     [Fact]
     public async Task Refresh_WithUnknownToken_ReturnsUnauthorized()
     {
-        using var response = await _client.PostAsJsonAsync(
+        using var request = CreateCookieRequest(
             "/api/v1/auth/refresh",
-            new { refreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) });
+            Convert.ToBase64String(Guid.NewGuid().ToByteArray()));
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            HandleCookies = false,
+        });
+        using var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -218,28 +229,32 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
     [Fact]
     public async Task Refresh_WithAlreadyRotatedToken_ReturnsUnauthorizedAndRevokesWholeChain()
     {
-        var (_, refreshToken) = await RegisterAsync();
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            HandleCookies = false,
+        });
+        var session = await RegisterAsync(client);
 
-        using var firstRefresh = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken });
+        using var firstRequest = CreateCookieRequest("/api/v1/auth/refresh", session.RefreshCookie);
+        using var firstRefresh = await client.SendAsync(firstRequest);
         firstRefresh.EnsureSuccessStatusCode();
-        using var firstRefreshDocument = JsonDocument.Parse(await firstRefresh.Content.ReadAsStringAsync());
-        var rotatedRefreshToken = firstRefreshDocument.RootElement.GetProperty("refreshToken").GetString();
+        var rotatedRefreshToken = GetRefreshCookieValue(firstRefresh);
 
         // Reusing the original (now-revoked) token simulates a stolen token being replayed.
-        using var reuseResponse = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken });
+        using var reuseRequest = CreateCookieRequest("/api/v1/auth/refresh", session.RefreshCookie);
+        using var reuseResponse = await client.SendAsync(reuseRequest);
         Assert.Equal(HttpStatusCode.Unauthorized, reuseResponse.StatusCode);
 
         // The whole chain, including the legitimate rotated token, must now be dead too.
-        using var rotatedTokenResponse = await _client.PostAsJsonAsync(
-            "/api/v1/auth/refresh",
-            new { refreshToken = rotatedRefreshToken });
+        using var rotatedRequest = CreateCookieRequest("/api/v1/auth/refresh", rotatedRefreshToken);
+        using var rotatedTokenResponse = await client.SendAsync(rotatedRequest);
         Assert.Equal(HttpStatusCode.Unauthorized, rotatedTokenResponse.StatusCode);
     }
 
     [Fact]
     public async Task ResetPassword_WithInvalidToken_ReturnsBadRequest()
     {
-        var (_, _, email) = await RegisterWithEmailAsync();
+        var email = (await RegisterAsync()).Email;
 
         using var response = await _client.PostAsJsonAsync(
             "/api/v1/auth/reset-password",
@@ -248,17 +263,12 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    private async Task<(string AccessToken, string RefreshToken)> RegisterAsync()
+    private async Task<RegisteredSession> RegisterAsync(HttpClient? client = null)
     {
-        var (accessToken, refreshToken, _) = await RegisterWithEmailAsync();
-        return (accessToken, refreshToken);
-    }
-
-    private async Task<(string AccessToken, string RefreshToken, string Email)> RegisterWithEmailAsync()
-    {
+        client ??= _client;
         var email = $"{Guid.NewGuid()}@example.com";
 
-        using var response = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        using var response = await client.PostAsJsonAsync("/api/v1/auth/register", new
         {
             email,
             password = "P@ssw0rd123!",
@@ -272,6 +282,32 @@ public sealed class AuthEndpointsTests(ApiWebApplicationFactory factory) : IClas
 
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var root = document.RootElement;
-        return (root.GetProperty("accessToken").GetString()!, root.GetProperty("refreshToken").GetString()!, email);
+        return new RegisteredSession(
+            root.GetProperty("accessToken").GetString()!,
+            GetRefreshCookieValue(response),
+            email);
     }
+
+    private static HttpRequestMessage CreateCookieRequest(string path, string refreshToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, path);
+        request.Headers.Add("Cookie", $"{RefreshTokenCookieOptions.DefaultName}={refreshToken}");
+        return request;
+    }
+
+    private static string GetRefreshCookieValue(HttpResponseMessage response)
+    {
+        var setCookie = GetRefreshSetCookieHeader(response);
+        var cookiePair = setCookie.Split(';', 2)[0];
+        return Uri.UnescapeDataString(cookiePair[(cookiePair.IndexOf('=') + 1)..].Trim('"'));
+    }
+
+    private static string GetRefreshSetCookieHeader(HttpResponseMessage response) =>
+        Assert.Single(
+            response.Headers.GetValues("Set-Cookie"),
+            value => value.StartsWith(
+                $"{RefreshTokenCookieOptions.DefaultName}=",
+                StringComparison.Ordinal));
+
+    private sealed record RegisteredSession(string AccessToken, string RefreshCookie, string Email);
 }

@@ -85,8 +85,6 @@ export async function logout() {
     if (tokens) {
       await apiRequest<void>('/api/v1/auth/logout', {
         method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ refreshToken: tokens.refreshToken }),
       }, {
         retryAfterRefresh: false,
       })
