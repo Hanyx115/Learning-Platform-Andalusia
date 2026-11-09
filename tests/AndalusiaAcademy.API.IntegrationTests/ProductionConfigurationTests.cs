@@ -14,6 +14,8 @@ public sealed class ProductionConfigurationTests
             ["Database:MigrateOnStartup"] = "true",
             ["CatalogSeed:Enabled"] = "true",
             ["HttpsRedirection:Enabled"] = "false",
+            ["Authentication:RefreshCookie:Secure"] = "false",
+            ["Authentication:RefreshCookie:SameSite"] = "Lax",
         });
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
@@ -24,6 +26,8 @@ public sealed class ProductionConfigurationTests
         Assert.Contains("AllowedHosts", exception.Message);
         Assert.Contains("Cors:AllowedOrigins", exception.Message);
         Assert.Contains("MigrateOnStartup", exception.Message);
+        Assert.Contains("RefreshCookie:Secure", exception.Message);
+        Assert.Contains("RefreshCookie:SameSite", exception.Message);
     }
 
     [Fact]
@@ -39,6 +43,8 @@ public sealed class ProductionConfigurationTests
             ["CatalogSeed:Enabled"] = "false",
             ["IdentitySeed:Enabled"] = "false",
             ["HttpsRedirection:Enabled"] = "true",
+            ["Authentication:RefreshCookie:Secure"] = "true",
+            ["Authentication:RefreshCookie:SameSite"] = "Strict",
         });
 
         ProductionConfigurationValidator.Validate(configuration, "Production");

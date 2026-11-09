@@ -92,6 +92,12 @@ function InstructorOfferingsPage() {
                   >
                     {t('instructorOfferings.viewProgress')}
                   </Link>
+                  <Link
+                    className="button button--secondary"
+                    to={`/community/${offering.offeringType.toLowerCase()}/${offeringId}`}
+                  >
+                    {t('community.open')}
+                  </Link>
                   {offering.courseId ? (
                     <Link
                       className="button button--secondary"

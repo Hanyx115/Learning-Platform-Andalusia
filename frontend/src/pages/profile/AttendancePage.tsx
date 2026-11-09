@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getApiErrorMessage } from '../../api/auth'
 import { getMyAttendance, type LearnerAttendance } from '../../api/enrollment'
@@ -43,28 +43,69 @@ function AttendancePage() {
   const { t } = useTranslation()
   const [records, setRecords] = useState<LearnerAttendance[] | null>(null)
   const [error, setError] = useState('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const isMounted = useRef(true)
+  const latestRequestId = useRef(0)
   const groupedRecords = records
     ? groupAttendanceByCourse(records, t('learnerAttendance.uncategorized'))
     : []
 
-  useEffect(() => {
-    let isCurrent = true
-    getMyAttendance()
-      .then((loaded) => {
-        if (isCurrent) setRecords(loaded)
-      })
-      .catch((requestError: unknown) => {
-        if (isCurrent) setError(getApiErrorMessage(requestError, t('learnerAttendance.errors.load')))
-      })
+  const loadAttendance = useCallback(async (background = false) => {
+    const requestId = ++latestRequestId.current
+    if (background) setIsRefreshing(true)
+    setError('')
 
-    return () => { isCurrent = false }
+    try {
+      const loaded = await getMyAttendance()
+      if (isMounted.current && requestId === latestRequestId.current) setRecords(loaded)
+    } catch (requestError) {
+      if (isMounted.current && requestId === latestRequestId.current) {
+        setError(getApiErrorMessage(requestError, t('learnerAttendance.errors.load')))
+      }
+    } finally {
+      if (isMounted.current && requestId === latestRequestId.current) {
+        setIsRefreshing(false)
+      }
+    }
   }, [t])
+
+  useEffect(() => {
+    isMounted.current = true
+    const initialLoad = window.setTimeout(() => void loadAttendance(), 0)
+
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void loadAttendance(true)
+    }
+
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    const refreshInterval = window.setInterval(refreshWhenVisible, 30_000)
+
+    return () => {
+      isMounted.current = false
+      latestRequestId.current += 1
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+      window.clearTimeout(initialLoad)
+      window.clearInterval(refreshInterval)
+    }
+  }, [loadAttendance])
 
   return (
     <section className="dashboard-section">
       <div className="dashboard-section__heading">
         <h1>{t('learnerAttendance.title')}</h1>
         <p>{t('learnerAttendance.description')}</p>
+      </div>
+      <div>
+        <button
+          className="button button--secondary"
+          type="button"
+          disabled={isRefreshing}
+          onClick={() => void loadAttendance(true)}
+        >
+          {isRefreshing ? t('learnerAttendance.refreshing') : t('learnerAttendance.refresh')}
+        </button>
       </div>
       {error ? <p className="auth-message auth-message--error" role="alert">{error}</p> : null}
       {records === null ? (

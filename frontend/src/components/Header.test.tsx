@@ -92,7 +92,6 @@ describe('Header', () => {
     authSession.setTokens({
       accessToken: 'access-token',
       accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
-      refreshToken: 'refresh-token',
       refreshTokenExpiresAtUtc: '2099-01-02T00:00:00Z',
     })
     renderHeader()
@@ -116,7 +115,6 @@ describe('Header', () => {
     authSession.setTokens({
       accessToken: 'access-token',
       accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
-      refreshToken: 'refresh-token',
       refreshTokenExpiresAtUtc: '2099-01-02T00:00:00Z',
     })
     renderHeader()
@@ -135,7 +133,6 @@ describe('Header', () => {
     authSession.setTokens({
       accessToken: 'access-token',
       accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
-      refreshToken: 'refresh-token',
       refreshTokenExpiresAtUtc: '2099-01-02T00:00:00Z',
     })
     renderHeader(['/profile'], ['Learner', 'Instructor', 'ContentManager', 'Manager', 'Admin'])

@@ -1,6 +1,7 @@
 using System.Data;
 using AndalusiaAcademy.Application.DTOs.Applications;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
+using AndalusiaAcademy.Application.Enrollment;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Application.Repositories;
 using AndalusiaAcademy.Domain.Models;
@@ -289,11 +290,41 @@ public sealed class SchedulingRepository(ApplicationDbContext dbContext) : ISche
     public Task<bool> CourseOfferingHasSessionsAsync(Guid offeringId, CancellationToken cancellationToken)
         => dbContext.CourseSessions.AnyAsync(session => session.CourseOfferingId == offeringId, cancellationToken);
 
+    public async Task<int> GetCourseOfferingCommittedSeatCountAsync(
+        Guid offeringId,
+        CancellationToken cancellationToken)
+    {
+        var activeEnrollments = await dbContext.Enrollments.CountAsync(enrollment =>
+            enrollment.CourseOfferingId == offeringId &&
+            enrollment.Status == EnrollmentStatus.Active,
+            cancellationToken);
+        var pendingPayments = await dbContext.Payments.CountAsync(payment =>
+            payment.Status == PaymentStatus.Pending &&
+            payment.Application!.CourseOfferingId == offeringId,
+            cancellationToken);
+        return activeEnrollments + pendingPayments;
+    }
+
     public Task<bool> HasProgramSessionsOutsidePeriodAsync(Guid offeringId, DateTimeOffset startsAtUtc, DateTimeOffset endsAtUtc, CancellationToken cancellationToken)
         => dbContext.ProgramSessions.AnyAsync(session => session.ProgramOfferingId == offeringId && (session.StartsAtUtc < startsAtUtc || session.EndsAtUtc > endsAtUtc), cancellationToken);
 
     public Task<bool> ProgramOfferingHasSessionsAsync(Guid offeringId, CancellationToken cancellationToken)
         => dbContext.ProgramSessions.AnyAsync(session => session.ProgramOfferingId == offeringId, cancellationToken);
+
+    public async Task<int> GetProgramOfferingCommittedSeatCountAsync(
+        Guid offeringId,
+        CancellationToken cancellationToken)
+    {
+        var activeEnrollments = await dbContext.Enrollments.CountAsync(enrollment =>
+            enrollment.ProgramOfferingId == offeringId &&
+            enrollment.Status == EnrollmentStatus.Active,
+            cancellationToken);
+        var pendingPayments = await dbContext.Payments.CountAsync(payment =>
+            payment.Status == PaymentStatus.Pending &&
+            payment.Application!.ProgramOfferingId == offeringId,
+            cancellationToken);
+        return activeEnrollments + pendingPayments;
+    }
 
     public void AddCourseOffering(CourseOffering offering) => dbContext.CourseOfferings.Add(offering);
 

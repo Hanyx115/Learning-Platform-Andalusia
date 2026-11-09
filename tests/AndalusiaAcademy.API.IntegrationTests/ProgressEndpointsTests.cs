@@ -98,6 +98,119 @@ public sealed class ProgressEndpointsTests(ApiWebApplicationFactory factory) : I
         Assert.Equal(JsonValueKind.Null, record.GetProperty("averageScorePercentage").ValueKind);
     }
 
+    [Fact]
+    public async Task Learner_MarkedLate_IsCountedAsAttendingTheSession()
+    {
+        var seed = await SeedOfferingWithPastSessionAndEnrolledLearnerAsync();
+        using var markResponse = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"/api/v1/course-sessions/{seed.SessionId}/attendance",
+            seed.InstructorToken,
+            new { entries = new[] { new { userId = seed.LearnerId, status = "Late", note = (string?)null } } });
+        markResponse.EnsureSuccessStatusCode();
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/learner/progress", seed.LearnerToken);
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var record = Assert.Single(document.RootElement.EnumerateArray());
+        Assert.Equal(1, record.GetProperty("attendedSessions").GetInt32());
+        Assert.Equal(100, record.GetProperty("attendanceRatePercentage").GetDecimal());
+    }
+
+    [Fact]
+    public async Task SessionStillInProgress_IsNotCountedAsMissed()
+    {
+        var seed = await SeedOfferingWithPastSessionAndEnrolledLearnerAsync();
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var session = await dbContext.CourseSessions.FindAsync(seed.SessionId);
+            session!.StartsAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30);
+            session.EndsAtUtc = DateTimeOffset.UtcNow.AddMinutes(30);
+            session.Status = CourseSessionStatuses.Scheduled;
+            await dbContext.SaveChangesAsync();
+        }
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/learner/progress", seed.LearnerToken);
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var record = Assert.Single(document.RootElement.EnumerateArray());
+        Assert.Equal(0, record.GetProperty("totalSessions").GetInt32());
+        Assert.Equal(0, record.GetProperty("attendanceRatePercentage").GetDecimal());
+    }
+
+    [Fact]
+    public async Task FutureSession_AttendanceForAnotherLearner_DoesNotCountAgainstCurrentLearner()
+    {
+        var seed = await SeedOfferingWithPastSessionAndEnrolledLearnerAsync();
+        var (_, otherLearnerEmail) = await RegisterAsync();
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var otherLearner = (await userManager.FindByEmailAsync(otherLearnerEmail))!;
+            var session = await dbContext.CourseSessions.FindAsync(seed.SessionId);
+            session!.StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2);
+            session.EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(2).AddHours(2);
+            session.Status = CourseSessionStatuses.Scheduled;
+            dbContext.CourseSessionAttendances.Add(new CourseSessionAttendance
+            {
+                Id = Guid.NewGuid(),
+                CourseSessionId = seed.SessionId,
+                UserId = otherLearner.Id,
+                Status = AttendanceStatuses.Present,
+                RecordedByUserId = otherLearner.Id,
+                RecordedAtUtc = DateTimeOffset.UtcNow,
+            });
+            await dbContext.SaveChangesAsync();
+        }
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/learner/progress", seed.LearnerToken);
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var record = Assert.Single(document.RootElement.EnumerateArray());
+        Assert.Equal(0, record.GetProperty("totalSessions").GetInt32());
+        Assert.Equal(0, record.GetProperty("attendedSessions").GetInt32());
+    }
+
+    [Fact]
+    public async Task FutureSession_WithRecordedAttendance_IsIncludedInProgress()
+    {
+        var seed = await SeedOfferingWithPastSessionAndEnrolledLearnerAsync();
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var session = await dbContext.CourseSessions.FindAsync(seed.SessionId);
+            session!.StartsAtUtc = DateTimeOffset.UtcNow.AddMonths(2);
+            session.EndsAtUtc = DateTimeOffset.UtcNow.AddMonths(2).AddHours(2);
+            session.Status = CourseSessionStatuses.Scheduled;
+            await dbContext.SaveChangesAsync();
+        }
+
+        await MarkPresentAsync(seed.SessionId, seed.LearnerId, seed.InstructorToken);
+
+        using var learnerResponse = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/learner/progress", seed.LearnerToken);
+        learnerResponse.EnsureSuccessStatusCode();
+        using var learnerDocument = JsonDocument.Parse(await learnerResponse.Content.ReadAsStringAsync());
+        var learnerRecord = Assert.Single(learnerDocument.RootElement.EnumerateArray());
+        Assert.Equal(1, learnerRecord.GetProperty("totalSessions").GetInt32());
+        Assert.Equal(1, learnerRecord.GetProperty("attendedSessions").GetInt32());
+        Assert.Equal(100, learnerRecord.GetProperty("attendanceRatePercentage").GetDecimal());
+
+        using var offeringResponse = await SendAuthorizedAsync(
+            HttpMethod.Get, $"/api/v1/course-offerings/{seed.OfferingId}/progress", seed.InstructorToken);
+        offeringResponse.EnsureSuccessStatusCode();
+        using var offeringDocument = JsonDocument.Parse(await offeringResponse.Content.ReadAsStringAsync());
+        var offeringRecord = Assert.Single(offeringDocument.RootElement.EnumerateArray());
+        Assert.Equal(1, offeringRecord.GetProperty("totalSessions").GetInt32());
+        Assert.Equal(1, offeringRecord.GetProperty("attendedSessions").GetInt32());
+    }
+
     private async Task MarkPresentAsync(Guid sessionId, Guid learnerId, string instructorToken)
     {
         using var response = await SendAuthorizedAsync(
@@ -145,23 +258,39 @@ public sealed class ProgressEndpointsTests(ApiWebApplicationFactory factory) : I
         var category = new CourseCategory { Id = Guid.NewGuid(), Name = $"Progress Cat {suffix}", Slug = $"progress-cat-{suffix}" };
         var course = new Course
         {
-            Id = Guid.NewGuid(), CategoryId = category.Id, Title = $"Progress Course {suffix}",
-            Slug = $"progress-course-{suffix}", Description = "desc", Status = "Published", Type = "Offline",
+            Id = Guid.NewGuid(),
+            CategoryId = category.Id,
+            Title = $"Progress Course {suffix}",
+            Slug = $"progress-course-{suffix}",
+            Description = "desc",
+            Status = "Published",
+            Type = "Offline",
             CreatedAt = DateTimeOffset.UtcNow,
         };
         var location = new TrainingLocation
         {
-            Id = Guid.NewGuid(), BranchName = $"Progress Branch {suffix}", RoomName = "Room 1",
-            City = "Alexandria", Address = "Addr", Capacity = 100, IsActive = true,
+            Id = Guid.NewGuid(),
+            BranchName = $"Progress Branch {suffix}",
+            RoomName = "Room 1",
+            City = "Alexandria",
+            Address = "Addr",
+            Capacity = 100,
+            IsActive = true,
         };
         var startsAtUtc = DateTimeOffset.UtcNow.AddMonths(2);
         var offering = new CourseOffering
         {
-            Id = Guid.NewGuid(), CourseId = course.Id, LocationId = location.Id,
-            StartsAtUtc = startsAtUtc, EndsAtUtc = startsAtUtc.AddMonths(2),
+            Id = Guid.NewGuid(),
+            CourseId = course.Id,
+            LocationId = location.Id,
+            StartsAtUtc = startsAtUtc,
+            EndsAtUtc = startsAtUtc.AddMonths(2),
             ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
             ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(1),
-            Price = 500m, Currency = "EGP", Capacity = 20, Status = OfferingStatuses.Open,
+            Price = 500m,
+            Currency = "EGP",
+            Capacity = 20,
+            Status = OfferingStatuses.Open,
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
         dbContext.AddRange(category, course, location, offering);

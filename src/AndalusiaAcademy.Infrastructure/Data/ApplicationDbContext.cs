@@ -37,6 +37,14 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<AssignmentSubmission> AssignmentSubmissions => Set<AssignmentSubmission>();
 
+    public DbSet<Skill> Skills => Set<Skill>();
+
+    public DbSet<LearningSkillMapping> LearningSkillMappings => Set<LearningSkillMapping>();
+
+    public DbSet<CommunityPost> CommunityPosts => Set<CommunityPost>();
+
+    public DbSet<CommunityReply> CommunityReplies => Set<CommunityReply>();
+
     public DbSet<ProgramCourse> ProgramCourses => Set<ProgramCourse>();
 
     public DbSet<CareerPath> CareerPaths => Set<CareerPath>();

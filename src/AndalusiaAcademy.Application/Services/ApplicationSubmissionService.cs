@@ -38,14 +38,21 @@ public sealed class ApplicationSubmissionService(
             return CreateApplicationOutcome.Failure("The selected offering is not open for applications.");
         }
 
-        if (await applicationRepository.HasPendingApplicationAsync(
+        if (await applicationRepository.HasOpenApplicationAsync(
             userId, request.CourseOfferingId, request.ProgramOfferingId, cancellationToken))
         {
-            return CreateApplicationOutcome.Failure("You already have a pending application for this offering.");
+            return CreateApplicationOutcome.Failure(
+                "You already have a pending or accepted application for this offering.");
         }
 
         var application = await applicationRepository.AddAsync(
             userId, request.CourseOfferingId, request.ProgramOfferingId, cancellationToken);
+
+        if (application is null)
+        {
+            return CreateApplicationOutcome.Failure(
+                "You already have a pending or accepted application for this offering.");
+        }
 
         await TryQueueNotificationAsync(
             new NotificationEventRequest(

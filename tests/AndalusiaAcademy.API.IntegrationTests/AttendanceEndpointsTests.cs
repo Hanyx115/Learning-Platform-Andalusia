@@ -103,6 +103,28 @@ public sealed class AttendanceEndpointsTests(ApiWebApplicationFactory factory) :
     }
 
     [Fact]
+    public async Task MarkAttendance_ForCancelledSession_ReturnsConflict()
+    {
+        var (sessionId, _, learnerId, _, instructorToken) = await SeedOfferingSessionAndEnrolledLearnerAsync();
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var session = await dbContext.CourseSessions.FindAsync(sessionId);
+            session!.Status = CourseSessionStatuses.Cancelled;
+            session.CancellationReason = "Session cancelled for testing.";
+            await dbContext.SaveChangesAsync();
+        }
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"/api/v1/course-sessions/{sessionId}/attendance",
+            instructorToken,
+            new { entries = new[] { new { userId = learnerId, status = "Present", note = (string?)null } } });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Learner_CanSeeOwnAttendanceAfterBeingMarked()
     {
         var (sessionId, _, learnerId, learnerToken, instructorToken) = await SeedOfferingSessionAndEnrolledLearnerAsync();
@@ -122,6 +144,56 @@ public sealed class AttendanceEndpointsTests(ApiWebApplicationFactory factory) :
         Assert.Equal("Late", record.GetProperty("status").GetString());
     }
 
+    [Fact]
+    public async Task ClearingAttendance_RemovesItFromTheLearnerAccount()
+    {
+        var (sessionId, _, learnerId, learnerToken, instructorToken) = await SeedOfferingSessionAndEnrolledLearnerAsync();
+
+        using var markResponse = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"/api/v1/course-sessions/{sessionId}/attendance",
+            instructorToken,
+            new { entries = new[] { new { userId = learnerId, status = "Present", note = "Recorded by mistake" } } });
+        markResponse.EnsureSuccessStatusCode();
+
+        using var clearResponse = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"/api/v1/course-sessions/{sessionId}/attendance",
+            instructorToken,
+            new { entries = new[] { new { userId = learnerId, status = (string?)null, note = (string?)null } } });
+        clearResponse.EnsureSuccessStatusCode();
+        using var clearedRoster = JsonDocument.Parse(await clearResponse.Content.ReadAsStringAsync());
+        Assert.Equal(JsonValueKind.Null, Assert.Single(clearedRoster.RootElement.EnumerateArray()).GetProperty("status").ValueKind);
+
+        using var learnerResponse = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/learner/attendance", learnerToken);
+        learnerResponse.EnsureSuccessStatusCode();
+        using var learnerAttendance = JsonDocument.Parse(await learnerResponse.Content.ReadAsStringAsync());
+        Assert.Empty(learnerAttendance.RootElement.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Learner_CanSeeProgramAttendanceAfterBeingMarked()
+    {
+        var (sessionId, learnerId, learnerToken, instructorToken, programTitle) =
+            await SeedProgramSessionAndEnrolledLearnerAsync();
+
+        using var markResponse = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"/api/v1/program-sessions/{sessionId}/attendance",
+            instructorToken,
+            new { entries = new[] { new { userId = learnerId, status = "Excused", note = "Approved absence" } } });
+        markResponse.EnsureSuccessStatusCode();
+
+        using var response = await SendAuthorizedAsync(HttpMethod.Get, "/api/v1/learner/attendance", learnerToken);
+        response.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var record = Assert.Single(document.RootElement.EnumerateArray());
+        Assert.Equal("Excused", record.GetProperty("status").GetString());
+        Assert.Equal(programTitle, record.GetProperty("programTitle").GetString());
+        Assert.Equal(JsonValueKind.Null, record.GetProperty("courseTitle").ValueKind);
+    }
+
     private async Task<(Guid SessionId, Guid OfferingId, Guid LearnerId, string LearnerToken, string InstructorToken)> SeedOfferingSessionAndEnrolledLearnerAsync()
     {
         using var scope = factory.Services.CreateScope();
@@ -131,23 +203,39 @@ public sealed class AttendanceEndpointsTests(ApiWebApplicationFactory factory) :
         var category = new CourseCategory { Id = Guid.NewGuid(), Name = $"Attendance Cat {suffix}", Slug = $"attendance-cat-{suffix}" };
         var course = new Course
         {
-            Id = Guid.NewGuid(), CategoryId = category.Id, Title = $"Attendance Course {suffix}",
-            Slug = $"attendance-course-{suffix}", Description = "desc", Status = "Published", Type = "Offline",
+            Id = Guid.NewGuid(),
+            CategoryId = category.Id,
+            Title = $"Attendance Course {suffix}",
+            Slug = $"attendance-course-{suffix}",
+            Description = "desc",
+            Status = "Published",
+            Type = "Offline",
             CreatedAt = DateTimeOffset.UtcNow,
         };
         var location = new TrainingLocation
         {
-            Id = Guid.NewGuid(), BranchName = $"Attendance Branch {suffix}", RoomName = "Room 1",
-            City = "Alexandria", Address = "Addr", Capacity = 100, IsActive = true,
+            Id = Guid.NewGuid(),
+            BranchName = $"Attendance Branch {suffix}",
+            RoomName = "Room 1",
+            City = "Alexandria",
+            Address = "Addr",
+            Capacity = 100,
+            IsActive = true,
         };
         var startsAtUtc = DateTimeOffset.UtcNow.AddMonths(2);
         var offering = new CourseOffering
         {
-            Id = Guid.NewGuid(), CourseId = course.Id, LocationId = location.Id,
-            StartsAtUtc = startsAtUtc, EndsAtUtc = startsAtUtc.AddMonths(2),
+            Id = Guid.NewGuid(),
+            CourseId = course.Id,
+            LocationId = location.Id,
+            StartsAtUtc = startsAtUtc,
+            EndsAtUtc = startsAtUtc.AddMonths(2),
             ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
             ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(1),
-            Price = 500m, Currency = "EGP", Capacity = 20, Status = OfferingStatuses.Open,
+            Price = 500m,
+            Currency = "EGP",
+            Capacity = 20,
+            Status = OfferingStatuses.Open,
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
         dbContext.AddRange(category, course, location, offering);
@@ -198,6 +286,92 @@ public sealed class AttendanceEndpointsTests(ApiWebApplicationFactory factory) :
         payResponse.EnsureSuccessStatusCode();
 
         return (sessionId, offering.Id, learnerId, learnerToken, instructorToken);
+    }
+
+    private async Task<(Guid SessionId, Guid LearnerId, string LearnerToken, string InstructorToken, string ProgramTitle)>
+        SeedProgramSessionAndEnrolledLearnerAsync()
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var suffix = Guid.NewGuid().ToString("N");
+        var program = new AcademyProgram
+        {
+            Id = Guid.NewGuid(),
+            Title = $"Attendance Program {suffix}",
+            Slug = $"attendance-program-{suffix}",
+            Description = "Program attendance integration test.",
+            Status = "Published",
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+        var location = new TrainingLocation
+        {
+            Id = Guid.NewGuid(),
+            BranchName = $"Program Attendance Branch {suffix}",
+            RoomName = "Room 2",
+            City = "Alexandria",
+            Address = "Program attendance address",
+            Capacity = 100,
+            IsActive = true,
+        };
+        var startsAtUtc = DateTimeOffset.UtcNow.AddMonths(2);
+        var offering = new ProgramOffering
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            LocationId = location.Id,
+            StartsAtUtc = startsAtUtc,
+            EndsAtUtc = startsAtUtc.AddMonths(2),
+            ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(1),
+            Price = 1_500m,
+            Currency = "EGP",
+            Capacity = 20,
+            Status = OfferingStatuses.Open,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        dbContext.AddRange(program, location, offering);
+        await dbContext.SaveChangesAsync();
+
+        var (instructorToken, instructorId) = await RegisterAsWithUserIdAsync(RoleNames.Instructor);
+        var adminToken = await RegisterAsAsync(RoleNames.Admin);
+        using var createSessionResponse = await SendAuthorizedAsync(
+            HttpMethod.Post,
+            $"/api/v1/program-offerings/{offering.Id}/sessions",
+            adminToken,
+            new
+            {
+                locationId = location.Id,
+                instructorUserId = instructorId,
+                title = "Program attendance session",
+                startsAtUtc = offering.StartsAtUtc.AddDays(1),
+                endsAtUtc = offering.StartsAtUtc.AddDays(1).AddHours(2),
+            });
+        createSessionResponse.EnsureSuccessStatusCode();
+        using var sessionDocument = JsonDocument.Parse(await createSessionResponse.Content.ReadAsStringAsync());
+        var sessionId = sessionDocument.RootElement.GetProperty("id").GetGuid();
+
+        var (learnerToken, learnerEmail) = await RegisterAsync();
+        Guid learnerId;
+        using (var learnerScope = factory.Services.CreateScope())
+        {
+            var userManager = learnerScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            learnerId = (await userManager.FindByEmailAsync(learnerEmail))!.Id;
+        }
+
+        using var applyResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/applications", learnerToken, new { programOfferingId = offering.Id });
+        applyResponse.EnsureSuccessStatusCode();
+        using var applyDocument = JsonDocument.Parse(await applyResponse.Content.ReadAsStringAsync());
+        var applicationId = applyDocument.RootElement.GetProperty("id").GetGuid();
+
+        using var acceptResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, $"/api/v1/applications/{applicationId}/accept", adminToken);
+        acceptResponse.EnsureSuccessStatusCode();
+        using var payResponse = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+        payResponse.EnsureSuccessStatusCode();
+
+        return (sessionId, learnerId, learnerToken, instructorToken, program.Title);
     }
 
     private async Task<HttpResponseMessage> SendAuthorizedAsync(

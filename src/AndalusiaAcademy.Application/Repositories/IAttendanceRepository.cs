@@ -14,13 +14,15 @@ public interface IAttendanceRepository
         Guid programSessionId,
         CancellationToken cancellationToken);
 
-    Task UpsertCourseSessionAttendanceAsync(
+    /// <summary>Creates or updates marked entries and removes an existing record when its status is empty.</summary>
+    Task SaveCourseSessionAttendanceAsync(
         Guid courseSessionId,
         Guid recordedByUserId,
         IReadOnlyList<AttendanceEntryRequest> entries,
         CancellationToken cancellationToken);
 
-    Task UpsertProgramSessionAttendanceAsync(
+    /// <summary>Creates or updates marked entries and removes an existing record when its status is empty.</summary>
+    Task SaveProgramSessionAttendanceAsync(
         Guid programSessionId,
         Guid recordedByUserId,
         IReadOnlyList<AttendanceEntryRequest> entries,

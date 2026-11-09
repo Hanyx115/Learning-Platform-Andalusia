@@ -16,7 +16,6 @@ describe('LoginPage', () => {
     const tokens = {
       accessToken: 'access-token',
       accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
-      refreshToken: 'refresh-token',
       refreshTokenExpiresAtUtc: '2099-02-01T00:00:00Z',
     }
 

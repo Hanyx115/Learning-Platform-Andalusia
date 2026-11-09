@@ -1,3 +1,4 @@
+using System.Data;
 using AndalusiaAcademy.Application.DTOs.Enrollments;
 using AndalusiaAcademy.Application.DTOs.Payments;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
@@ -32,6 +33,12 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
                 CourseId = a.CourseOffering != null ? a.CourseOffering.CourseId : (Guid?)null,
                 CourseTitle = a.CourseOffering != null ? a.CourseOffering.Course!.Title : null,
                 CoursePrice = a.CourseOffering != null ? a.CourseOffering.Price : (decimal?)null,
+                OfferingStatus = a.CourseOffering != null
+                    ? a.CourseOffering.Status
+                    : a.ProgramOffering!.Status,
+                OfferingCapacity = a.CourseOffering != null
+                    ? a.CourseOffering.Capacity
+                    : a.ProgramOffering!.Capacity,
                 a.ProgramOfferingId,
                 ProgramId = a.ProgramOffering != null ? a.ProgramOffering.ProgramId : (Guid?)null,
                 ProgramTitle = a.ProgramOffering != null ? a.ProgramOffering.Program!.Title : null,
@@ -84,13 +91,20 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             return PayForApplicationOutcome.Failure("This application must be accepted before it can be paid for.");
         }
 
-        var hasActivePayment = await dbContext.Payments
-            .AsNoTracking()
-            .AnyAsync(payment => payment.ApplicationId == applicationId && payment.Status != PaymentStatus.Failed, cancellationToken);
-
-        if (hasActivePayment)
+        var now = DateTimeOffset.UtcNow;
+        if (application.OfferingStatus == OfferingStatuses.Cancelled)
         {
-            return PayForApplicationOutcome.Failure("A payment already exists for this application.");
+            return PayForApplicationOutcome.Failure("This offering has been cancelled and can no longer be paid for.");
+        }
+
+        if (application.EndsAtUtc <= now)
+        {
+            return PayForApplicationOutcome.Failure("This offering has already ended and can no longer be paid for.");
+        }
+
+        if (application.LocationId.HasValue && application.LocationIsActive != true)
+        {
+            return PayForApplicationOutcome.Failure("This offering's training location is not active.");
         }
 
         var amount = application.CourseOfferingId.HasValue ? application.CoursePrice : application.ProgramPrice;
@@ -100,33 +114,141 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             return PayForApplicationOutcome.Failure("This course or program does not have a price set yet.");
         }
 
-        var now = DateTimeOffset.UtcNow;
-        var payment = new Payment
-        {
-            Id = Guid.NewGuid(),
-            ApplicationId = applicationId,
-            UserId = userId,
-            Amount = amount.Value,
-            Currency = application.Currency,
-            Status = PaymentStatus.Pending,
-            IdempotencyKey = Guid.NewGuid(),
-            CreatedAt = now,
-        };
+        var paymentId = Guid.NewGuid();
+        var pendingHistoryId = Guid.NewGuid();
+        var idempotencyKey = Guid.NewGuid();
+        Payment? payment = null;
+        var strategy = dbContext.Database.CreateExecutionStrategy();
 
-        dbContext.Payments.Add(payment);
-        dbContext.PaymentStatusHistories.Add(new PaymentStatusHistory
+        // Reserve capacity and the application payment slot atomically. Pending payments count as
+        // temporary reservations so two simultaneous checkouts cannot oversell the same offering.
+        var reservationError = await strategy.ExecuteAsync(async () =>
         {
-            Id = Guid.NewGuid(),
-            PaymentId = payment.Id,
-            Status = PaymentStatus.Pending,
-            ChangedAt = now,
-            Source = Source,
+            dbContext.ChangeTracker.Clear();
+            await using var reservationTransaction = await dbContext.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
+
+            var currentOffering = await dbContext.LearnerApplications
+                .AsNoTracking()
+                .Where(candidate => candidate.Id == applicationId && candidate.Status == ApplicationStatus.Accepted)
+                .Select(candidate => new
+                {
+                    Status = candidate.CourseOfferingId != null
+                        ? candidate.CourseOffering!.Status
+                        : candidate.ProgramOffering!.Status,
+                    Capacity = candidate.CourseOfferingId != null
+                        ? candidate.CourseOffering!.Capacity
+                        : candidate.ProgramOffering!.Capacity,
+                    EndsAtUtc = candidate.CourseOfferingId != null
+                        ? candidate.CourseOffering!.EndsAtUtc
+                        : candidate.ProgramOffering!.EndsAtUtc,
+                    LocationIsActive = candidate.CourseOfferingId != null
+                        ? (candidate.CourseOffering!.LocationId == null || candidate.CourseOffering.Location!.IsActive)
+                        : (candidate.ProgramOffering!.LocationId == null || candidate.ProgramOffering.Location!.IsActive),
+                })
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (currentOffering is null)
+            {
+                return "This application is no longer accepted.";
+            }
+            if (currentOffering.Status == OfferingStatuses.Cancelled || currentOffering.EndsAtUtc <= now)
+            {
+                return "This offering is no longer available for payment.";
+            }
+            if (!currentOffering.LocationIsActive)
+            {
+                return "This offering's training location is not active.";
+            }
+
+            var hasActivePayment = await dbContext.Payments
+                .AsNoTracking()
+                .AnyAsync(candidate =>
+                    candidate.ApplicationId == applicationId && candidate.Status != PaymentStatus.Failed,
+                    cancellationToken);
+            if (hasActivePayment)
+            {
+                return "A payment already exists for this application.";
+            }
+
+            var alreadyEnrolled = await dbContext.Enrollments
+                .AsNoTracking()
+                .AnyAsync(enrollment =>
+                        enrollment.UserId == userId &&
+                        enrollment.Status == EnrollmentStatus.Active &&
+                        enrollment.CourseOfferingId == application.CourseOfferingId &&
+                        enrollment.ProgramOfferingId == application.ProgramOfferingId,
+                    cancellationToken);
+            if (alreadyEnrolled)
+            {
+                return "You are already enrolled in this offering.";
+            }
+
+            int activeEnrollments;
+            int pendingReservations;
+            if (application.CourseOfferingId.HasValue)
+            {
+                var offeringId = application.CourseOfferingId.Value;
+                activeEnrollments = await dbContext.Enrollments.AsNoTracking().CountAsync(enrollment =>
+                    enrollment.CourseOfferingId == offeringId && enrollment.Status == EnrollmentStatus.Active,
+                    cancellationToken);
+                pendingReservations = await dbContext.Payments.AsNoTracking().CountAsync(candidate =>
+                    candidate.Status == PaymentStatus.Pending &&
+                    candidate.Application!.CourseOfferingId == offeringId,
+                    cancellationToken);
+            }
+            else
+            {
+                var offeringId = application.ProgramOfferingId!.Value;
+                activeEnrollments = await dbContext.Enrollments.AsNoTracking().CountAsync(enrollment =>
+                    enrollment.ProgramOfferingId == offeringId && enrollment.Status == EnrollmentStatus.Active,
+                    cancellationToken);
+                pendingReservations = await dbContext.Payments.AsNoTracking().CountAsync(candidate =>
+                    candidate.Status == PaymentStatus.Pending &&
+                    candidate.Application!.ProgramOfferingId == offeringId,
+                    cancellationToken);
+            }
+
+            if (activeEnrollments + pendingReservations >= currentOffering.Capacity)
+            {
+                return "This offering is full. No seats are available.";
+            }
+
+            payment = new Payment
+            {
+                Id = paymentId,
+                ApplicationId = applicationId,
+                UserId = userId,
+                Amount = amount.Value,
+                Currency = application.Currency,
+                Status = PaymentStatus.Pending,
+                IdempotencyKey = idempotencyKey,
+                CreatedAt = now,
+            };
+            dbContext.Payments.Add(payment);
+            dbContext.PaymentStatusHistories.Add(new PaymentStatusHistory
+            {
+                Id = pendingHistoryId,
+                PaymentId = payment.Id,
+                Status = PaymentStatus.Pending,
+                ChangedAt = now,
+                Source = Source,
+            });
+
+            // Persisted before calling the processor so a crash mid-call leaves a recoverable
+            // Pending row instead of losing the payment attempt entirely.
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await reservationTransaction.CommitAsync(cancellationToken);
+            return null;
         });
 
-        // Persisted before calling the processor so a crash mid-call leaves a recoverable
-        // Pending row instead of losing the payment attempt entirely (matches how the real,
-        // asynchronous Paymob flow will behave once #7 replaces the simulated processor).
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (reservationError is not null)
+        {
+            return PayForApplicationOutcome.Failure(reservationError);
+        }
+
+        payment ??= await dbContext.Payments.SingleAsync(candidate => candidate.Id == paymentId, cancellationToken);
 
         var result = await paymentProcessor.ProcessAsync(payment.Id, payment.Amount, payment.Currency, cancellationToken);
         var completedAt = DateTimeOffset.UtcNow;
@@ -145,6 +267,39 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             await dbContext.SaveChangesAsync(cancellationToken);
 
             return PayForApplicationOutcome.Failure(result.FailureReason ?? "Payment failed.");
+        }
+
+        // The offering may have been cancelled or its physical location deactivated while an
+        // external processor was completing. Never convert that successful attempt into an invalid
+        // enrollment. The simulated processor does not capture real funds; a real provider must
+        // refund this branch as part of its webhook/reconciliation implementation.
+        var canStillEnroll = await dbContext.LearnerApplications
+            .AsNoTracking()
+            .Where(candidate => candidate.Id == applicationId)
+            .AnyAsync(candidate =>
+                candidate.CourseOfferingId != null
+                    ? candidate.CourseOffering!.Status != OfferingStatuses.Cancelled &&
+                      candidate.CourseOffering.EndsAtUtc > completedAt &&
+                      (candidate.CourseOffering.LocationId == null || candidate.CourseOffering.Location!.IsActive)
+                    : candidate.ProgramOffering!.Status != OfferingStatuses.Cancelled &&
+                      candidate.ProgramOffering.EndsAtUtc > completedAt &&
+                      (candidate.ProgramOffering.LocationId == null || candidate.ProgramOffering.Location!.IsActive),
+                cancellationToken);
+
+        if (!canStillEnroll)
+        {
+            payment.Status = PaymentStatus.Failed;
+            dbContext.PaymentStatusHistories.Add(new PaymentStatusHistory
+            {
+                Id = Guid.NewGuid(),
+                PaymentId = payment.Id,
+                Status = PaymentStatus.Failed,
+                ChangedAt = completedAt,
+                Source = Source,
+            });
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return PayForApplicationOutcome.Failure(
+                "The offering became unavailable before enrollment could be completed.");
         }
 
         payment.Status = PaymentStatus.Succeeded;
@@ -170,6 +325,7 @@ public sealed class PaymentRepository(ApplicationDbContext dbContext, IPaymentPr
             EnrolledAt = completedAt,
         };
         dbContext.Enrollments.Add(enrollment);
+        dbContext.Entry(enrollment).Property<bool>("IntegrityProtected").CurrentValue = true;
 
         // Payment success and Enrollment creation commit in this one SaveChangesAsync call, so the
         // two can never be left out of sync with each other.

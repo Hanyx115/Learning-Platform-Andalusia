@@ -85,8 +85,6 @@ export async function logout() {
     if (tokens) {
       await apiRequest<void>('/api/v1/auth/logout', {
         method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ refreshToken: tokens.refreshToken }),
       }, {
         retryAfterRefresh: false,
       })
@@ -120,6 +118,10 @@ export function resetPassword(email: string, token: string, newPassword: string)
 
 export function getProfile() {
   return apiRequest<Profile>('/api/v1/profile')
+}
+
+export function getProfileByUserId(userId: string) {
+  return apiRequest<Profile>(`/api/v1/profile/${userId}`)
 }
 
 export function updateProfile(request: UpdateProfileRequest) {

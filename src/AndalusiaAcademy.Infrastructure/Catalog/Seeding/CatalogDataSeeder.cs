@@ -92,6 +92,55 @@ public static class CatalogDataSeeder
             addedCount++;
         }
 
+        var skillsByName = (await dbContext.Skills.AsNoTracking().ToListAsync(cancellationToken))
+            .ToDictionary(skill => skill.Name, StringComparer.OrdinalIgnoreCase);
+        foreach (var seed in Skills)
+        {
+            if (skillsByName.ContainsKey(seed.Name))
+            {
+                continue;
+            }
+
+            var skill = new Skill
+            {
+                Id = seed.Id,
+                Name = seed.Name,
+                Category = seed.Category,
+                Description = seed.Description,
+                IsActive = true,
+                CreatedAtUtc = new DateTimeOffset(2026, 11, 9, 0, 0, 0, TimeSpan.Zero),
+            };
+            dbContext.Skills.Add(skill);
+            skillsByName.Add(skill.Name, skill);
+            addedCount++;
+        }
+
+        var skillMappingKeys = (await dbContext.LearningSkillMappings.AsNoTracking()
+                .Select(mapping => new { mapping.SkillId, mapping.CourseId, mapping.ProgramId })
+                .ToListAsync(cancellationToken))
+            .Select(mapping => (mapping.SkillId, mapping.CourseId, mapping.ProgramId))
+            .ToHashSet();
+        foreach (var seed in SkillMappings)
+        {
+            var key = (
+                SkillId: skillsByName[seed.SkillName].Id,
+                CourseId: (Guid?)coursesBySlug[seed.CourseSlug].Id,
+                ProgramId: (Guid?)null);
+            if (!skillMappingKeys.Add(key))
+            {
+                continue;
+            }
+
+            dbContext.LearningSkillMappings.Add(new LearningSkillMapping
+            {
+                Id = seed.Id,
+                SkillId = key.SkillId,
+                CourseId = key.CourseId,
+                TargetLevel = seed.TargetLevel,
+            });
+            addedCount++;
+        }
+
         var programCourseKeys = (await dbContext.ProgramCourses
                 .AsNoTracking()
                 .Select(link => new { link.ProgramId, link.CourseId })
@@ -400,6 +449,20 @@ public static class CatalogDataSeeder
             "Central Cairo training center",
             null,
             35),
+    ];
+
+    private static readonly SkillSeed[] Skills =
+    [
+        new(new Guid("71000000-0000-0000-0000-000000000001"), "Threat awareness", "Cybersecurity", "Recognize common digital threats and explain how they affect people and systems."),
+        new(new Guid("71000000-0000-0000-0000-000000000002"), "Access control", "Cybersecurity", "Apply authentication, authorization and least-privilege principles."),
+        new(new Guid("71000000-0000-0000-0000-000000000003"), "Network protection", "Cybersecurity", "Identify foundational controls that protect connected systems and data."),
+    ];
+
+    private static readonly SkillMappingSeed[] SkillMappings =
+    [
+        new(new Guid("72000000-0000-0000-0000-000000000001"), "Threat awareness", "cybersecurity-foundations", 2),
+        new(new Guid("72000000-0000-0000-0000-000000000002"), "Access control", "cybersecurity-foundations", 2),
+        new(new Guid("72000000-0000-0000-0000-000000000003"), "Network protection", "cybersecurity-foundations", 2),
     ];
 
     private static readonly CategorySeed[] Categories =
@@ -829,4 +892,8 @@ public static class CatalogDataSeeder
         string Address,
         string? MapUrl,
         int Capacity);
+
+    private sealed record SkillSeed(Guid Id, string Name, string Category, string Description);
+
+    private sealed record SkillMappingSeed(Guid Id, string SkillName, string CourseSlug, int TargetLevel);
 }

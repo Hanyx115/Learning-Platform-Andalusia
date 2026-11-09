@@ -1,10 +1,13 @@
 using System.Security.Claims;
+using AndalusiaAcademy.API.Configuration;
 using AndalusiaAcademy.Application.DTOs.Auth;
 using AndalusiaAcademy.Application.Identity;
 using Asp.Versioning;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 
 namespace AndalusiaAcademy.API.Controllers.V1;
 
@@ -15,13 +18,15 @@ public sealed class AuthController(
     IAuthService authService,
     IValidator<RegisterRequest> registerValidator,
     IValidator<LoginRequest> loginValidator,
-    IValidator<LogoutRequest> logoutValidator,
-    IValidator<RefreshRequest> refreshValidator,
     IValidator<ForgotPasswordRequest> forgotPasswordValidator,
     IValidator<ResetPasswordRequest> resetPasswordValidator,
-    IHostEnvironment hostEnvironment) : ControllerBase
+    IHostEnvironment hostEnvironment,
+    IOptions<RefreshTokenCookieOptions> refreshCookieOptions) : ControllerBase
 {
+    private readonly RefreshTokenCookieOptions _refreshCookie = refreshCookieOptions.Value;
+
     [HttpPost("register")]
+    [EnableRateLimiting(AuthRateLimitPolicies.Registration)]
     [ProducesResponseType<AuthResultDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthResultDto>> Register(
@@ -40,10 +45,12 @@ public sealed class AuthController(
             }));
         }
 
+        SetRefreshTokenCookie(outcome.Tokens!);
         return Ok(outcome.Tokens);
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(AuthRateLimitPolicies.Login)]
     [ProducesResponseType<AuthResultDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResultDto>> Login(
@@ -67,47 +74,56 @@ public sealed class AuthController(
             });
         }
 
+        SetRefreshTokenCookie(outcome.Tokens!);
         return Ok(outcome.Tokens);
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting(AuthRateLimitPolicies.Session)]
     [ProducesResponseType<AuthResultDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<AuthResultDto>> Refresh(RefreshRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<AuthResultDto>> Refresh(CancellationToken cancellationToken)
     {
-        await refreshValidator.ValidateAndThrowAsync(request, cancellationToken);
+        if (!Request.Cookies.TryGetValue(_refreshCookie.Name, out var refreshToken)
+            || string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return InvalidRefreshToken();
+        }
 
         var outcome = await authService.RefreshAsync(
-            request,
+            new RefreshRequest(refreshToken),
             HttpContext.Connection.RemoteIpAddress?.ToString(),
             cancellationToken);
 
         if (!outcome.Succeeded)
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Status = StatusCodes.Status401Unauthorized,
-                Title = "Invalid or expired refresh token.",
-            });
+            DeleteRefreshTokenCookie();
+            return InvalidRefreshToken();
         }
 
+        SetRefreshTokenCookie(outcome.Tokens!);
         return Ok(outcome.Tokens);
     }
 
     [HttpPost("logout")]
     [Authorize]
+    [EnableRateLimiting(AuthRateLimitPolicies.Session)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Logout(LogoutRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        await logoutValidator.ValidateAndThrowAsync(request, cancellationToken);
+        if (Request.Cookies.TryGetValue(_refreshCookie.Name, out var refreshToken)
+            && !string.IsNullOrWhiteSpace(refreshToken))
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await authService.LogoutAsync(userId, refreshToken, cancellationToken);
+        }
 
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await authService.LogoutAsync(userId, request.RefreshToken, cancellationToken);
-
+        DeleteRefreshTokenCookie();
         return NoContent();
     }
 
     [HttpPost("forgot-password")]
+    [EnableRateLimiting(AuthRateLimitPolicies.Recovery)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
@@ -128,6 +144,7 @@ public sealed class AuthController(
     }
 
     [HttpPost("reset-password")]
+    [EnableRateLimiting(AuthRateLimitPolicies.Recovery)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
@@ -144,6 +161,37 @@ public sealed class AuthController(
             }));
         }
 
+        DeleteRefreshTokenCookie();
         return Ok();
     }
+
+    private UnauthorizedObjectResult InvalidRefreshToken() => Unauthorized(new ProblemDetails
+    {
+        Status = StatusCodes.Status401Unauthorized,
+        Title = "Invalid or expired refresh token.",
+    });
+
+    private void SetRefreshTokenCookie(AuthResultDto tokens)
+    {
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
+        Response.Cookies.Append(
+            _refreshCookie.Name,
+            tokens.RefreshToken,
+            CreateRefreshCookieOptions(tokens.RefreshTokenExpiresAtUtc));
+    }
+
+    private void DeleteRefreshTokenCookie() => Response.Cookies.Delete(
+        _refreshCookie.Name,
+        CreateRefreshCookieOptions(expiresAtUtc: null));
+
+    private CookieOptions CreateRefreshCookieOptions(DateTimeOffset? expiresAtUtc) => new()
+    {
+        HttpOnly = true,
+        Secure = _refreshCookie.Secure,
+        SameSite = _refreshCookie.SameSite,
+        IsEssential = true,
+        Path = RefreshTokenCookieOptions.CookiePath,
+        Expires = expiresAtUtc,
+    };
 }

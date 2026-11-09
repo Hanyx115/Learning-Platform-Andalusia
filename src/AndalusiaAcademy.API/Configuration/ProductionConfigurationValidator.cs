@@ -52,6 +52,17 @@ public static class ProductionConfigurationValidator
             errors.Add("HTTPS redirection must be enabled in Production.");
         }
 
+        if (!configuration.GetValue("Authentication:RefreshCookie:Secure", true))
+        {
+            errors.Add("Authentication:RefreshCookie:Secure must be true in Production.");
+        }
+
+        var refreshCookieSameSite = configuration["Authentication:RefreshCookie:SameSite"] ?? "Strict";
+        if (!string.Equals(refreshCookieSameSite, "Strict", StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add("Authentication:RefreshCookie:SameSite must be Strict in Production.");
+        }
+
         var assistantProvider = configuration["CourseAssistant:Provider"];
         if (string.Equals(assistantProvider, "OpenAI", StringComparison.OrdinalIgnoreCase))
         {

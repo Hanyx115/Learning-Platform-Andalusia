@@ -5,13 +5,13 @@ namespace AndalusiaAcademy.Application.Repositories;
 
 public interface IApplicationRepository
 {
-    Task<bool> HasPendingApplicationAsync(
+    Task<bool> HasOpenApplicationAsync(
         Guid userId,
         Guid? courseOfferingId,
         Guid? programOfferingId,
         CancellationToken cancellationToken);
 
-    Task<ApplicationDto> AddAsync(
+    Task<ApplicationDto?> AddAsync(
         Guid userId,
         Guid? courseOfferingId,
         Guid? programOfferingId,

@@ -3,7 +3,6 @@ import { useSyncExternalStore } from 'react'
 export interface AuthTokens {
   accessToken: string
   accessTokenExpiresAtUtc: string
-  refreshToken: string
   refreshTokenExpiresAtUtc: string
 }
 
@@ -21,7 +20,6 @@ function readStoredTokens(): AuthTokens | null {
     if (
       typeof parsedValue.accessToken !== 'string' ||
       typeof parsedValue.accessTokenExpiresAtUtc !== 'string' ||
-      typeof parsedValue.refreshToken !== 'string' ||
       typeof parsedValue.refreshTokenExpiresAtUtc !== 'string'
     ) {
       sessionStorage.removeItem(storageKey)
@@ -33,7 +31,15 @@ function readStoredTokens(): AuthTokens | null {
       return null
     }
 
-    return parsedValue as AuthTokens
+    const tokens: AuthTokens = {
+      accessToken: parsedValue.accessToken,
+      accessTokenExpiresAtUtc: parsedValue.accessTokenExpiresAtUtc,
+      refreshTokenExpiresAtUtc: parsedValue.refreshTokenExpiresAtUtc,
+    }
+
+    // Re-save only the public session fields so legacy browser sessions cannot retain a refresh token.
+    sessionStorage.setItem(storageKey, JSON.stringify(tokens))
+    return tokens
   } catch {
     sessionStorage.removeItem(storageKey)
     return null

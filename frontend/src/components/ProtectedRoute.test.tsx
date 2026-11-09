@@ -28,7 +28,6 @@ function renderRoleProtectedRoute(roles: string[], allowedRoles: string[], isLoa
   authSession.setTokens({
     accessToken: 'access-token',
     accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
-    refreshToken: 'refresh-token',
     refreshTokenExpiresAtUtc: '2099-02-01T00:00:00Z',
   })
 
@@ -74,7 +73,6 @@ describe('ProtectedRoute', () => {
     authSession.setTokens({
       accessToken: 'access-token',
       accessTokenExpiresAtUtc: '2099-01-01T00:00:00Z',
-      refreshToken: 'refresh-token',
       refreshTokenExpiresAtUtc: '2099-02-01T00:00:00Z',
     })
 

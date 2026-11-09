@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using AndalusiaAcademy.Application.Enrollment;
 using AndalusiaAcademy.Application.Identity;
 using AndalusiaAcademy.Domain.Models;
 using AndalusiaAcademy.Infrastructure.Data;
@@ -118,6 +119,123 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Pay_WhenOfferingIsFull_ReturnsValidationProblemAndDoesNotCreateEnrollment()
+    {
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m, capacity: 1);
+        var (firstLearnerToken, _) = await RegisterAsync();
+        var (secondLearnerToken, _) = await RegisterAsync();
+        var firstApplicationId = await SubmitAndAcceptAsync(firstLearnerToken, courseOfferingId);
+        var secondApplicationId = await SubmitAndAcceptAsync(secondLearnerToken, courseOfferingId);
+
+        using var firstPayment = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/payments", firstLearnerToken, new { applicationId = firstApplicationId });
+        firstPayment.EnsureSuccessStatusCode();
+
+        using var secondPayment = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/payments", secondLearnerToken, new { applicationId = secondApplicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, secondPayment.StatusCode);
+        using var enrollments = await SendAuthorizedAsync(
+            HttpMethod.Get, "/api/v1/enrollments/me", secondLearnerToken);
+        enrollments.EnsureSuccessStatusCode();
+        using var document = JsonDocument.Parse(await enrollments.Content.ReadAsStringAsync());
+        Assert.Empty(document.RootElement.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task ConcurrentPayments_ForLastSeat_CreateOnlyOneEnrollment()
+    {
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m, capacity: 1);
+        var (firstLearnerToken, _) = await RegisterAsync();
+        var (secondLearnerToken, _) = await RegisterAsync();
+        var firstApplicationId = await SubmitAndAcceptAsync(firstLearnerToken, courseOfferingId);
+        var secondApplicationId = await SubmitAndAcceptAsync(secondLearnerToken, courseOfferingId);
+
+        var responses = await Task.WhenAll(
+            SendAuthorizedAsync(
+                HttpMethod.Post, "/api/v1/payments", firstLearnerToken, new { applicationId = firstApplicationId }),
+            SendAuthorizedAsync(
+                HttpMethod.Post, "/api/v1/payments", secondLearnerToken, new { applicationId = secondApplicationId }));
+
+        try
+        {
+            Assert.Equal(
+                [HttpStatusCode.OK, HttpStatusCode.BadRequest],
+                responses.Select(response => response.StatusCode).Order().ToArray());
+        }
+        finally
+        {
+            foreach (var response in responses)
+            {
+                response.Dispose();
+            }
+        }
+
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(
+            1,
+            dbContext.Enrollments.Count(enrollment =>
+                enrollment.CourseOfferingId == courseOfferingId && enrollment.Status == EnrollmentStatus.Active));
+    }
+
+    [Fact]
+    public async Task Pay_AfterOfferingWasCancelled_ReturnsValidationProblem()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseOfferingId);
+        await UpdateOfferingAsync(courseOfferingId, offering => offering.Status = OfferingStatuses.Cancelled);
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pay_AfterPhysicalLocationWasDeactivated_ReturnsValidationProblem()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseOfferingId);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var offering = await dbContext.CourseOfferings.FindAsync(courseOfferingId);
+            var location = await dbContext.TrainingLocations.FindAsync(offering!.LocationId);
+            location!.IsActive = false;
+            await dbContext.SaveChangesAsync();
+        }
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Pay_AfterOfferingEnded_ReturnsValidationProblem()
+    {
+        var (learnerToken, _) = await RegisterAsync();
+        var courseOfferingId = await SeedCourseOfferingAsync(offeringPrice: 100m);
+        var applicationId = await SubmitAndAcceptAsync(learnerToken, courseOfferingId);
+        await UpdateOfferingAsync(courseOfferingId, offering =>
+        {
+            offering.ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-10);
+            offering.ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddDays(-4);
+            offering.StartsAtUtc = DateTimeOffset.UtcNow.AddDays(-3);
+            offering.EndsAtUtc = DateTimeOffset.UtcNow.AddDays(-1);
+        });
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Post, "/api/v1/payments", learnerToken, new { applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private async Task<string> RegisterAdminOnlyAsync()
     {
         var email = $"{Guid.NewGuid()}@example.com";
@@ -183,7 +301,10 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
         return await _client.SendAsync(request);
     }
 
-    private async Task<Guid> SeedCourseOfferingAsync(decimal offeringPrice, decimal? catalogPrice = null)
+    private async Task<Guid> SeedCourseOfferingAsync(
+        decimal offeringPrice,
+        decimal? catalogPrice = null,
+        int capacity = 20)
     {
         using var scope = factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -226,7 +347,7 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
             ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(1),
             Price = offeringPrice,
             Currency = "EGP",
-            Capacity = 20,
+            Capacity = capacity,
             Status = OfferingStatuses.Open,
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
@@ -234,6 +355,16 @@ public sealed class PaymentsEndpointsTests(ApiWebApplicationFactory factory) : I
         await dbContext.SaveChangesAsync();
 
         return offering.Id;
+    }
+
+    private async Task UpdateOfferingAsync(Guid offeringId, Action<CourseOffering> update)
+    {
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var offering = await dbContext.CourseOfferings.FindAsync(offeringId)
+            ?? throw new InvalidOperationException("Test offering was not found.");
+        update(offering);
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task<(string AccessToken, string Email)> RegisterAsync()

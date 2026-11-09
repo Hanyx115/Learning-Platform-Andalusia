@@ -23,13 +23,19 @@ public sealed class MarkSessionAttendanceRequestValidator : AbstractValidator<Ma
         RuleForEach(request => request.Entries).ChildRules(entry =>
         {
             entry.RuleFor(e => e.UserId).NotEmpty();
-            entry.RuleFor(e => e.Status).Must(status => ValidStatuses.Contains(status))
-                .WithMessage($"Status must be one of: {string.Join(", ", ValidStatuses)}.");
+            entry.RuleFor(e => e.Status)
+                .Must(status => string.IsNullOrWhiteSpace(status) || ValidStatuses.Contains(status))
+                .WithMessage($"Status must be empty to clear attendance, or one of: {string.Join(", ", ValidStatuses)}.");
             entry.RuleFor(e => e.Note).MaximumLength(500);
+            entry.RuleFor(e => e.Note)
+                .Empty()
+                .When(e => string.IsNullOrWhiteSpace(e.Status))
+                .WithMessage("A note cannot be saved without an attendance status.");
         });
 
         RuleFor(request => request.Entries)
-            .Must(entries => entries.Select(e => e.UserId).Distinct().Count() == entries.Count)
+            .Must(entries => entries is not null
+                && entries.Select(e => e.UserId).Distinct().Count() == entries.Count)
             .WithMessage("Each learner can only appear once per attendance submission.");
     }
 }
