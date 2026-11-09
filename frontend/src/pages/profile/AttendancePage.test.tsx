@@ -1,10 +1,12 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as enrollmentApi from '../../api/enrollment'
 import AttendancePage from './AttendancePage'
 
 describe('AttendancePage', () => {
   beforeEach(() => {
+    vi.restoreAllMocks()
     vi.spyOn(enrollmentApi, 'getMyAttendance').mockResolvedValue([
       {
         sessionId: 'session-1',
@@ -49,5 +51,28 @@ describe('AttendancePage', () => {
     expect(within(cybersecurityGroup).getByText('Late')).toBeInTheDocument()
     expect(within(cybersecurityGroup).getByText('Completed the practical exercise.')).toBeInTheDocument()
     expect(within(networksGroup).getByText('1 attendance record')).toBeInTheDocument()
+  })
+
+  it('lets the learner refresh attendance without leaving the page', async () => {
+    const attendanceRequest = vi.mocked(enrollmentApi.getMyAttendance)
+    attendanceRequest
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{
+        sessionId: 'new-session',
+        sessionTitle: 'Newly marked session',
+        courseTitle: 'Cybersecurity Foundations',
+        programTitle: null,
+        startsAtUtc: '2027-02-20T08:00:00Z',
+        status: 'Present',
+        note: null,
+      }])
+
+    render(<AttendancePage />)
+    expect(await screen.findByText('No attendance has been recorded yet.')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Refresh attendance' }))
+
+    expect(await screen.findByRole('heading', { name: 'Newly marked session' })).toBeInTheDocument()
+    expect(attendanceRequest).toHaveBeenCalledTimes(2)
   })
 })

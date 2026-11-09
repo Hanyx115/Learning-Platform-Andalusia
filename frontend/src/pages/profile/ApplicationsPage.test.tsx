@@ -8,6 +8,9 @@ import ApplicationsPage from './ApplicationsPage'
 const applications: Application[] = [{
     id: 'application-1',
     userId: 'user-1',
+    applicantFirstName: 'Test',
+    applicantLastName: 'Learner',
+    applicantEmail: 'learner@andalusia.test',
     courseOfferingId: 'offering-1',
     courseId: 'course-1',
     courseTitle: 'Patient Care Basics',

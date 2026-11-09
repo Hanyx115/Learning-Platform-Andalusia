@@ -101,7 +101,7 @@ public sealed class PhaseOneAcceptanceTests(ApiWebApplicationFactory factory)
         var location = new TrainingLocation
         {
             Id = Guid.NewGuid(),
-            BranchName = "Acceptance Branch",
+            BranchName = $"Acceptance Branch {unique}",
             RoomName = "Room 1",
             City = "Cairo",
             Address = "Acceptance test location",

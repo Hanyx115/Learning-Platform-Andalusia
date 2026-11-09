@@ -25,6 +25,7 @@ import SchedulePage from './pages/profile/SchedulePage'
 import AttendancePage from './pages/profile/AttendancePage'
 import CourseLearningPage from './pages/profile/CourseLearningPage'
 import StaffApplicationsPage from './pages/staff/StaffApplicationsPage'
+import StaffApplicantProfilePage from './pages/staff/StaffApplicantProfilePage'
 import InstructorLayout from './pages/instructor/InstructorLayout'
 import InstructorSessionsPage from './pages/instructor/InstructorSessionsPage'
 import InstructorSessionAttendancePage from './pages/instructor/InstructorSessionAttendancePage'
@@ -55,6 +56,8 @@ import CmsLayout from './pages/cms/CmsLayout'
 import CmsContentPage from './pages/cms/CmsContentPage'
 import CmsNotificationsPage from './pages/cms/CmsNotificationsPage'
 import AdminCompensationPage from './pages/admin/AdminCompensationPage'
+import SkillsPassportPage from './pages/profile/SkillsPassportPage'
+import CommunityPage from './pages/community/CommunityPage'
 
 export const router = createBrowserRouter([
   {
@@ -183,9 +186,17 @@ export const router = createBrowserRouter([
                     path: 'payments',
                     element: <PaymentHistoryPage />,
                   },
+                  {
+                    path: 'skills-passport',
+                    element: <SkillsPassportPage />,
+                  },
                 ],
               },
             ],
+          },
+          {
+            path: 'community/:offeringType/:offeringId',
+            element: <CommunityPage />,
           },
           {
             element: <ProtectedRoute allowedRoles={['ContentManager', 'Manager', 'Admin']} />,
@@ -225,6 +236,10 @@ export const router = createBrowserRouter([
               {
                 path: 'staff/applications',
                 element: <StaffApplicationsPage />,
+              },
+              {
+                path: 'staff/applicants/:userId',
+                element: <StaffApplicantProfilePage />,
               },
             ],
           },

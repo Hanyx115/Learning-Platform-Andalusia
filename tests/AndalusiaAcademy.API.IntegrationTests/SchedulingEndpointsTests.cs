@@ -165,6 +165,65 @@ public sealed class SchedulingEndpointsTests(ApiWebApplicationFactory factory) :
     }
 
     [Fact]
+    public async Task UpdateOffering_CannotReduceCapacityBelowActiveEnrollments()
+    {
+        var seeded = await SeedCourseOfferingAsync();
+        var adminToken = await RegisterAsAsync(RoleNames.Admin);
+
+        for (var index = 0; index < 2; index++)
+        {
+            var (learnerToken, _) = await RegisterAsync();
+            using var applicationResponse = await SendAuthorizedAsync(
+                HttpMethod.Post,
+                "/api/v1/applications",
+                learnerToken,
+                new { courseOfferingId = seeded.OfferingId });
+            applicationResponse.EnsureSuccessStatusCode();
+            using var applicationDocument = JsonDocument.Parse(await applicationResponse.Content.ReadAsStringAsync());
+            var applicationId = applicationDocument.RootElement.GetProperty("id").GetGuid();
+
+            using var acceptResponse = await SendAuthorizedAsync(
+                HttpMethod.Post,
+                $"/api/v1/applications/{applicationId}/accept",
+                adminToken);
+            acceptResponse.EnsureSuccessStatusCode();
+
+            using var paymentResponse = await SendAuthorizedAsync(
+                HttpMethod.Post,
+                "/api/v1/payments",
+                learnerToken,
+                new { applicationId });
+            paymentResponse.EnsureSuccessStatusCode();
+        }
+
+        CourseOffering offering;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            offering = (await dbContext.CourseOfferings.FindAsync(seeded.OfferingId))!;
+        }
+
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"/api/v1/course-offerings/{seeded.OfferingId}",
+            adminToken,
+            new
+            {
+                offering.LocationId,
+                offering.StartsAtUtc,
+                offering.EndsAtUtc,
+                offering.ApplicationOpensAtUtc,
+                offering.ApplicationClosesAtUtc,
+                offering.Price,
+                offering.Currency,
+                capacity = 1,
+                offering.Status,
+            });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Learner_UpcomingSessions_ReturnsOnlyTheirEnrolledCourseSchedule()
     {
         var (learnerToken, _) = await RegisterAsync();
@@ -477,12 +536,18 @@ public sealed class SchedulingEndpointsTests(ApiWebApplicationFactory factory) :
         var startsAtUtc = DateTimeOffset.UtcNow.AddMonths(3);
         var offering = new ProgramOffering
         {
-            Id = Guid.NewGuid(), ProgramId = program.Id, LocationId = location.Id,
-            StartsAtUtc = startsAtUtc, EndsAtUtc = startsAtUtc.AddMonths(2),
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            LocationId = location.Id,
+            StartsAtUtc = startsAtUtc,
+            EndsAtUtc = startsAtUtc.AddMonths(2),
             ApplicationOpensAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
             ApplicationClosesAtUtc = DateTimeOffset.UtcNow.AddMonths(2),
-            Price = 1500m, Currency = "EGP", Capacity = 25,
-            Status = OfferingStatuses.Open, CreatedAtUtc = DateTimeOffset.UtcNow,
+            Price = 1500m,
+            Currency = "EGP",
+            Capacity = 25,
+            Status = OfferingStatuses.Open,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
         };
         dbContext.AddRange(program, location, offering);
         await dbContext.SaveChangesAsync();

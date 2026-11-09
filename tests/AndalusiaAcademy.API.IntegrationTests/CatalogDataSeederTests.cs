@@ -14,7 +14,7 @@ public sealed class CatalogDataSeederTests
 
         var addedRows = await CatalogDataSeeder.SeedAsync(context);
 
-        Assert.Equal(212, addedRows);
+        Assert.Equal(218, addedRows);
         Assert.Equal(7, await context.CourseCategories.CountAsync());
         Assert.Equal(22, await context.Courses.CountAsync());
         Assert.Equal(9, await context.Programs.CountAsync());
@@ -26,6 +26,15 @@ public sealed class CatalogDataSeederTests
         Assert.Equal(9, await context.ProgramOfferings.CountAsync());
         Assert.Equal(4, await context.TrainingLocations.CountAsync());
         Assert.Equal(66, await context.CourseSessions.CountAsync());
+        Assert.Equal(3, await context.Skills.CountAsync());
+        Assert.Equal(3, await context.LearningSkillMappings.CountAsync());
+
+        var cybersecuritySkills = await context.LearningSkillMappings
+            .Where(mapping => mapping.Course!.Slug == "cybersecurity-foundations")
+            .Select(mapping => mapping.Skill!.Name)
+            .OrderBy(name => name)
+            .ToListAsync();
+        Assert.Equal(["Access control", "Network protection", "Threat awareness"], cybersecuritySkills);
 
         var emergencyProgram = await context.Programs
             .SingleAsync(program => program.Slug == "emergency-care-foundations");
@@ -92,7 +101,7 @@ public sealed class CatalogDataSeederTests
         var firstAddedRows = await CatalogDataSeeder.SeedAsync(context);
         var secondAddedRows = await CatalogDataSeeder.SeedAsync(context);
 
-        Assert.Equal(211, firstAddedRows);
+        Assert.Equal(217, firstAddedRows);
         Assert.Equal(0, secondAddedRows);
         Assert.Equal(7, await context.CourseCategories.CountAsync());
         Assert.Equal(22, await context.Courses.CountAsync());
@@ -102,6 +111,8 @@ public sealed class CatalogDataSeederTests
         Assert.Equal(9, await context.ProgramOfferings.CountAsync());
         Assert.Equal(4, await context.TrainingLocations.CountAsync());
         Assert.Equal(66, await context.CourseSessions.CountAsync());
+        Assert.Equal(3, await context.Skills.CountAsync());
+        Assert.Equal(3, await context.LearningSkillMappings.CountAsync());
 
         var preservedCategory = await context.CourseCategories
             .SingleAsync(category => category.Slug == "clinical-care");

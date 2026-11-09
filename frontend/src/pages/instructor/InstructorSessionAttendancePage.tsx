@@ -82,8 +82,11 @@ function InstructorSessionAttendancePage() {
     }
 
     const entries = Object.entries(drafts)
-      .filter(([, draft]) => draft.status !== '')
-      .map(([userId, draft]) => ({ userId, status: draft.status, note: draft.note.trim() || null }))
+      .map(([userId, draft]) => ({
+        userId,
+        status: draft.status || null,
+        note: draft.status ? draft.note.trim() || null : null,
+      }))
 
     setIsSaving(true)
     setSaveError('')
@@ -134,12 +137,17 @@ function InstructorSessionAttendancePage() {
                   {t('instructorAttendance.statusLabel')}
                   <select
                     value={drafts[record.userId]?.status ?? ''}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const status = event.target.value
                       setDrafts((previous) => ({
                         ...previous,
-                        [record.userId]: { ...previous[record.userId], status: event.target.value },
+                        [record.userId]: {
+                          ...previous[record.userId],
+                          status,
+                          note: status ? previous[record.userId]?.note ?? '' : '',
+                        },
                       }))
-                    }
+                    }}
                   >
                     <option value="">{t('instructorAttendance.statusUnset')}</option>
                     {ATTENDANCE_STATUSES.map((status) => (

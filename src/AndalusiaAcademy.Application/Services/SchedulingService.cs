@@ -62,9 +62,14 @@ public sealed class SchedulingService(
 
         var location = new TrainingLocation
         {
-            Id = Guid.NewGuid(), BranchName = branchName, RoomName = roomName, City = city,
-            Address = request.Address.Trim(), MapUrl = NormalizeOptional(request.MapUrl),
-            Capacity = request.Capacity, IsActive = true,
+            Id = Guid.NewGuid(),
+            BranchName = branchName,
+            RoomName = roomName,
+            City = city,
+            Address = request.Address.Trim(),
+            MapUrl = NormalizeOptional(request.MapUrl),
+            Capacity = request.Capacity,
+            IsActive = true,
         };
         repository.AddLocation(location);
         await repository.SaveChangesAsync(cancellationToken);
@@ -174,6 +179,14 @@ public sealed class SchedulingService(
             return Fail<OfferingDto>(SchedulingFailureKind.Conflict,
                 "The new offering dates would leave one or more sessions outside the offering period.");
         }
+
+        var committedSeats = await repository.GetCourseOfferingCommittedSeatCountAsync(id, cancellationToken);
+        if (normalized.Capacity < committedSeats)
+        {
+            return Fail<OfferingDto>(SchedulingFailureKind.Conflict,
+                $"Capacity cannot be lower than the {committedSeats} enrolled or currently paying learners.");
+        }
+
         if (offering.LocationId != normalized.LocationId &&
             await repository.CourseOfferingHasSessionsAsync(id, cancellationToken))
         {
@@ -252,6 +265,14 @@ public sealed class SchedulingService(
             return Fail<OfferingDto>(SchedulingFailureKind.Conflict,
                 "The new offering dates would leave one or more sessions outside the offering period.");
         }
+
+        var committedSeats = await repository.GetProgramOfferingCommittedSeatCountAsync(id, cancellationToken);
+        if (normalized.Capacity < committedSeats)
+        {
+            return Fail<OfferingDto>(SchedulingFailureKind.Conflict,
+                $"Capacity cannot be lower than the {committedSeats} enrolled or currently paying learners.");
+        }
+
         if (offering.LocationId != normalized.LocationId &&
             await repository.ProgramOfferingHasSessionsAsync(id, cancellationToken))
         {
@@ -295,9 +316,14 @@ public sealed class SchedulingService(
 
         var session = new CourseSession
         {
-            Id = Guid.NewGuid(), CourseOfferingId = offeringId, LocationId = request.LocationId,
-            InstructorUserId = request.InstructorUserId, Title = request.Title.Trim(),
-            StartsAtUtc = start, EndsAtUtc = end, Status = CourseSessionStatuses.Scheduled,
+            Id = Guid.NewGuid(),
+            CourseOfferingId = offeringId,
+            LocationId = request.LocationId,
+            InstructorUserId = request.InstructorUserId,
+            Title = request.Title.Trim(),
+            StartsAtUtc = start,
+            EndsAtUtc = end,
+            Status = CourseSessionStatuses.Scheduled,
             CreatedAtUtc = timeProvider.GetUtcNow(),
         };
         repository.AddSession(session);
@@ -339,9 +365,14 @@ public sealed class SchedulingService(
 
         var session = new ProgramSession
         {
-            Id = Guid.NewGuid(), ProgramOfferingId = offeringId, LocationId = request.LocationId,
-            InstructorUserId = request.InstructorUserId, Title = request.Title.Trim(),
-            StartsAtUtc = start, EndsAtUtc = end, Status = CourseSessionStatuses.Scheduled,
+            Id = Guid.NewGuid(),
+            ProgramOfferingId = offeringId,
+            LocationId = request.LocationId,
+            InstructorUserId = request.InstructorUserId,
+            Title = request.Title.Trim(),
+            StartsAtUtc = start,
+            EndsAtUtc = end,
+            Status = CourseSessionStatuses.Scheduled,
             CreatedAtUtc = timeProvider.GetUtcNow(),
         };
         repository.AddProgramSession(session);

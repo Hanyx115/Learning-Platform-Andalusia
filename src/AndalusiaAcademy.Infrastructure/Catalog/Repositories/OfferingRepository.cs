@@ -18,6 +18,7 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
             .Where(offering =>
                 offering.Course!.Slug == courseSlug &&
                 offering.Status == OfferingStatuses.Open &&
+                (offering.LocationId == null || offering.Location!.IsActive) &&
                 offering.ApplicationOpensAtUtc <= availableAtUtc &&
                 offering.ApplicationClosesAtUtc >= availableAtUtc)
             .OrderBy(offering => offering.StartsAtUtc)
@@ -51,6 +52,7 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
             .Where(offering =>
                 offering.Program!.Slug == programSlug &&
                 offering.Status == OfferingStatuses.Open &&
+                (offering.LocationId == null || offering.Location!.IsActive) &&
                 offering.ApplicationOpensAtUtc <= availableAtUtc &&
                 offering.ApplicationClosesAtUtc >= availableAtUtc)
             .OrderBy(offering => offering.StartsAtUtc)
@@ -78,7 +80,8 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
     public Task<OfferingTargetDto?> GetCourseOfferingAsync(Guid offeringId, CancellationToken cancellationToken)
         => dbContext.CourseOfferings
             .AsNoTracking()
-            .Where(offering => offering.Id == offeringId)
+            .Where(offering => offering.Id == offeringId &&
+                (offering.LocationId == null || offering.Location!.IsActive))
             .Select(offering => new OfferingTargetDto(
                 offering.Id,
                 "Course",
@@ -91,7 +94,8 @@ public sealed class OfferingRepository(ApplicationDbContext dbContext) : IOfferi
     public Task<OfferingTargetDto?> GetProgramOfferingAsync(Guid offeringId, CancellationToken cancellationToken)
         => dbContext.ProgramOfferings
             .AsNoTracking()
-            .Where(offering => offering.Id == offeringId)
+            .Where(offering => offering.Id == offeringId &&
+                (offering.LocationId == null || offering.Location!.IsActive))
             .Select(offering => new OfferingTargetDto(
                 offering.Id,
                 "Program",

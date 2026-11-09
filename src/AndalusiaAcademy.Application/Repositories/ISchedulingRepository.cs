@@ -84,6 +84,10 @@ public interface ISchedulingRepository
 
     Task<bool> CourseOfferingHasSessionsAsync(Guid offeringId, CancellationToken cancellationToken);
 
+    Task<int> GetCourseOfferingCommittedSeatCountAsync(
+        Guid offeringId,
+        CancellationToken cancellationToken);
+
     Task<bool> HasProgramSessionsOutsidePeriodAsync(
         Guid offeringId,
         DateTimeOffset startsAtUtc,
@@ -91,6 +95,10 @@ public interface ISchedulingRepository
         CancellationToken cancellationToken);
 
     Task<bool> ProgramOfferingHasSessionsAsync(Guid offeringId, CancellationToken cancellationToken);
+
+    Task<int> GetProgramOfferingCommittedSeatCountAsync(
+        Guid offeringId,
+        CancellationToken cancellationToken);
 
     void AddCourseOffering(CourseOffering offering);
 

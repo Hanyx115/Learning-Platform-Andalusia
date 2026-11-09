@@ -64,32 +64,38 @@ public sealed class ProgressRepository(ApplicationDbContext dbContext, TimeProvi
             return [];
         }
 
-        var elapsedSessionIds = courseOfferingId.HasValue
+        var progressSessionIds = courseOfferingId.HasValue
             ? await dbContext.CourseSessions
                 .AsNoTracking()
                 .Where(session => session.CourseOfferingId == courseOfferingId
                     && session.Status != CourseSessionStatuses.Cancelled
-                    && session.StartsAtUtc <= now)
+                    && (session.EndsAtUtc <= now
+                        || dbContext.CourseSessionAttendances.Any(
+                            attendance => attendance.CourseSessionId == session.Id)))
                 .Select(session => session.Id)
                 .ToListAsync(cancellationToken)
             : await dbContext.ProgramSessions
                 .AsNoTracking()
                 .Where(session => session.ProgramOfferingId == programOfferingId
                     && session.Status != CourseSessionStatuses.Cancelled
-                    && session.StartsAtUtc <= now)
+                    && (session.EndsAtUtc <= now
+                        || dbContext.ProgramSessionAttendances.Any(
+                            attendance => attendance.ProgramSessionId == session.Id)))
                 .Select(session => session.Id)
                 .ToListAsync(cancellationToken);
 
         var presentCountsByUser = courseOfferingId.HasValue
             ? await dbContext.CourseSessionAttendances
                 .AsNoTracking()
-                .Where(record => elapsedSessionIds.Contains(record.CourseSessionId) && record.Status == AttendanceStatuses.Present)
+                .Where(record => progressSessionIds.Contains(record.CourseSessionId) &&
+                    (record.Status == AttendanceStatuses.Present || record.Status == AttendanceStatuses.Late))
                 .GroupBy(record => record.UserId)
                 .Select(group => new { UserId = group.Key, Count = group.Count() })
                 .ToDictionaryAsync(group => group.UserId, group => group.Count, cancellationToken)
             : await dbContext.ProgramSessionAttendances
                 .AsNoTracking()
-                .Where(record => elapsedSessionIds.Contains(record.ProgramSessionId) && record.Status == AttendanceStatuses.Present)
+                .Where(record => progressSessionIds.Contains(record.ProgramSessionId) &&
+                    (record.Status == AttendanceStatuses.Present || record.Status == AttendanceStatuses.Late))
                 .GroupBy(record => record.UserId)
                 .Select(group => new { UserId = group.Key, Count = group.Count() })
                 .ToDictionaryAsync(group => group.UserId, group => group.Count, cancellationToken);
@@ -131,15 +137,15 @@ public sealed class ProgressRepository(ApplicationDbContext dbContext, TimeProvi
                     learner.UserId,
                     learner.LearnerName,
                     learner.Email,
-                    elapsedSessionIds.Count,
+                    progressSessionIds.Count,
                     attendedSessions,
-                    ComputeRatePercentage(attendedSessions, elapsedSessionIds.Count),
+                    ComputeRatePercentage(attendedSessions, progressSessionIds.Count),
                     assignments.Count,
                     submissions.Count,
                     gradedSubmissions.Count,
                     averageScorePercentage,
                     ComputeOverallPercentage(
-                        attendedSessions, elapsedSessionIds.Count, submissions.Count, assignments.Count));
+                        attendedSessions, progressSessionIds.Count, submissions.Count, assignments.Count));
             })
             .ToList();
     }
@@ -165,32 +171,36 @@ public sealed class ProgressRepository(ApplicationDbContext dbContext, TimeProvi
 
         foreach (var enrollment in enrollments)
         {
-            var elapsedSessionCount = enrollment.CourseOfferingId.HasValue
+            var progressSessionCount = enrollment.CourseOfferingId.HasValue
                 ? await dbContext.CourseSessions.CountAsync(
                     session => session.CourseOfferingId == enrollment.CourseOfferingId
                         && session.Status != CourseSessionStatuses.Cancelled
-                        && session.StartsAtUtc <= now,
+                        && (session.EndsAtUtc <= now
+                            || dbContext.CourseSessionAttendances.Any(
+                                attendance => attendance.CourseSessionId == session.Id
+                                    && attendance.UserId == userId)),
                     cancellationToken)
                 : await dbContext.ProgramSessions.CountAsync(
                     session => session.ProgramOfferingId == enrollment.ProgramOfferingId
                         && session.Status != CourseSessionStatuses.Cancelled
-                        && session.StartsAtUtc <= now,
+                        && (session.EndsAtUtc <= now
+                            || dbContext.ProgramSessionAttendances.Any(
+                                attendance => attendance.ProgramSessionId == session.Id
+                                    && attendance.UserId == userId)),
                     cancellationToken);
 
             var attendedSessionCount = enrollment.CourseOfferingId.HasValue
                 ? await dbContext.CourseSessionAttendances.CountAsync(
                     record => record.UserId == userId
-                        && record.Status == AttendanceStatuses.Present
+                        && (record.Status == AttendanceStatuses.Present || record.Status == AttendanceStatuses.Late)
                         && record.CourseSession!.CourseOfferingId == enrollment.CourseOfferingId
-                        && record.CourseSession!.Status != CourseSessionStatuses.Cancelled
-                        && record.CourseSession!.StartsAtUtc <= now,
+                        && record.CourseSession!.Status != CourseSessionStatuses.Cancelled,
                     cancellationToken)
                 : await dbContext.ProgramSessionAttendances.CountAsync(
                     record => record.UserId == userId
-                        && record.Status == AttendanceStatuses.Present
+                        && (record.Status == AttendanceStatuses.Present || record.Status == AttendanceStatuses.Late)
                         && record.ProgramSession!.ProgramOfferingId == enrollment.ProgramOfferingId
-                        && record.ProgramSession!.Status != CourseSessionStatuses.Cancelled
-                        && record.ProgramSession!.StartsAtUtc <= now,
+                        && record.ProgramSession!.Status != CourseSessionStatuses.Cancelled,
                     cancellationToken)
                 ;
 
@@ -222,14 +232,14 @@ public sealed class ProgressRepository(ApplicationDbContext dbContext, TimeProvi
                 enrollment.CourseTitle,
                 enrollment.ProgramOfferingId,
                 enrollment.ProgramTitle,
-                elapsedSessionCount,
+                progressSessionCount,
                 attendedSessionCount,
-                ComputeRatePercentage(attendedSessionCount, elapsedSessionCount),
+                ComputeRatePercentage(attendedSessionCount, progressSessionCount),
                 assignments.Count,
                 submissions.Count,
                 gradedSubmissions.Count,
                 averageScorePercentage,
-                ComputeOverallPercentage(attendedSessionCount, elapsedSessionCount, submissions.Count, assignments.Count)));
+                ComputeOverallPercentage(attendedSessionCount, progressSessionCount, submissions.Count, assignments.Count)));
         }
 
         return results;

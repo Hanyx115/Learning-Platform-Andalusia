@@ -4,6 +4,9 @@ import type { TrainingLocation } from './catalog'
 export interface Application {
   id: string
   userId: string
+  applicantFirstName: string
+  applicantLastName: string
+  applicantEmail: string
   courseOfferingId: string | null
   courseId: string | null
   courseTitle: string | null
@@ -48,7 +51,21 @@ export interface ApplicationListQuery {
   page?: number
   pageSize?: number
   status?: string
+  learnerName?: string
+  offeringTitle?: string
+  intakeFrom?: string
+  intakeTo?: string
+  sort?: ApplicationSort
 }
+
+export type ApplicationSort =
+  | 'submitted_desc'
+  | 'learner_asc'
+  | 'learner_desc'
+  | 'offering_asc'
+  | 'offering_desc'
+  | 'intake_asc'
+  | 'intake_desc'
 
 export interface PaginatedResult<T> {
   items: T[]

@@ -3,6 +3,9 @@ namespace AndalusiaAcademy.Application.DTOs.Applications;
 public sealed record ApplicationDto(
     Guid Id,
     Guid UserId,
+    string ApplicantFirstName,
+    string ApplicantLastName,
+    string ApplicantEmail,
     Guid? CourseOfferingId,
     Guid? CourseId,
     string? CourseTitle,

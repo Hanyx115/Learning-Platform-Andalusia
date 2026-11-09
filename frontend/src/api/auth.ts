@@ -120,6 +120,10 @@ export function getProfile() {
   return apiRequest<Profile>('/api/v1/profile')
 }
 
+export function getProfileByUserId(userId: string) {
+  return apiRequest<Profile>(`/api/v1/profile/${userId}`)
+}
+
 export function updateProfile(request: UpdateProfileRequest) {
   return apiRequest<Profile>('/api/v1/profile', {
     method: 'PUT',

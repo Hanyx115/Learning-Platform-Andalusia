@@ -1,6 +1,7 @@
 using AndalusiaAcademy.Application.DTOs.Attendance;
 using AndalusiaAcademy.Application.DTOs.Scheduling;
 using AndalusiaAcademy.Application.Repositories;
+using AndalusiaAcademy.Domain.Models;
 
 namespace AndalusiaAcademy.Application.Services;
 
@@ -38,6 +39,12 @@ public sealed class AttendanceService(
                 SchedulingFailureKind.NotFound, "Course session not found.");
         }
 
+        if (session.Status == CourseSessionStatuses.Cancelled)
+        {
+            return Fail<IReadOnlyList<SessionAttendanceRecordDto>>(
+                SchedulingFailureKind.Conflict, "Attendance cannot be recorded for a cancelled course session.");
+        }
+
         var roster = await attendanceRepository.GetCourseSessionRosterAsync(courseSessionId, cancellationToken);
         var enrolledIds = roster.Select(record => record.UserId).ToHashSet();
         if (request.Entries.Any(entry => !enrolledIds.Contains(entry.UserId)))
@@ -46,7 +53,7 @@ public sealed class AttendanceService(
                 SchedulingFailureKind.Validation, "One or more selected learners are not enrolled in this offering.");
         }
 
-        await attendanceRepository.UpsertCourseSessionAttendanceAsync(
+        await attendanceRepository.SaveCourseSessionAttendanceAsync(
             courseSessionId, callerUserId, request.Entries, cancellationToken);
         var updated = await attendanceRepository.GetCourseSessionRosterAsync(courseSessionId, cancellationToken);
         return SchedulingMutationOutcome<IReadOnlyList<SessionAttendanceRecordDto>>.Success(updated);
@@ -80,6 +87,12 @@ public sealed class AttendanceService(
                 SchedulingFailureKind.NotFound, "Program session not found.");
         }
 
+        if (session.Status == CourseSessionStatuses.Cancelled)
+        {
+            return Fail<IReadOnlyList<SessionAttendanceRecordDto>>(
+                SchedulingFailureKind.Conflict, "Attendance cannot be recorded for a cancelled program session.");
+        }
+
         var roster = await attendanceRepository.GetProgramSessionRosterAsync(programSessionId, cancellationToken);
         var enrolledIds = roster.Select(record => record.UserId).ToHashSet();
         if (request.Entries.Any(entry => !enrolledIds.Contains(entry.UserId)))
@@ -88,7 +101,7 @@ public sealed class AttendanceService(
                 SchedulingFailureKind.Validation, "One or more selected learners are not enrolled in this offering.");
         }
 
-        await attendanceRepository.UpsertProgramSessionAttendanceAsync(
+        await attendanceRepository.SaveProgramSessionAttendanceAsync(
             programSessionId, callerUserId, request.Entries, cancellationToken);
         var updated = await attendanceRepository.GetProgramSessionRosterAsync(programSessionId, cancellationToken);
         return SchedulingMutationOutcome<IReadOnlyList<SessionAttendanceRecordDto>>.Success(updated);

@@ -36,6 +36,7 @@ export function getWorkspaceNavGroups(roles: string[]): WorkspaceNavGroup[] {
           { path: '/profile/schedule', labelKey: 'profileNav.schedule' },
           { path: '/profile/attendance', labelKey: 'profileNav.attendance' },
           { path: '/profile/payments', labelKey: 'profileNav.payments' },
+          { path: '/profile/skills-passport', labelKey: 'profileNav.skillsPassport' },
         ] : []),
       ],
     },

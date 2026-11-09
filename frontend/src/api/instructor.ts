@@ -61,7 +61,7 @@ export interface SessionAttendanceRecord {
 
 export interface AttendanceEntry {
   userId: string
-  status: string
+  status: string | null
   note: string | null
 }
 

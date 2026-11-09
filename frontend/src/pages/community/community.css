@@ -1,0 +1,27 @@
+.community-page { padding-block: 3rem 5rem; }
+.community-page__heading { border-bottom: 1px solid var(--color-border); padding-bottom: 1.25rem; }
+.community-composer, .community-post, .community-empty { margin-top: 1.5rem; border: 1px solid var(--color-border); border-radius: 1.25rem; background: #fff; padding: 1.5rem; box-shadow: 0 12px 30px rgb(37 49 52 / 6%); }
+.community-composer { display: grid; gap: 1rem; }
+.community-composer__heading { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.community-composer__heading h2, .community-composer__heading p { margin: 0; }
+.community-composer label { display: grid; gap: .45rem; font-weight: 700; }
+.community-composer input, .community-composer textarea, .community-composer select, .community-reply-form textarea { border: 1px solid #d9c7bb; border-radius: .75rem; padding: .8rem 1rem; font: inherit; background: #fcfaf8; }
+.community-composer textarea { min-height: 8rem; resize: vertical; }
+.community-composer .button { justify-self: start; }
+.community-feed { display: grid; gap: 1.25rem; }
+.community-post--announcement { border-inline-start: 5px solid var(--color-primary); background: linear-gradient(135deg, #fffaf6, #fff); }
+.community-post > header { display: flex; justify-content: space-between; gap: 1rem; }
+.community-post h2 { margin: .55rem 0 .2rem; }
+.community-post header p { margin: 0; color: var(--color-text-secondary); }
+.community-post__badges { display: flex; flex-wrap: wrap; gap: .45rem; }
+.community-post__badges span { border-radius: 999px; padding: .3rem .65rem; background: #f3ebe6; color: #855842; font-size: .82rem; font-weight: 700; }
+.community-post__moderation { display: flex; gap: .5rem; }
+.community-post__moderation button { border: 1px solid var(--color-border); border-radius: .65rem; background: #fff; padding: .5rem .7rem; }
+.community-post__body { white-space: pre-wrap; line-height: 1.7; }
+.community-replies { border-top: 1px solid var(--color-border); margin-top: 1.25rem; padding-top: 1rem; }
+.community-reply { padding: .9rem 1rem; margin-top: .65rem; border-radius: .8rem; background: #f8f4f0; }
+.community-reply > div { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-text-secondary); }
+.community-reply p { margin: .45rem 0 0; }
+.community-reply-form { display: grid; grid-template-columns: 1fr auto; gap: .75rem; margin-top: 1rem; align-items: end; }
+.community-reply-form textarea { min-height: 4.25rem; resize: vertical; }
+@media (max-width: 700px) { .community-composer__heading, .community-post > header, .community-reply > div { flex-direction: column; } .community-reply-form { grid-template-columns: 1fr; } }

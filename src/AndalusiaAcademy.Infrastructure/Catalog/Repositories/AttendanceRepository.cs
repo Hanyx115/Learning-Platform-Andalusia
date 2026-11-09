@@ -105,7 +105,7 @@ public sealed class AttendanceRepository(ApplicationDbContext dbContext) : IAtte
             .ToList();
     }
 
-    public async Task UpsertCourseSessionAttendanceAsync(
+    public async Task SaveCourseSessionAttendanceAsync(
         Guid courseSessionId,
         Guid recordedByUserId,
         IReadOnlyList<AttendanceEntryRequest> entries,
@@ -119,10 +119,20 @@ public sealed class AttendanceRepository(ApplicationDbContext dbContext) : IAtte
 
         foreach (var entry in entries)
         {
+            if (string.IsNullOrWhiteSpace(entry.Status))
+            {
+                if (existing.TryGetValue(entry.UserId, out var recordToRemove))
+                {
+                    dbContext.CourseSessionAttendances.Remove(recordToRemove);
+                }
+
+                continue;
+            }
+
             if (existing.TryGetValue(entry.UserId, out var record))
             {
                 record.Status = entry.Status;
-                record.Note = entry.Note;
+                record.Note = NormalizeNote(entry.Note);
                 record.RecordedByUserId = recordedByUserId;
                 record.UpdatedAtUtc = now;
             }
@@ -134,7 +144,7 @@ public sealed class AttendanceRepository(ApplicationDbContext dbContext) : IAtte
                     CourseSessionId = courseSessionId,
                     UserId = entry.UserId,
                     Status = entry.Status,
-                    Note = entry.Note,
+                    Note = NormalizeNote(entry.Note),
                     RecordedByUserId = recordedByUserId,
                     RecordedAtUtc = now,
                 });
@@ -144,7 +154,7 @@ public sealed class AttendanceRepository(ApplicationDbContext dbContext) : IAtte
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task UpsertProgramSessionAttendanceAsync(
+    public async Task SaveProgramSessionAttendanceAsync(
         Guid programSessionId,
         Guid recordedByUserId,
         IReadOnlyList<AttendanceEntryRequest> entries,
@@ -158,10 +168,20 @@ public sealed class AttendanceRepository(ApplicationDbContext dbContext) : IAtte
 
         foreach (var entry in entries)
         {
+            if (string.IsNullOrWhiteSpace(entry.Status))
+            {
+                if (existing.TryGetValue(entry.UserId, out var recordToRemove))
+                {
+                    dbContext.ProgramSessionAttendances.Remove(recordToRemove);
+                }
+
+                continue;
+            }
+
             if (existing.TryGetValue(entry.UserId, out var record))
             {
                 record.Status = entry.Status;
-                record.Note = entry.Note;
+                record.Note = NormalizeNote(entry.Note);
                 record.RecordedByUserId = recordedByUserId;
                 record.UpdatedAtUtc = now;
             }
@@ -173,7 +193,7 @@ public sealed class AttendanceRepository(ApplicationDbContext dbContext) : IAtte
                     ProgramSessionId = programSessionId,
                     UserId = entry.UserId,
                     Status = entry.Status,
-                    Note = entry.Note,
+                    Note = NormalizeNote(entry.Note),
                     RecordedByUserId = recordedByUserId,
                     RecordedAtUtc = now,
                 });
@@ -218,4 +238,7 @@ public sealed class AttendanceRepository(ApplicationDbContext dbContext) : IAtte
             .OrderByDescending(record => record.StartsAtUtc)
             .ToList();
     }
+
+    private static string? NormalizeNote(string? note)
+        => string.IsNullOrWhiteSpace(note) ? null : note.Trim();
 }

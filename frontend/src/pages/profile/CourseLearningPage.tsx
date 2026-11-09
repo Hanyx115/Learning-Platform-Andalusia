@@ -189,8 +189,16 @@ function CourseLearningPage() {
       ) : (
         <>
           <div className="dashboard-section__heading">
-            <h1 dir="auto">{enrollment.courseTitle ?? enrollment.programTitle}</h1>
-            <p>{t('courseLearning.description')}</p>
+            <div>
+              <h1 dir="auto">{enrollment.courseTitle ?? enrollment.programTitle}</h1>
+              <p>{t('courseLearning.description')}</p>
+            </div>
+            <Link
+              className="button button--secondary"
+              to={`/community/${enrollment.courseOfferingId ? 'course' : 'program'}/${enrollment.courseOfferingId ?? enrollment.programOfferingId}`}
+            >
+              {t('community.open')}
+            </Link>
           </div>
 
           {progress ? (
