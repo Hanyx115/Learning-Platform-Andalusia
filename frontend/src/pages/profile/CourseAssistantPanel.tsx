@@ -8,7 +8,7 @@ import {
 } from '../../api/enrollment'
 import { getApiErrorMessage } from '../../api/auth'
 import { saveBlob } from '../../utils/download'
-import robotHead from '../../assets/oufa-shobeir-robot.png'
+import robotHead from '../../assets/atlas-robot.png'
 
 interface CourseAssistantPanelProps {
   enrollmentId: string

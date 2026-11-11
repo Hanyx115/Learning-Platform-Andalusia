@@ -61,7 +61,7 @@ public sealed class CourseAssistantService(
         {
             return CourseAssistantOutcome.Failure(
                 CourseAssistantFailureKind.Unavailable,
-                providerResult.Error ?? "Oufa Shobeir is temporarily unavailable.");
+                providerResult.Error ?? "Atlas is temporarily unavailable.");
         }
 
         var citations = sources

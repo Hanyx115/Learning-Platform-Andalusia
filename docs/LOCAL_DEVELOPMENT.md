@@ -174,7 +174,7 @@ Visual Studio URLs are:
 | `https` | `https://localhost:7115/swagger` |
 | `Container (Dockerfile)` | `https://localhost:7115/swagger` or `http://localhost:5032/swagger` |
 
-### Optional: enable real AI responses for Oufa Shobeir
+### Optional: enable real AI responses for Atlas
 
 The course assistant runs in safe demo mode by default, so the enrolled-learner flow works without an external account.
 Demo mode uses published material titles and descriptions and clearly labels its answers.
