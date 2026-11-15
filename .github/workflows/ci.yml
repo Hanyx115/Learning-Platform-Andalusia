@@ -1,0 +1,197 @@
+name: Continuous integration
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  backend:
+    name: Backend build and tests
+    runs-on: ubuntu-latest
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Developer
+          # Ephemeral CI-only credential; never used outside this disposable runner.
+          MSSQL_SA_PASSWORD: CiOnly_Academy!2026
+        ports:
+          - 1433:1433
+    env:
+      ANDALUSIA_TEST_CONNECTION_STRING: Server=localhost,1433;Database=AndalusiaAcademyIntegrationTests;User Id=sa;Password=CiOnly_Academy!2026;TrustServerCertificate=True;Encrypt=False
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Wait for SQL Server
+        shell: bash
+        run: |
+          container_id="$(docker ps --filter ancestor=mcr.microsoft.com/mssql/server:2022-latest --format '{{.ID}}' | head -n 1)"
+          for _ in {1..30}; do
+            if docker exec "$container_id" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'CiOnly_Academy!2026' -Q 'SELECT 1' >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "SQL Server did not become ready." >&2
+          exit 1
+
+      - name: Restore tools and packages
+        run: |
+          dotnet tool restore
+          dotnet restore AndalusiaAcademy.sln
+
+      - name: Build
+        run: dotnet build AndalusiaAcademy.sln --configuration Release --no-restore
+
+      - name: Verify EF model matches migrations
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/AndalusiaAcademy.Infrastructure/AndalusiaAcademy.Infrastructure.csproj
+          --startup-project src/AndalusiaAcademy.API/AndalusiaAcademy.API.csproj
+          --configuration Release
+          --no-build
+
+      - name: Generate idempotent migration artifact
+        run: >-
+          dotnet ef migrations script
+          --idempotent
+          --project src/AndalusiaAcademy.Infrastructure/AndalusiaAcademy.Infrastructure.csproj
+          --startup-project src/AndalusiaAcademy.API/AndalusiaAcademy.API.csproj
+          --configuration Release
+          --no-build
+          --output artifacts/sql/andalusia-academy-migrations.sql
+
+      - name: Run automated tests
+        run: dotnet test AndalusiaAcademy.sln --configuration Release --no-build --no-restore --logger "trx;LogFileName=backend-tests.trx"
+
+      - name: Upload backend test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: backend-test-results
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
+
+      - name: Upload migration artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: idempotent-sql-migrations
+          path: artifacts/sql/andalusia-academy-migrations.sql
+          if-no-files-found: error
+
+  acceptance:
+    name: Clean database acceptance journey
+    runs-on: ubuntu-latest
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: CiOnly_Acceptance!2026
+        ports:
+          - 1433:1433
+    env:
+      ANDALUSIA_TEST_CONNECTION_STRING: Server=localhost,1433;Database=AndalusiaAcademyAcceptance;User Id=sa;Password=CiOnly_Acceptance!2026;TrustServerCertificate=True;Encrypt=False
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Wait for SQL Server
+        shell: bash
+        run: |
+          container_id="$(docker ps --filter ancestor=mcr.microsoft.com/mssql/server:2022-latest --format '{{.ID}}' | head -n 1)"
+          for _ in {1..30}; do
+            if docker exec "$container_id" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'CiOnly_Acceptance!2026' -Q 'SELECT 1' >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Run visitor-to-learner acceptance test
+        run: >-
+          dotnet test tests/AndalusiaAcademy.API.IntegrationTests/AndalusiaAcademy.API.IntegrationTests.csproj
+          --configuration Release
+          --filter "Category=Acceptance"
+
+  frontend:
+    name: Frontend lint, tests, and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+  containers:
+    name: Build container images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build API image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: src/AndalusiaAcademy.API/Dockerfile
+          push: false
+          tags: andalusia-academy-api:ci
+
+      - name: Build web image
+        uses: docker/build-push-action@v7
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          push: false
+          tags: andalusia-academy-web:ci

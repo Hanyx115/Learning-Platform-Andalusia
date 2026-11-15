@@ -31,6 +31,8 @@ logs/
 !.env.example
 appsettings.Development.local.json
 secrets.json
+deploy/*.env
+!deploy/*.env.example
 
 # Test and tooling output
 TestResults/
@@ -52,3 +54,5 @@ Thumbs.db
 *.zip
 tmp/
 temp/
+**/__pycache__/
+*.pyc

@@ -1,0 +1,63 @@
+name: Performance smoke test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  load-smoke:
+    runs-on: ubuntu-latest
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: CiOnly_Load!2026
+        ports:
+          - 1433:1433
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build API
+        run: |
+          dotnet restore AndalusiaAcademy.sln
+          dotnet build AndalusiaAcademy.sln --configuration Release --no-restore
+
+      - name: Start API with a clean database
+        shell: bash
+        env:
+          ASPNETCORE_ENVIRONMENT: Testing
+          ASPNETCORE_URLS: http://127.0.0.1:5080
+          ConnectionStrings__DefaultConnection: Server=localhost,1433;Database=AndalusiaAcademyLoad;User Id=sa;Password=CiOnly_Load!2026;TrustServerCertificate=True;Encrypt=False
+          Jwt__Key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          Database__MigrateOnStartup: 'true'
+          Notifications__ProcessingEnabled: 'false'
+          HttpsRedirection__Enabled: 'false'
+        run: |
+          dotnet run --project src/AndalusiaAcademy.API/AndalusiaAcademy.API.csproj --configuration Release --no-build >/tmp/andalusia-api.log 2>&1 &
+          for _ in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:5080/health/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/andalusia-api.log
+          exit 1
+
+      - name: Run k6 thresholds
+        run: >-
+          docker run --rm --network host
+          -v "${{ github.workspace }}/tests/load:/scripts:ro"
+          -e BASE_URL=http://127.0.0.1:5080
+          -e K6_VUS=3
+          -e K6_DURATION=15s
+          grafana/k6:latest run /scripts/platform-smoke.js

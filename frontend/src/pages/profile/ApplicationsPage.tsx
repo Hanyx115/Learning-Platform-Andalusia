@@ -1,0 +1,147 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { getApiErrorMessage, getApiErrorStatus } from '../../api/auth'
+import { getMyApplications, getMyPayments, type Application } from '../../api/enrollment'
+import { Link } from 'react-router-dom'
+import Container from '../../components/Container'
+
+function statusBadgeClass(status: string) {
+  switch (status) {
+    case 'Accepted':
+      return 'status-badge status-badge--positive'
+    case 'Rejected':
+      return 'status-badge status-badge--negative'
+    default:
+      return 'status-badge status-badge--pending'
+  }
+}
+
+function ApplicationsPage() {
+  const { t } = useTranslation()
+  const [applications, setApplications] = useState<Application[] | null>(null)
+  const [loadError, setLoadError] = useState('')
+  const [isForbidden, setIsForbidden] = useState(false)
+  const [paidIds, setPaidIds] = useState<Set<string>>(new Set())
+
+  const loadApplications = useCallback(() => {
+    Promise.all([getMyApplications(), getMyPayments()])
+      .then(([loadedApplications, payments]) => {
+        setApplications(loadedApplications)
+        setPaidIds(new Set(
+          payments
+            .filter((payment) => payment.status === 'Succeeded')
+            .map((payment) => payment.applicationId),
+        ))
+      })
+      .catch((requestError: unknown) => {
+        if (getApiErrorStatus(requestError) === 403) {
+          setIsForbidden(true)
+        } else {
+          setLoadError(getApiErrorMessage(requestError, t('applications.errors.load')))
+        }
+      })
+  }, [t])
+
+  useEffect(() => {
+    loadApplications()
+  }, [loadApplications])
+
+  if (isForbidden) {
+    return (
+      <Container className="auth-state-page">
+        <h1>{t('forbidden.title')}</h1>
+        <p>{t('forbidden.description')}</p>
+      </Container>
+    )
+  }
+
+  return (
+    <section className="dashboard-section">
+      <div className="dashboard-section__heading">
+        <h1>{t('applications.title')}</h1>
+        <p>{t('applications.description')}</p>
+      </div>
+
+      {loadError ? <p className="auth-message auth-message--error" role="alert">{loadError}</p> : null}
+
+      {applications === null ? (
+        <p role="status">{t('applications.loading')}</p>
+      ) : applications.length === 0 ? (
+        <p>{t('applications.empty')}</p>
+      ) : (
+        <div className="dashboard-list">
+          {applications.map((application) => {
+            const title = application.courseTitle ?? application.programTitle ?? ''
+            const isPaid = paidIds.has(application.id)
+            return (
+              <article key={application.id} className="dashboard-card">
+                <div className="dashboard-card__heading">
+                  <h2 dir="auto">{title}</h2>
+                  <span className={statusBadgeClass(application.status)}>
+                    {t(`applications.status.${application.status}`, application.status)}
+                  </span>
+                </div>
+                <div className="dashboard-card__meta">
+                  <span>
+                    {t('applications.submittedOn', {
+                      date: new Date(application.submittedAt).toLocaleDateString(),
+                    })}
+                  </span>
+                  <span>
+                    {t('applications.offeringDates', {
+                      start: new Date(application.startsAtUtc).toLocaleDateString(),
+                      end: new Date(application.endsAtUtc).toLocaleDateString(),
+                    })}
+                  </span>
+                  <span>
+                    {t('applications.offeringPrice', {
+                      price: application.price,
+                      currency: application.currency,
+                    })}
+                  </span>
+                  {application.status === 'Rejected' && application.rejectionReason ? (
+                    <span>{t('applications.rejectionReason', { reason: application.rejectionReason })}</span>
+                  ) : null}
+                </div>
+
+                <div className="application-history">
+                  <h3>{t('applications.historyTitle')}</h3>
+                  <ol>
+                    {application.statusHistory.map((history) => (
+                      <li key={history.id}>
+                        <strong>{t(`applications.status.${history.status}`, history.status)}</strong>
+                        <span>{new Date(history.changedAt).toLocaleString()}</span>
+                        {history.note ? <span>{history.note}</span> : null}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {application.status === 'Accepted' && !isPaid ? (
+                  <div className="dashboard-card__actions">
+                    <Link className="button button--primary" to={`/profile/applications/${application.id}/payment`}>
+                      {t('applications.pay')}
+                    </Link>
+                  </div>
+                ) : null}
+
+                {isPaid ? (
+                  <div className="dashboard-card__actions">
+                    <p className="auth-message auth-message--success" role="status">
+                      {t('applications.paid')}
+                    </p>
+                    <Link className="button button--secondary" to="/profile/enrollments">
+                      {t('applications.viewEnrollments')}
+                    </Link>
+                  </div>
+                ) : null}
+              </article>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
+
+export default ApplicationsPage

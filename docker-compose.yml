@@ -1,0 +1,52 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your .env file}
+      MSSQL_PID: Developer
+    ports:
+      - "${SQLSERVER_PORT:-1433}:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: src/AndalusiaAcademy.API/Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      PUBLIC_URLS: "http://localhost:${API_HTTP_PORT:-8080}"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AndalusiaAcademy;User Id=sa;Password=${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your .env file};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY in your .env file}
+      CourseAssistant__Provider: ${COURSE_ASSISTANT_PROVIDER:-Demo}
+      CourseAssistant__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      Database__MigrateOnStartup: "true"
+      HttpsRedirection__Enabled: "false"
+      AssignmentSubmissions__StoragePath: "/home/app/assignment-submissions"
+      CourseMaterials__StoragePath: "/home/app/course-materials"
+      CatalogImages__StoragePath: "/home/app/catalog-images"
+    ports:
+      - "${API_HTTP_PORT:-8080}:8080"
+    volumes:
+      - api-dataprotection-keys:/home/app/.aspnet/DataProtection-Keys
+      - assignment-submissions:/home/app/assignment-submissions
+      - course-materials:/home/app/course-materials
+      - catalog-images:/home/app/catalog-images
+
+volumes:
+  sqlserver-data:
+  api-dataprotection-keys:
+  assignment-submissions:
+  course-materials:
+  catalog-images:

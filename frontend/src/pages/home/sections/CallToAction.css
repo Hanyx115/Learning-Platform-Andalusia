@@ -1,0 +1,34 @@
+.cta-banner {
+  background: var(--color-bg-neutral);
+  padding-block: 3.5rem;
+}
+
+.cta-banner__inner {
+  max-width: 36rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.cta-banner__title {
+  color: var(--color-primary-dark);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  margin: 0 0 0.75rem;
+}
+
+.cta-banner__description {
+  color: var(--color-text-secondary);
+  margin: 0 0 2rem;
+}
+
+.cta-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (min-width: 64rem) {
+  .cta-banner {
+    padding-block: 4.5rem;
+  }
+}

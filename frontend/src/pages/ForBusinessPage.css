@@ -1,0 +1,108 @@
+.for-business-page__intro {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.for-business-page__cta {
+  margin-block-start: 1.5rem;
+}
+
+.for-business-page__companies {
+  padding-block: clamp(3rem, 7vw, 5rem);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 85% 20%, rgb(176 121 99 / 18%), transparent 30%),
+    var(--color-primary-dark);
+  color: var(--color-surface);
+}
+
+.for-business-page__companies-header {
+  max-width: 44rem;
+}
+
+.for-business-page__companies-header h2 {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.6rem);
+}
+
+.for-business-page__companies-header > p:last-child {
+  margin: 1rem 0 0;
+  color: rgb(255 255 255 / 78%);
+  line-height: 1.7;
+}
+
+.company-carousel {
+  width: min(100vw, 72rem);
+  margin: 2.5rem auto 0;
+  overflow: hidden;
+  direction: ltr;
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.company-carousel__track {
+  display: flex;
+  width: max-content;
+  animation: company-carousel-flow 30s linear infinite;
+}
+
+.company-carousel__group {
+  display: flex;
+  flex-shrink: 0;
+  gap: 1rem;
+  margin: 0;
+  padding: 0 1rem 0 0;
+  list-style: none;
+}
+
+.company-carousel__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  width: 14rem;
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 1rem;
+  padding: 1rem 1.2rem;
+  background: rgb(255 255 255 / 9%);
+  box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 14%);
+}
+
+.company-carousel__logo {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.85rem;
+  background: var(--color-surface);
+}
+
+.company-carousel__logo svg,
+.company-carousel__logo img {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+}
+
+.company-carousel__name {
+  color: var(--color-surface);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+@media (min-width: 48rem) {
+  .for-business-page__intro {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .company-carousel__track {
+    animation-duration: 60s;
+  }
+}
+
+@keyframes company-carousel-flow {
+  to {
+    transform: translateX(-50%);
+  }
+}

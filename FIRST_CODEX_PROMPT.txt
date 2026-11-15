@@ -1,0 +1,27 @@
+Read AGENTS.md and the relevant files under docs/, then inspect the current repository and Git state.
+
+We are beginning Stage 1: Solution Setup and Clean Architecture.
+
+Requirements for this checkpoint:
+- Confirm the current branch is chore/solution-foundation.
+- Create the AndalusiaAcademy.sln solution.
+- Create the four .NET 10 projects: Domain, Application, Infrastructure, and API.
+- Configure only the correct project references.
+- Create the tests project structure defined in README.md.
+- Create the React 18 + TypeScript + Vite application under frontend/andalusia-academy-web.
+- Add only baseline configuration required for the solution and frontend to build.
+- Preserve the existing AGENTS.md, README.md, docs, .gitignore, and .gitattributes.
+- Do not create business entities, DbContext, migrations, Identity, JWT, Redis, Hangfire, payments, or business features yet.
+- Use the smallest safe changes.
+- Run restore/build and the relevant frontend verification.
+- Explain any package or tooling issue honestly; do not claim a command succeeded unless it ran.
+- Stop after Stage 1.
+
+At the end, provide:
+- What was created and why.
+- Exact verification results.
+- GIT CHECKPOINT with explicit files, commands, branch, commit message, push decision, and PR decision.
+- COLLEAGUE HANDOFF.
+
+Planned commit message:
+chore(solution): initialize clean architecture projects
